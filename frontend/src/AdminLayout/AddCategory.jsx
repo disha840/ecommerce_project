@@ -33,6 +33,7 @@ const AddCategory = ({ onClose, getdata,editData }) => {
     const { name, value, type, files } = e.target;
 
     if (type === "file") {
+      console.dir(files)
       setImage(files[0]);
       return;
     }

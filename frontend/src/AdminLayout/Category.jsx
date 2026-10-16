@@ -65,10 +65,7 @@ async function SearchCategory(searchvalue=""){
   } catch (error) {
     console.log(error.response?.data);
   }
-};
-
-
-    
+}; 
   return (
     <>
     {createcategory && <AddCategory onClose={()=> setCreateCategory(false)} getdata={getdata} />}

@@ -22,7 +22,7 @@ const Sidebar = () => {
     { name: "Role", icon: ShieldCheck, path: "/admin/role" },
     { name: "Store", icon: Store, path: null },
     { name: "Category", icon: Tags, path: "/admin/category" },
-    { name: "Subcategory", icon: FolderTree, path: null },
+    { name: "Subcategory", icon: FolderTree, path:"/admin/subcategory" },
     { name: "Brand", icon: Tag, path: "/admin/brand" },
     { name: "Inventory", icon: Boxes, path: null },
     { name: "Product", icon: Package, path: null },
@@ -37,7 +37,7 @@ const Sidebar = () => {
           Main Menu
         </p>
       </div>
-
+      
       {/* Navigation */}
       <nav className="flex flex-col gap-1.5">
         {menuItems.map((item) => {

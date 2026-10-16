@@ -9,6 +9,7 @@ const cookieParser=require("cookie-parser")
 const categoryRoute=require("./router/categoryRoute")
 const roleRoute=require("./router/rolesRoute")
 const brandRoute=require("./router/brandRoute")
+const subcategoryRoute=require("./router/subcategoryRoute")
 const app=express();
 
 app.use(cors({
@@ -25,6 +26,7 @@ app.use("/admin",adminRoute)
 app.use("/category",categoryRoute)
 app.use("/brands",brandRoute)
 app.use("/role",roleRoute)
+app.use("/subcategory",subcategoryRoute)
 app.listen(3000,()=>{
     console.log("server is running");
 })

@@ -302,14 +302,14 @@ const User = () => {
 
 
 
-
-            {showModal && (
+ {showModal && (
   <CreateUserForm
     onClose={() => setShowModal(false)}
      editData={editUser} onCreated={showAllUsers}  
   />
   
 )}
+
 {
     deleteuser && <DeleteUserModal userId={deleteid} onClose={()=> setDelete(false)}  onDeleted={showAllUsers} />
 }

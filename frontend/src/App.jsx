@@ -18,6 +18,7 @@ import Role from './AdminLayout/Role'
 import Brand from './AdminLayout/Brand'
 import ViewUser from './AdminLayout/ViewUser'
 import ViewCategory from './AdminLayout/ViewCategory'
+import Subcategory from './AdminLayout/Subcategory'
 
 
 
@@ -36,6 +37,7 @@ const App = () => {
     <Route path='/forgotpassw' element={<ForgotPassw/>}/>
     <Route path='/verifyotp' element={<VeryfyOtp/>}/>
     <Route path='/resetpassword' element={<ResetPass/>}/>
+
      <Route path='/admin' element={<Admin/>}>
      <Route path='/admin/brand' element={<Brand/>}/>
      <Route path='dashboard' element={<Dashboard/>}/>
@@ -45,6 +47,7 @@ const App = () => {
      <Route path='/admin/userdetail' element={<UserDetail/>}/>
      <Route path='/admin/view/:id' element={<ViewUser/>}/>
      <Route path='/admin/viewcategory/:id' element={<ViewCategory/>}/>
+     <Route path='/admin/subcategory' element={<Subcategory/>}/>
   
      </Route>
     
