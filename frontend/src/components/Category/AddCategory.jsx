@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from "react";
-import api from "../api";
+import api from "../../api";
 
-const AddBrand = ({ onClose, editData ,getdata}) => {
+const AddCategory = ({ onClose, getdata,editData }) => {
   const [formData, setFormData] = useState({
-    name: "",
+    category: "",
     description: "",
     status: "Active",
   });
@@ -14,17 +14,26 @@ const AddBrand = ({ onClose, editData ,getdata}) => {
   useEffect(() => {
     if (editData) {
       setFormData({
-        name: editData.name || "",
+        category: editData.name || "",
         description: editData.description || "",
         status: editData.status || "Active",
       });
+    } else {
+      setFormData({
+        category: "",
+        description: "",
+        status: "Active",
+      });
     }
+
+    setImage(null);
   }, [editData]);
 
   function inputHandler(e) {
     const { name, value, type, files } = e.target;
 
     if (type === "file") {
+      console.dir(files)
       setImage(files[0]);
       return;
     }
@@ -40,7 +49,7 @@ const AddBrand = ({ onClose, editData ,getdata}) => {
 
     const data = new FormData();
 
-    data.append("name", formData.name);
+    data.append("name", formData.category);
     data.append("description", formData.description);
     data.append("status", formData.status);
 
@@ -49,12 +58,23 @@ const AddBrand = ({ onClose, editData ,getdata}) => {
     }
 
     try {
-      const res = editData?._id
-        ? await api.put(`/brands/${editData._id}`, data)
-        : await api.post("/brands/createbrand", data);
+      let res;
+
+      if (editData?._id) {
+        res = await api.put(
+          `/category/updatecategory/${editData._id}`,
+          data
+        );
+      } else {
+        res = await api.post(
+          "/category/createcategory",
+          data
+        );
+      }
 
       console.log(res.data);
-      getdata()
+
+      await getdata();
       onClose();
     } catch (error) {
       console.log(error.response?.data || error.message);
@@ -73,13 +93,13 @@ const AddBrand = ({ onClose, editData ,getdata}) => {
         <div className="flex items-center justify-between border-b border-[#F7E9E9] p-6">
           <div>
             <h2 className="text-xl font-bold text-[#713F50]">
-              {editData ? "Edit Brand" : "Add New Brand"}
+              {editData ? "Edit Category" : "Add New Category"}
             </h2>
 
             <p className="mt-1 text-sm text-[#A17B86]">
               {editData
-                ? "Update brand details"
-                : "Create a new product brand"}
+                ? "Update category details"
+                : "Create a new product category"}
             </p>
           </div>
 
@@ -95,14 +115,14 @@ const AddBrand = ({ onClose, editData ,getdata}) => {
         <form className="space-y-5 p-6" onSubmit={submitHandler}>
           <div>
             <label className="mb-2 block text-sm font-medium text-[#713F50]">
-              Brand Name
+              Category Name
             </label>
 
             <input
               type="text"
-              name="name"
-              value={formData.name}
-              placeholder="Enter brand name"
+              name="category"
+              value={formData.category}
+              placeholder="Enter category name"
               className="w-full rounded-xl border border-[#EBD9D9] bg-white px-4 py-3 text-sm text-[#713F50] placeholder:text-[#AD9299] outline-none focus:border-[#B77B8C] focus:ring-2 focus:ring-[#F0DDE1]"
               onChange={inputHandler}
               required
@@ -118,7 +138,7 @@ const AddBrand = ({ onClose, editData ,getdata}) => {
               rows="4"
               name="description"
               value={formData.description}
-              placeholder="Enter brand description"
+              placeholder="Enter category description"
               className="w-full resize-none rounded-xl border border-[#EBD9D9] bg-white px-4 py-3 text-sm text-[#713F50] placeholder:text-[#AD9299] outline-none focus:border-[#B77B8C] focus:ring-2 focus:ring-[#F0DDE1]"
               onChange={inputHandler}
             />
@@ -126,13 +146,17 @@ const AddBrand = ({ onClose, editData ,getdata}) => {
 
           <div>
             <label className="mb-2 block text-sm font-medium text-[#713F50]">
-              Brand Image
+              Category Image
             </label>
 
             {editData?.image && (
               <img
-                src={editData.image}
-                alt="Current brand"
+                src={
+                  editData.image.startsWith("http")
+                    ? editData.image
+                    : `http://localhost:5000${editData.image}`
+                }
+                alt="Current category"
                 className="mb-3 h-20 w-20 rounded-lg object-cover"
               />
             )}
@@ -143,7 +167,11 @@ const AddBrand = ({ onClose, editData ,getdata}) => {
               </div>
 
               <p className="text-sm font-medium text-[#96566A]">
-                {image ? image.name : "Upload brand image"}
+                {image
+                  ? image.name
+                  : editData?.image
+                    ? "Choose a new image to replace the current one"
+                    : "Upload category image"}
               </p>
 
               <p className="mt-1 text-xs text-[#A17B86]">
@@ -153,7 +181,7 @@ const AddBrand = ({ onClose, editData ,getdata}) => {
               <input
                 type="file"
                 name="image"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/webp"
                 className="mx-auto mt-4 block max-w-full text-sm text-[#713F50]"
                 onChange={inputHandler}
               />
@@ -167,9 +195,9 @@ const AddBrand = ({ onClose, editData ,getdata}) => {
 
             <select
               value={formData.status}
+              className="w-full rounded-xl border border-[#EBD9D9] bg-white px-4 py-3 text-sm text-[#713F50] outline-none focus:border-[#B77B8C]"
               name="status"
               onChange={inputHandler}
-              className="w-full rounded-xl border border-[#EBD9D9] bg-white px-4 py-3 text-sm text-[#713F50] outline-none focus:border-[#B77B8C]"
             >
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
@@ -189,7 +217,7 @@ const AddBrand = ({ onClose, editData ,getdata}) => {
               type="submit"
               className="rounded-xl bg-[#96566A] px-5 py-3 text-sm font-medium text-white hover:bg-[#713F50]"
             >
-              {editData ? "Update Brand" : "+ Add Brand"}
+              {editData ? "Update Category" : "+ Add Category"}
             </button>
           </div>
         </form>
@@ -198,4 +226,4 @@ const AddBrand = ({ onClose, editData ,getdata}) => {
   );
 };
 
-export default AddBrand;
+export default AddCategory;

@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from "react";
-import api from "../api";
+import api from "../../api";
 
-const AddCategory = ({ onClose, getdata,editData }) => {
+const AddBrand = ({ onClose, editData ,getdata}) => {
   const [formData, setFormData] = useState({
-    category: "",
+    name: "",
     description: "",
     status: "Active",
   });
@@ -14,26 +14,17 @@ const AddCategory = ({ onClose, getdata,editData }) => {
   useEffect(() => {
     if (editData) {
       setFormData({
-        category: editData.name || "",
+        name: editData.name || "",
         description: editData.description || "",
         status: editData.status || "Active",
       });
-    } else {
-      setFormData({
-        category: "",
-        description: "",
-        status: "Active",
-      });
     }
-
-    setImage(null);
   }, [editData]);
 
   function inputHandler(e) {
     const { name, value, type, files } = e.target;
 
     if (type === "file") {
-      console.dir(files)
       setImage(files[0]);
       return;
     }
@@ -49,7 +40,7 @@ const AddCategory = ({ onClose, getdata,editData }) => {
 
     const data = new FormData();
 
-    data.append("name", formData.category);
+    data.append("name", formData.name);
     data.append("description", formData.description);
     data.append("status", formData.status);
 
@@ -58,23 +49,12 @@ const AddCategory = ({ onClose, getdata,editData }) => {
     }
 
     try {
-      let res;
-
-      if (editData?._id) {
-        res = await api.put(
-          `/category/updatecategory/${editData._id}`,
-          data
-        );
-      } else {
-        res = await api.post(
-          "/category/createcategory",
-          data
-        );
-      }
+      const res = editData?._id
+        ? await api.put(`/brands/${editData._id}`, data)
+        : await api.post("/brands/createbrand", data);
 
       console.log(res.data);
-
-      await getdata();
+      getdata()
       onClose();
     } catch (error) {
       console.log(error.response?.data || error.message);
@@ -93,13 +73,13 @@ const AddCategory = ({ onClose, getdata,editData }) => {
         <div className="flex items-center justify-between border-b border-[#F7E9E9] p-6">
           <div>
             <h2 className="text-xl font-bold text-[#713F50]">
-              {editData ? "Edit Category" : "Add New Category"}
+              {editData ? "Edit Brand" : "Add New Brand"}
             </h2>
 
             <p className="mt-1 text-sm text-[#A17B86]">
               {editData
-                ? "Update category details"
-                : "Create a new product category"}
+                ? "Update brand details"
+                : "Create a new product brand"}
             </p>
           </div>
 
@@ -115,14 +95,14 @@ const AddCategory = ({ onClose, getdata,editData }) => {
         <form className="space-y-5 p-6" onSubmit={submitHandler}>
           <div>
             <label className="mb-2 block text-sm font-medium text-[#713F50]">
-              Category Name
+              Brand Name
             </label>
 
             <input
               type="text"
-              name="category"
-              value={formData.category}
-              placeholder="Enter category name"
+              name="name"
+              value={formData.name}
+              placeholder="Enter brand name"
               className="w-full rounded-xl border border-[#EBD9D9] bg-white px-4 py-3 text-sm text-[#713F50] placeholder:text-[#AD9299] outline-none focus:border-[#B77B8C] focus:ring-2 focus:ring-[#F0DDE1]"
               onChange={inputHandler}
               required
@@ -138,7 +118,7 @@ const AddCategory = ({ onClose, getdata,editData }) => {
               rows="4"
               name="description"
               value={formData.description}
-              placeholder="Enter category description"
+              placeholder="Enter brand description"
               className="w-full resize-none rounded-xl border border-[#EBD9D9] bg-white px-4 py-3 text-sm text-[#713F50] placeholder:text-[#AD9299] outline-none focus:border-[#B77B8C] focus:ring-2 focus:ring-[#F0DDE1]"
               onChange={inputHandler}
             />
@@ -146,17 +126,13 @@ const AddCategory = ({ onClose, getdata,editData }) => {
 
           <div>
             <label className="mb-2 block text-sm font-medium text-[#713F50]">
-              Category Image
+              Brand Image
             </label>
 
             {editData?.image && (
               <img
-                src={
-                  editData.image.startsWith("http")
-                    ? editData.image
-                    : `http://localhost:5000${editData.image}`
-                }
-                alt="Current category"
+                src={editData.image}
+                alt="Current brand"
                 className="mb-3 h-20 w-20 rounded-lg object-cover"
               />
             )}
@@ -167,11 +143,7 @@ const AddCategory = ({ onClose, getdata,editData }) => {
               </div>
 
               <p className="text-sm font-medium text-[#96566A]">
-                {image
-                  ? image.name
-                  : editData?.image
-                    ? "Choose a new image to replace the current one"
-                    : "Upload category image"}
+                {image ? image.name : "Upload brand image"}
               </p>
 
               <p className="mt-1 text-xs text-[#A17B86]">
@@ -181,7 +153,7 @@ const AddCategory = ({ onClose, getdata,editData }) => {
               <input
                 type="file"
                 name="image"
-                accept="image/png,image/jpeg,image/webp"
+                accept="image/*"
                 className="mx-auto mt-4 block max-w-full text-sm text-[#713F50]"
                 onChange={inputHandler}
               />
@@ -195,9 +167,9 @@ const AddCategory = ({ onClose, getdata,editData }) => {
 
             <select
               value={formData.status}
-              className="w-full rounded-xl border border-[#EBD9D9] bg-white px-4 py-3 text-sm text-[#713F50] outline-none focus:border-[#B77B8C]"
               name="status"
               onChange={inputHandler}
+              className="w-full rounded-xl border border-[#EBD9D9] bg-white px-4 py-3 text-sm text-[#713F50] outline-none focus:border-[#B77B8C]"
             >
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
@@ -217,7 +189,7 @@ const AddCategory = ({ onClose, getdata,editData }) => {
               type="submit"
               className="rounded-xl bg-[#96566A] px-5 py-3 text-sm font-medium text-white hover:bg-[#713F50]"
             >
-              {editData ? "Update Category" : "+ Add Category"}
+              {editData ? "Update Brand" : "+ Add Brand"}
             </button>
           </div>
         </form>
@@ -226,4 +198,4 @@ const AddCategory = ({ onClose, getdata,editData }) => {
   );
 };
 
-export default AddCategory;
+export default AddBrand;

@@ -25,7 +25,7 @@ const Sidebar = () => {
     { name: "Subcategory", icon: FolderTree, path:"/admin/subcategory" },
     { name: "Brand", icon: Tag, path: "/admin/brand" },
     { name: "Inventory", icon: Boxes, path: null },
-    { name: "Product", icon: Package, path: null },
+    { name: "Product", icon: Package, path:"/admin/products"},
   ];
 
   return (

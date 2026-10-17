@@ -10,9 +10,9 @@ import {
     FiXCircle,
     FiShield,
 } from "react-icons/fi";
-import AddCategory from "./AddCategory";
-import api from "../api"
-import DeleteCategoryModal from "./DelateCategory";
+import AddCategory from "../../components/Category/AddCategory";
+import api from "../../api";
+import DeleteCategoryModal from "../../components/Category/DelateCategory";
 import { useNavigate } from "react-router-dom";
 
 const Category = () => {

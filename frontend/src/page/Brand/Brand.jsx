@@ -1,7 +1,7 @@
 
 import React, { useState ,useEffect} from "react";
-import AddBrand from "./AddBrand";
-import api from "../api"
+import AddBrand from "../../components/Brand/AddBrand";
+import api from "../../api";
 
 const Brand = () => {
   const [createBrand, setCreateBrand] = useState(false);

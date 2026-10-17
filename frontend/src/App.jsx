@@ -10,15 +10,23 @@ import { BrowserRouter,Routes,Route } from 'react-router-dom'
 import Main from './Pages/Main'
 import CreateUser from './Pages/CreateUser'
 import Admin from './AdminLayout/Admin'
-import Users from './AdminLayout/Users'
-import UserDetail from './AdminLayout/UserDetail'
-import Dashboard from './AdminLayout/Dashboard'
-import Category from './AdminLayout/Category'
-import Role from './AdminLayout/Role'
-import Brand from './AdminLayout/Brand'
-import ViewUser from './AdminLayout/ViewUser'
-import ViewCategory from './AdminLayout/ViewCategory'
-import Subcategory from './AdminLayout/Subcategory'
+
+import Users from './page/UsersFolder/Users'
+import ViewUser from './page/UsersFolder/ViewUser'
+
+import Dashboard from './page/Dashboard/Dashboard'
+
+import Category from './page/category/Category'
+import ViewCategory from './page/category/ViewCategory'
+
+import Role from './page/Role/Role'
+
+import Brand from './page/Brand/Brand'
+
+
+import Subcategory from './page/Subcategory/Subcategory'
+import ViewSubcategory from './page/Subcategory/ViewSubCat'
+import Product from './page/Products/Produtcts'
 
 
 
@@ -41,13 +49,19 @@ const App = () => {
      <Route path='/admin' element={<Admin/>}>
      <Route path='/admin/brand' element={<Brand/>}/>
      <Route path='dashboard' element={<Dashboard/>}/>
+
      <Route path='/admin/users' element={<Users/>}/>
+ <Route path='/admin/view/:id' element={<ViewUser/>}/>
+
      <Route path='/admin/role' element={<Role/>}/>
+
      <Route path='/admin/category' element={<Category/>}/>
-     <Route path='/admin/userdetail' element={<UserDetail/>}/>
-     <Route path='/admin/view/:id' element={<ViewUser/>}/>
      <Route path='/admin/viewcategory/:id' element={<ViewCategory/>}/>
+    
      <Route path='/admin/subcategory' element={<Subcategory/>}/>
+     <Route path='/admin/viewsubcategory/:id' element={<ViewSubcategory/>}/>
+
+     <Route path='/admin/products' element={<Product/>}/>
   
      </Route>
     

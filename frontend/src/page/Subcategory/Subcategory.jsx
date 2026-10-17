@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import api from "../api";
+import api from "../../api";
 import {
   FiSearch,
   FiPlus,
@@ -8,15 +8,21 @@ import {
   FiEdit2,
   FiTrash2,
 } from "react-icons/fi";
-import AddSubcategory from "./AddSubcategory";
+import AddSubcategory from "../../components/Subcategory/AddSubcategory";
+import { useNavigate } from "react-router-dom";
+import DeleteSubcategoryModal from "../../components/Subcategory/DeleteSubCategory";
 
 const Subcategory = () => {
+  const navigate=useNavigate()
   const [showModal, setShowModal] = useState(false);
   const [data, setData] = useState([]);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [edit,setshowEdit]=useState(false);
-  const [editData,setEditData]=useState(null)
+  const [editData,setEditData]=useState(null);
+  const [deleting,setDeleting]=useState(false);
+  const [deleteId,setDeleteId]=useState(null);
+
 
   // Get all subcategories
   async function getdata() {
@@ -43,24 +49,32 @@ const Subcategory = () => {
     getdata();
   }, []);
 
-  // Search subcategories by name
+  
   const filteredData = data.filter((item) =>
     item.name?.toLowerCase().includes(search.toLowerCase())
   );
+
+  function viewHandler(id){
+          navigate(`/admin/viewsubcategory/${id}`)
+  }
 
   return (
     <div className="min-h-screen bg-[#FFF9F6] p-6 text-[#713F50]">
 
       {showModal && (
         <AddSubcategory
+          onClose={() => {setShowModal(false); }}  getdata={getdata}
+        />
+      )}
+      {deleting && (
+        <DeleteSubcategoryModal
           onClose={() => {
-            setShowModal(false);
-            getdata();
-          }}
+            setDeleting(false);
+          }}                      subId={deleteId}  onDeleted={()=> getdata()}
         />
       )}
       {
-        edit &&<AddSubcategory onClose={()=>setshowEdit(false)} getdata={()=> getdata()} editData={editData}/>
+        edit &&<AddSubcategory onClose={()=>setshowEdit(false)} getdata={getdata} editData={editData}/>
       }
 
       {/* Header */}
@@ -213,7 +227,7 @@ const Subcategory = () => {
                       <div className="flex justify-center gap-2">
                         <button
                           className="rounded-lg bg-[#F0DDE1] px-3 py-2 text-[#96566A]"
-                          title="View"
+                          title="View" onClick={()=> viewHandler(item._id)}
                         >
                           <FiEye size={17} />
                         </button>
@@ -230,7 +244,10 @@ const Subcategory = () => {
 
                         <button
                           className="rounded-lg bg-[#F7E9E9] px-3 py-2"
-                          title="Delete"
+                          title="Delete" onClick={()=>{
+                            setDeleteId(item._id);
+                            setDeleting(true)
+                          }}
                         >
                           <FiTrash2 size={17} />
                         </button>

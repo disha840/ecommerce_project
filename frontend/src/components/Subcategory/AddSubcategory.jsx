@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FiX } from "react-icons/fi";
-import api from "../api";
+import api from "../../api";
 
 const AddSubcategory = ({ onClose,getdata, editData }) => {
   const [name, setName] = useState("");
@@ -30,14 +30,17 @@ const AddSubcategory = ({ onClose,getdata, editData }) => {
       setParentCategory(
         editData.parentCategory?._id ||
         editData.parentCategory ||
+
         ""
       );
+      setImage(null)
     } else {
       setName("");
       setDescription("");
       setParentCategory("");
       setImage(null);
     }
+     
   }, [editData]);
 
   async function handleSubmit(e) {
@@ -134,16 +137,19 @@ const AddSubcategory = ({ onClose,getdata, editData }) => {
             <label className="mb-1 block text-sm">Image</label>
             <input
               type="file"
-              accept="image/*"
+              accept="image/png,image/jpeg,image/webp"
               onChange={(e) => setImage(e.target.files[0])}
               className="w-full rounded-lg border p-3"
             />
+            {editData?.image && (
+  <img
+    src={editData.image}
+    alt="Current Image"
+    className="mt-2 h-20 w-20 object-cover"
+  />
+)}
 
-            {editData?.image && !image && (
-              <p className="mt-1 text-xs text-gray-500">
-                Existing image will be kept if you don't select a new one.
-              </p>
-            )}
+            
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}

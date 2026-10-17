@@ -1,11 +1,11 @@
 
 import React from "react";
-import api from "../api";
+import api from "../../api";
 
-function DeleteCategoryModal({ catId, onClose, onDeleted }) {
+function DeleteUserModal({ userId, onClose, onDeleted }) {
   const handleDelete = async () => {
     try {
-      await api.delete(`/category/deletecategory/${catId}`);
+      await api.delete(`/api/deleteuser/${userId}`);
       await onDeleted();
       onClose();
     } catch (error) {
@@ -27,7 +27,7 @@ function DeleteCategoryModal({ catId, onClose, onDeleted }) {
         </h2>
 
         <p className="mt-3 text-[#A17B86]">
-          Are you sure you want to delete this category?
+          Are you sure you want to delete this user?
           This action cannot be undone.
         </p>
 
@@ -51,4 +51,4 @@ function DeleteCategoryModal({ catId, onClose, onDeleted }) {
   );
 }
 
-export default  DeleteCategoryModal ;
+export default DeleteUserModal;

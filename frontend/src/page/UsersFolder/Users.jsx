@@ -1,10 +1,10 @@
 
 import React, { use, useEffect, useState } from "react";
-import api from '../api'
+import api from "../../api";
 import ViewUser from "./ViewUser";
-import CreateUserForm from "./CreateUserForm";
+import CreateUserForm from "../../components/users/CreateUserForm";
 import { useNavigate } from "react-router-dom";
-import DeleteUserModal from "./deleteUserModel";
+import DeleteUserModal from "../../components/users/DeleteUserModel";
 const User = () => {
 
     const [showModal, setShowModal] = useState(false);

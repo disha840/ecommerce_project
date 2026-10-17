@@ -121,7 +121,39 @@ const updateSubcategory = async (req, res) => {
   }
 };
 
+async function viewSubCategory(req,res){
+  try{
+      const id=req.params.id;
+      const subcategory=await Subcategory.findOne({_id:id}).populate("parentCategory");
+      if(!subcategory){
+        return res.send({message:"subcategory not found"})
+      }
+      res.send({subcategory:subcategory})
+    }
+    catch(error){
+      console.log(error)
+    res.status(500).send({error:error})
+  }
+
+}
+const deleteSubCategory=async(req,res)=>{
+  try{
+    const id=req.params.id;
+    const subcategory=await Subcategory.findOneAndDelete({_id:id});
+  
+    if(!subcategory){
+      return res.status(404).send({message:"subcategory not found"})
+      
+    }
+    console.log(subcategory)
+    res.status(200).send({message:"subcategory deleted sucessfully"})
+  }
+  catch(error){
+    res.status(500).send({message:"internal server error"})
+  }
+}
+
 
 module.exports = {
-  createSubcategory,ShowSubCategory,updateSubcategory
+  createSubcategory,ShowSubCategory,updateSubcategory,viewSubCategory,deleteSubCategory
 };

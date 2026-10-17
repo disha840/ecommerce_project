@@ -10,7 +10,7 @@ import {
     FiShield,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
-import FormModal from "../components/Role/FormModal";
+import FormModal from "../../components/Role/FormModal";
 const Role = () => {
 
 
