@@ -2,9 +2,14 @@
 import React, { useState ,useEffect} from "react";
 import AddBrand from "../../components/Brand/AddBrand";
 import api from "../../api";
+import DeleteBrandModal from "../../components/Brand/DeleteBrand";
+import { useNavigate } from "react-router-dom";
 
 const Brand = () => {
+  const navigate=useNavigate()
   const [createBrand, setCreateBrand] = useState(false);
+  const [showDelete,setShowDelete]=useState(false);
+  const [deleteId,setDeleteId]=useState(null)
   const [data,setData]=useState([])
   const [editData, setEditData] = useState(null);
    async function getdata(){
@@ -22,14 +27,10 @@ const Brand = () => {
       getdata()
 
      },[])
-     async function handleDelete(id){
-        try{
-            const brand=await api.delete(`/brands/deletebrand/${id}`)
-            setData((prev)=> prev.filter((b)=> b._id!=id))
-        }catch(error){
-            console.log(error)
-        }
-    }
+     function handleView(id){
+      navigate(`/admin/viewbrand/${id}`)
+     }
+     
     
 
   return (
@@ -40,6 +41,10 @@ const Brand = () => {
           editData={editData} getdata={getdata}
         />
       )}
+      {showDelete && <DeleteBrandModal brandId={deleteId} onClose={()=> {
+        setDeleteId(null);
+        setShowDelete(false);
+      }} onDeleted={getdata}  />}
 
       <div className="min-h-screen bg-[#FFF9F6] p-6 text-[#713F50]">
 
@@ -56,20 +61,24 @@ const Brand = () => {
 
           <div className="rounded-2xl border border-[#EBD9D9] bg-white p-5 shadow-sm">
             <p className="text-sm text-[#A17B86]">Total Brands</p>
-            <h2 className="mt-2 text-3xl font-bold">120</h2>
+            <h2 className="mt-2 text-3xl font-bold">{data.length}</h2>
           </div>
 
           <div className="rounded-2xl border border-[#EBD9D9] bg-white p-5 shadow-sm">
             <p className="text-sm text-[#A17B86]">Active Brands</p>
             <h2 className="mt-2 text-3xl font-bold text-[#96566A]">
-              95
+            {data.filter((item)=>(
+                item.status=='Active'
+              )).length}
             </h2>
           </div>
 
           <div className="rounded-2xl border border-[#EBD9D9] bg-white p-5 shadow-sm">
             <p className="text-sm text-[#A17B86]">Inactive Brands</p>
             <h2 className="mt-2 text-3xl font-bold text-red-600">
-              25
+              {data.filter((item)=>(
+                item.status!='Active'
+              )).length}
             </h2>
           </div>
 
@@ -158,7 +167,7 @@ const Brand = () => {
 
       <td className="px-5 py-5">
         <div className="flex justify-center gap-2">
-          <button className="rounded-lg bg-[#F0DDE1] px-3 py-2 text-[#96566A]">
+          <button className="rounded-lg bg-[#F0DDE1] px-3 py-2 text-[#96566A]" onClick={()=> handleView(item._id)}>
             View
           </button>
 
@@ -172,7 +181,10 @@ const Brand = () => {
             Edit
           </button>
 
-          <button className="rounded-lg bg-red-50 px-3 py-2 text-red-600" onClick={()=> handleDelete(item._id)}>
+          <button className="rounded-lg bg-red-50 px-3 py-2 text-red-600" onClick={()=>{
+            setDeleteId(item._id);
+            setShowDelete(true);
+          }}>
             Delete
           </button>
         </div>

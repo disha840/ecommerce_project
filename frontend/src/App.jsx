@@ -27,6 +27,10 @@ import Brand from './page/Brand/Brand'
 import Subcategory from './page/Subcategory/Subcategory'
 import ViewSubcategory from './page/Subcategory/ViewSubCat'
 import Product from './page/Products/Produtcts'
+import ViewProduct from './page/Products/ViewProduct'
+import ViewRole from './page/Role/ViewRole'
+import ViewBrand from './page/Brand/ViewBrand'
+import ProductVariant from './page/ProductVariant/ProductVariant'
 
 
 
@@ -47,13 +51,18 @@ const App = () => {
     <Route path='/resetpassword' element={<ResetPass/>}/>
 
      <Route path='/admin' element={<Admin/>}>
+
      <Route path='/admin/brand' element={<Brand/>}/>
+     <Route path='/admin/viewbrand/:id' element={<ViewBrand/>}/>
+
+
      <Route path='dashboard' element={<Dashboard/>}/>
 
      <Route path='/admin/users' element={<Users/>}/>
- <Route path='/admin/view/:id' element={<ViewUser/>}/>
+      <Route path='/admin/view/:id' element={<ViewUser/>}/>
 
      <Route path='/admin/role' element={<Role/>}/>
+     <Route path='/admin/viewrole/:id' element={<ViewRole/>}/>
 
      <Route path='/admin/category' element={<Category/>}/>
      <Route path='/admin/viewcategory/:id' element={<ViewCategory/>}/>
@@ -62,6 +71,10 @@ const App = () => {
      <Route path='/admin/viewsubcategory/:id' element={<ViewSubcategory/>}/>
 
      <Route path='/admin/products' element={<Product/>}/>
+     <Route path='/admin/viewproduct/:id' element={<ViewProduct/>}/>
+
+     <Route path='/admin/productvariant' element={<ProductVariant/>}/>
+     
   
      </Route>
     

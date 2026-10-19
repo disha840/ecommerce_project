@@ -65,5 +65,32 @@ const deleteBrand=async(req,res)=>{
     res.status(500).send({message:"internal server error"})
   }
 }
+const viewBrand = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-module.exports = { createBrand ,showBrand,deleteBrand};
+    const brand = await Brand.findById(id);
+
+    if (!brand) {
+      return res.status(404).json({
+        success: false,
+        message: "brand not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "brand fetched successfully",
+      brand,
+    });
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+module.exports = { createBrand ,showBrand,deleteBrand,viewBrand};

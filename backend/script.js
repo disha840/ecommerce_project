@@ -8,6 +8,7 @@ const adminRoute=require("./router/adminRoute")
 const cookieParser=require("cookie-parser")
 const productRoute=require("./router/productRoute")
 const categoryRoute=require("./router/categoryRoute")
+const productvariantRoute=require("./router/productVariant")
 const roleRoute=require("./router/rolesRoute")
 const brandRoute=require("./router/brandRoute")
 const subcategoryRoute=require("./router/subcategoryRoute")
@@ -28,7 +29,8 @@ app.use("/category",categoryRoute)
 app.use("/brands",brandRoute)
 app.use("/role",roleRoute)
 app.use("/subcategory",subcategoryRoute)
-app.use("/products",productRoute)
+app.use("/products",productRoute);
+app.use("/productvariant",productvariantRoute)
 app.listen(3000,()=>{
     console.log("server is running");
 })

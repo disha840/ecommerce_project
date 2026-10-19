@@ -26,6 +26,7 @@ const Sidebar = () => {
     { name: "Brand", icon: Tag, path: "/admin/brand" },
     { name: "Inventory", icon: Boxes, path: null },
     { name: "Product", icon: Package, path:"/admin/products"},
+     { name: "Product-Variant", icon: Package, path:"/admin/productvariant"}
   ];
 
   return (

@@ -96,6 +96,7 @@ const Subcategory = () => {
             {data.length}
           </h2>
         </div>
+        
 
         <div className="rounded-2xl border border-[#EBD9D9] bg-white p-5 shadow-sm">
           <p className="text-sm text-[#A17B86]">
