@@ -20,7 +20,7 @@ function ProductVariant() {
           Product Variants
         </h1>
         <p className="mt-1 text-sm text-[#A17B86]">
-          Manage your product variants
+          Manage your product variants.
         </p>
       </div>
 
