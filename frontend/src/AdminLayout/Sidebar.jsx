@@ -11,6 +11,7 @@ import {
   Boxes,
   Package,
 } from "lucide-react";
+import { FiLogOut } from "react-icons/fi";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const Sidebar = () => {
     { name: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
     { name: "User", icon: Users, path: "/admin/users" },
     { name: "Role", icon: ShieldCheck, path: "/admin/role" },
-    { name: "Store", icon: Store, path: null },
+    { name: "Store", icon: Store, path: "/admin/store" },
     { name: "Category", icon: Tags, path: "/admin/category" },
     { name: "Subcategory", icon: FolderTree, path:"/admin/subcategory" },
     { name: "Brand", icon: Tag, path: "/admin/brand" },
@@ -28,6 +29,11 @@ const Sidebar = () => {
     { name: "Product", icon: Package, path:"/admin/products"},
      { name: "Product-Variant", icon: Package, path:"/admin/productvariant"}
   ];
+
+
+  const logoutHandler = ()=>{
+    localStorage.removeItem("isloggedIn")
+  }
 
   return (
     <aside className="hidden md:flex flex-col w-64 shrink-0 bg-[#FFF9F6] text-[#713F50] border-r border-[#EBD9D9] p-4">
@@ -76,6 +82,11 @@ const Sidebar = () => {
           );
         })}
       </nav>
+      
+<button className="flex items-center gap-2 text-[#713F50] hover:text-[#96566A]" onClick={logoutHandler}>
+  <FiLogOut size={18} />
+  Logout
+</button>
 
       {/* Bottom Note */}
       <div className="mt-auto pt-8 px-3">
@@ -88,6 +99,8 @@ const Sidebar = () => {
           </p>
         </div>
       </div>
+
+    
 
     </aside>
   );

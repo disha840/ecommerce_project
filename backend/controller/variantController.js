@@ -1,4 +1,6 @@
 const ProductVariant = require("../models/productVariant");
+
+    const Product = require("../models/productModel");
 const cloudinary = require("../cloudinary")
 
 
@@ -37,96 +39,95 @@ const createProductVariant = async (req, res) => {
       });
     }
 
-    if (!sku || !sku.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "SKU is required. Please enter a SKU.",
-      });
-    }
+    // if (!sku || !sku.trim()) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "SKU is required. Please enter a SKU.",
+    //   });
+    // }
 
-    if (unitValue === undefined || unitValue === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Please enter unit value.",
-      });
-    }
+    // if (unitValue === undefined || unitValue === "") {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Please enter unit value.",
+    //   });
+    // }
 
-    if (!unit) {
-      return res.status(400).json({
-        success: false,
-        message: "Please select a unit.",
-      });
-    }
+    // if (!unit) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Please select a unit.",
+    //   });
+    // }
 
-    if (mrp === undefined || mrp === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Please enter MRP.",
-      });
-    }
+    // if (mrp === undefined || mrp === "") {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Please enter MRP.",
+    //   });
+    // }
 
-    if (sellingPrice === undefined || sellingPrice === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Please enter selling price.",
-      });
-    }
+    // if (sellingPrice === undefined || sellingPrice === "") {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Please enter selling price.",
+    //   });
+    // }
 
     // 2. Number fields validate karo
-    if (
-      !Number.isFinite(Number(unitValue)) ||
-      Number(unitValue) <= 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Unit value must be greater than 0.",
-      });
-    }
+    // if (
+    //   !Number.isFinite(Number(unitValue)) ||
+    //   Number(unitValue) <= 0
+    // ) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Unit value must be greater than 0.",
+    //   });
+    // }
 
-    if (
-      !Number.isFinite(Number(mrp)) ||
-      Number(mrp) <= 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "MRP must be a valid number greater than 0.",
-      });
-    }
+    // if (
+    //   !Number.isFinite(Number(mrp)) ||
+    //   Number(mrp) <= 0
+    // ) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "MRP must be a valid number greater than 0.",
+    //   });
+    // }
 
-    if (
-      !Number.isFinite(Number(sellingPrice)) ||
-      Number(sellingPrice) < 0
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Selling price must be 0 or greater.",
-      });
-    }
+    // if (
+    //   !Number.isFinite(Number(sellingPrice)) ||
+    //   Number(sellingPrice) < 0
+    // ) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Selling price must be 0 or greater.",
+    //   });
+    // }
 
-    if (Number(sellingPrice) > Number(mrp)) {
-      return res.status(400).json({
-        success: false,
-        message: "Selling price cannot be greater than MRP.",
-      });
-    }
+    // if (Number(sellingPrice) > Number(mrp)) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Selling price cannot be greater than MRP.",
+    //   });
+    // }
 
-    if (
-      discountPercentage !== undefined &&
-      discountPercentage !== "" &&
-      (
-        !Number.isFinite(Number(discountPercentage)) ||
-        Number(discountPercentage) < 0 ||
-        Number(discountPercentage) > 100
-      )
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Discount percentage must be between 0 and 100.",
-      });
-    }
+    // if (
+    //   discountPercentage !== undefined &&
+    //   discountPercentage !== "" &&
+    //   (
+    //     !Number.isFinite(Number(discountPercentage)) ||
+    //     Number(discountPercentage) < 0 ||
+    //     Number(discountPercentage) > 100
+    //   )
+    // ) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Discount percentage must be between 0 and 100.",
+    //   });
+    // }
 
     // 3. Product exist karta hai ya nahi
-    const Product = require("../models/productModel");
     const existingProduct = await Product.findById(product);
 
     if (!existingProduct) {
@@ -137,16 +138,11 @@ const createProductVariant = async (req, res) => {
     }
 
     // 4. SKU pehle se use toh nahi ho raha
-    const existingSku = await ProductVariant.findOne({
-      sku: sku.trim(),
-    });
+    // const existingSku = await ProductVariant.findOne({
+    //   sku: sku.trim(),
+    // });
 
-    if (existingSku) {
-      return res.status(409).json({
-        success: false,
-        message: "This SKU already exists. Please enter a different SKU.",
-      });
-    }
+   
 
     // 5. Images upload karo
     let images = [];

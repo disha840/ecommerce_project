@@ -19,10 +19,12 @@ const User = () => {
     const navigate=useNavigate()
 
 
-  
+
+ console.log("bahar",allusers)
 
    async function showAllUsers(){
     const response=await api.get("/api/allusers");
+    console.log("userall",response.data)
     setAllUsers(response.data.users)
   }
     useEffect(()=>{
@@ -46,6 +48,9 @@ const User = () => {
         }
     }
     useEffect(()=>{
+        // if(search=""){
+        //     return
+        // }
         const timer= setTimeout(() => {
             SearchUsers(search); 
         }, 400)
@@ -245,7 +250,7 @@ const User = () => {
                                 </td>
 
                                 <td className="px-6 py-4 text-[#713F50]">
-                                    {user.role}
+                                    {user.role.name}
                                 </td>
 
                                 <td className="px-6 py-4">

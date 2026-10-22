@@ -96,7 +96,8 @@ const hashedPassword=await bcrypt.hash(passw,8);
 
 const getAllUser=async(req,res)=>{
   try{
-      const users=await User.find();
+      const super_admin = await Role.findOne({name:"super_admin"})
+      const users=await User.find({role:{$ne:super_admin._id}}).populate("role","name");
       res.status(200).send({users:users,message:"fetch all users sucessfully"})
   }
   catch(error){
@@ -195,22 +196,27 @@ const deleteUser=async(req,res)=>{
 
 const searchUser=async(req,res)=>{
   try{
-    const search=req.query.search||"";
-    const users=await User.find({
-      $or:[
-        {firstName:{$regex:search,$options:"i"}},
-         {lastName:{$regex:search,$options:"i"}},
-          {email:{$regex:search,$options:"i"}}
-      ]
-    }).sort({createdAt: -1})
-    res.status(200).send({users})
+   const search = req.query.search || "";
+
+const super_admin = await Role.findOne({ name: "super_admin" });
+
+const users = await User.find({
+  ...(super_admin && { role: { $ne: super_admin._id } }),
+  $or: [
+    { firstName: { $regex: search, $options: "i" } },
+    { lastName: { $regex: search, $options: "i" } },
+    { email: { $regex: search, $options: "i" } }
+  ]
+}).sort({ createdAt: -1 });
+
+res.status(200).send({ users });
   }catch(error){
     res.status(500).send({message:"internal server error"})
   }
 }
 
 const getRole=async(req,res)=>{
-  const getAllRole=await Role.find();
+  const getAllRole=await Role.find({name:{$ne:"super_admin"}});
   res.send({message:"get all role",status:true,getAllRole})
 }
 

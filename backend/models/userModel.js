@@ -4,7 +4,7 @@ const userSchema=mongoose.Schema(
     role: {
       type:mongoose.Schema.Types.ObjectId,
       ref:"Role",
-      required: true,
+      // required: true,
     },
 
     firstName: {

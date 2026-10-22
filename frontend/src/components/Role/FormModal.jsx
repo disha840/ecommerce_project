@@ -9,8 +9,12 @@ const FormModal = ({ setShowModal, role, onUpdated }) => {
     "categories",
     "subcategories",
     "products",
+    "roles",
+    "store",
+    "product-variant",
+    "brand"
   ];
-
+  
   const actions = [
     { label: "Add", value: "create" },
     { label: "Read", value: "read" },

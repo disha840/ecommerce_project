@@ -31,6 +31,8 @@ import ViewProduct from './page/Products/ViewProduct'
 import ViewRole from './page/Role/ViewRole'
 import ViewBrand from './page/Brand/ViewBrand'
 import ProductVariant from './page/ProductVariant/ProductVariant'
+import Store from './page/Store/Store'
+import ProtectedRoute from './components/ProtectedRoute'
 
 
 
@@ -41,6 +43,14 @@ const App = () => {
    <Routes>
     <Route path='/' element={<Main/>}/>
   
+
+
+
+  <Route element={<ProtectedRoute />}>
+
+     <Route path='/admin/dashboard' element={<Dashboard/>}/>
+
+  </Route>
     
     
     <Route path='/create' element={<CreateUser/>} />
@@ -56,7 +66,7 @@ const App = () => {
      <Route path='/admin/viewbrand/:id' element={<ViewBrand/>}/>
 
 
-     <Route path='dashboard' element={<Dashboard/>}/>
+
 
      <Route path='/admin/users' element={<Users/>}/>
       <Route path='/admin/view/:id' element={<ViewUser/>}/>
@@ -74,6 +84,7 @@ const App = () => {
      <Route path='/admin/viewproduct/:id' element={<ViewProduct/>}/>
 
      <Route path='/admin/productvariant' element={<ProductVariant/>}/>
+     <Route path='/admin/store' element={<Store/>}/>
      
   
      </Route>

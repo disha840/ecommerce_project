@@ -35,7 +35,9 @@ const createRole=async(req,res)=>{
 }
 const getRoles = async (req, res) => {
   try {
-    const roles = await Role.find().sort({ createdAt: -1 });
+  
+    const roles = await Role.find({name:{$ne:"super_admin"}}).sort({ createdAt: -1 });
+    console.log("my roles",roles)
 
     return res.status(200).json({
       success: true,
