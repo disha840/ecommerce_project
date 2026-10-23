@@ -97,7 +97,7 @@ const hashedPassword=await bcrypt.hash(passw,8);
 const getAllUser=async(req,res)=>{
   try{
       const super_admin = await Role.findOne({name:"super_admin"})
-      const users=await User.find({role:{$ne:super_admin._id}}).populate("role","name");
+      const users=await User.find({role:{$ne:super_admin._id}}).sort({createdAt:-1}).populate("role","name");
       res.status(200).send({users:users,message:"fetch all users sucessfully"})
   }
   catch(error){

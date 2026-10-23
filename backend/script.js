@@ -16,7 +16,7 @@ const storeRoute=require("./router/storeRoute")
 const app=express();
 
 app.use(cors({
-    origin:"http://localhost:5173",
+    origin:["http://localhost:5173","http://localhost:4000"],
     credentials: true
 }))
 app.use(express.json());

@@ -90,7 +90,8 @@ const login = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
-
+// console.log(user)
+// return
     if (!user) {
       return res.status(404).send({
         message: "user not found"
@@ -109,7 +110,8 @@ const login = async (req, res) => {
 
     const token = jwt.sign(
       {
-        id: user._id
+        id: user._id,
+        role:user.role
       },
       process.env.JWT_SECRET,
       {
@@ -252,13 +254,31 @@ const changePassword=async(req,res)=>{
 const getdata=(req,res)=>{
     const token=req.cookies.token;
     if (!token) {
-    return res.json({
+    return res.status(200).json({
         message: "Token not provided"
     });
 }
     const decoded=jwt.verify(token,process.env.JWT_SECRET)
+    console.log("decoded",decoded)
+  
+    if(!decoded){
+     return  res.status(401).send({message:"access denied"})
+    }
     
-    res.send({decoded:decoded,status:true})
+   return res.send({decoded:decoded,status:true})
 }
 
-module.exports={signup,login,generateotp,resendOtop,verifyotp,changePassword,getdata}
+const logout = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Logout successful",
+  });
+};
+
+module.exports={signup,login,generateotp,resendOtop,verifyotp,changePassword,getdata,logout}
