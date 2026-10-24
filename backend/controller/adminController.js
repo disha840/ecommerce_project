@@ -75,7 +75,7 @@ const login = async (req, res) => {
   try {
 
     const { email, password } = req.body;
-    console.log(email)
+    console.log(">>>>>>>",email)
     // return
 
     if (!email) {
@@ -107,11 +107,15 @@ const login = async (req, res) => {
         message: "invalid password"
       });
     }
+  
+    const userRole=await User.findById(user._id).populate("role","name permissions");
+  
 
     const token = jwt.sign(
       {
         id: user._id,
-        role:user.role
+        role:userRole.role.name,
+        permissions:userRole.role.permissions
       },
       process.env.JWT_SECRET,
       {
@@ -127,7 +131,12 @@ const login = async (req, res) => {
     });
 
     return res.status(200).send({
-      message: "login successful",status:true
+      message: "login successful",status:true,
+      user:{
+        id: user._id,
+        role:userRole.role.name,
+        permissions:userRole.role.permissions
+      }
     });
 
   } catch (error) {

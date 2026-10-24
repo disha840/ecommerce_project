@@ -1,16 +1,23 @@
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import Sidebar from "./Sidebar";
 import { useContext, useEffect } from "react";
 import { AuthContext } from "../AuthProvider";
+import { useSelector } from "react-redux";
 
 const Admin = () => {
+  const user = useSelector((store)=>store.auth.user)
   const {getuser} = useContext(AuthContext)
 
   useEffect(()=>{
 getuser()
   },[])
+
+if(!user){
+  return <Navigate to="/login" replace />
+}
+
   return (
     <div className="h-screen flex flex-col overflow-hidden">
 

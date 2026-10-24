@@ -19,7 +19,6 @@ const AddSubcategory = ({ onClose,getdata, editData }) => {
         console.log(error.message);
       }
     }
-
     getCategories();
   }, []);
 
@@ -45,9 +44,11 @@ const AddSubcategory = ({ onClose,getdata, editData }) => {
 
   async function handleSubmit(e) {
     e.preventDefault();
+
     setError("");
 
     try {
+
       const formData = new FormData();
 
       formData.append("name", name);
@@ -58,16 +59,17 @@ const AddSubcategory = ({ onClose,getdata, editData }) => {
         formData.append("image", image);
       }
 
-      if (editData) {
+      if (editData) {    
+
         await api.put(
           `/subcategory/updatesubcategory/${editData._id}`,
           formData
         );
-      } else {
-        await api.post(
-          "/subcategory/createsubcategory",
-          formData
-        );
+
+      } 
+      else
+      {
+        await api.post("/subcategory/createsubcategory",formData);
       }
       await getdata()
 

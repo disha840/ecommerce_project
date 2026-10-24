@@ -55,10 +55,7 @@ const createUser=async (req, res) => {
 
 const subject="your password for the mail"; 
 
-
-
 const hashedPassword=await bcrypt.hash(passw,8);
-
 
     const newUser = await User.create({
       firstName,
@@ -69,8 +66,7 @@ const hashedPassword=await bcrypt.hash(passw,8);
       role,
       status
     });
-
-    
+  
     const mail=await mailer(email,subject,`your password for the ${email}` ,passw); 
 
      if(!mail){ return res.status(400).send({message:"failed to send mail and password"}) } 
@@ -90,9 +86,6 @@ const hashedPassword=await bcrypt.hash(passw,8);
 
   }
 }
-
-
-
 
 const getAllUser=async(req,res)=>{
   try{

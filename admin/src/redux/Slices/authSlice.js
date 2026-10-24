@@ -1,49 +1,94 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-// import { API } from "/axios";
-
-export const fetchUser = createAsyncThunk("user/fetch", async () => {
-    try {
-        const res = await API.get("/admin/getdata")
-        return res.data.user
-    }
-    catch (error) {
-        return error.message
-    }
-})
-
+import { createSlice } from "@reduxjs/toolkit";
 
 const authSlice = createSlice({
-    name: "auth",
-    initialState: {
-        user: null,
-        loading: true,
-        error: ""
-    },
+  name: "auth",
 
-    extraReducers: (builder) => {
-        builder.addCase(fetchUser.pending, (state) => {
-            state.loading = true
-        })
-        builder.addCase(fetchUser.fulfilled, (state, action) => {
-            // console.log("user in redux", action.payload)
-            state.user = action.payload
-            state.loading = false
-        })
-        builder.addCase(fetchUser.rejected, (state, action) => {
-            // console.log("error in redux", action.payload)
-            state.error = action.payload
-            state.loading = false
-        })
-    },
-    reducers: {
-        setUser: (state, action) => {
-            state.user = action.payload
-        },
-        setLoading: (state, action) => {
-            state.loading = action.payload
-        }
+  initialState: {
+    user: null
+  },
+
+  reducers: {
+    setUser: (state, action) => {
+      console.log("user at redux" ,action.payload)
+      state.user = action.payload;
     }
-})
+  }
+});
 
-export const { setUser, setLoading } = authSlice.actions
-export default authSlice.reducer
+export const { setUser } = authSlice.actions;
+
+export default authSlice.reducer;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+// // import { API } from "/axios";
+
+// export const fetchUser = createAsyncThunk("user/fetch", async () => {
+//     try {
+//         const res = await API.get("/admin/getdata")
+//         return res.data.user
+//     }
+//     catch (error) {
+//         return error.message
+//     }
+// })
+
+
+// const authSlice = createSlice({
+//     name: "auth",
+//     initialState: {
+//         user: null,
+//         loading: true,
+//         error: ""
+//     },
+
+//     extraReducers: (builder) => {
+//         builder.addCase(fetchUser.pending, (state) => {
+//             state.loading = true
+//         })
+//         builder.addCase(fetchUser.fulfilled, (state, action) => {
+//             // console.log("user in redux", action.payload)
+//             state.user = action.payload
+//             state.loading = false
+//         })
+//         builder.addCase(fetchUser.rejected, (state, action) => {
+//             // console.log("error in redux", action.payload)
+//             state.error = action.payload
+//             state.loading = false
+//         })
+//     },
+//     reducers: {
+//         setUser: (state, action) => {
+//             state.user = action.payload
+//         },
+//         setLoading: (state, action) => {
+//             state.loading = action.payload
+//         }
+//     }
+// })
+
+// export const { setUser, setLoading } = authSlice.actions
+// export default authSlice.reducer

@@ -1,15 +1,20 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate,Navigate } from 'react-router-dom'
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import Loader from '../components/Loader';
+import { setUser } from '../redux/Slices/authSlice';
+import { useDispatch } from 'react-redux';
+import { useSelector } from "react-redux";
+
 
 const Login = () => {
+   const user = useSelector((store)=>store.auth.user)
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState({})
   const [form,setForm]=useState({email:"",password:""});
   const navigate=useNavigate()
-
+const dispatch = useDispatch()
   function inputHandler(e){
     const {name,value}=e.target;
     setForm({...form,
@@ -48,11 +53,15 @@ const Login = () => {
        setLoading(true)
       const response=await axios.post("http://localhost:3000/admin/login",form,{withCredentials:true});
         setLoading(false)
+      
+        console.log("jhghhghgh",response.data.user)
+        dispatch(setUser(response.data.user))
         toast.success(response.data.message)
+
         if(response.data.status){
           localStorage.setItem("isloggedIn",true)
         }
-        navigate("/admin/dashboard")
+        navigate("/admin/dashboard",{replace:true})
     }
     catch(error){
        setLoading(false)
@@ -61,6 +70,10 @@ const Login = () => {
     }
   }
    setError({...errors})
+}
+
+if(user){
+  return <Navigate to="/admin/dashboard" replace />
 }
 
   return (
