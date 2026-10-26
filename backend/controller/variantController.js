@@ -4,7 +4,6 @@ const ProductVariant = require("../models/productVariant");
 const cloudinary = require("../cloudinary")
 
 
-
 const createProductVariant = async (req, res) => {
   try {
     const {
@@ -24,127 +23,36 @@ const createProductVariant = async (req, res) => {
       status,
     } = req.body;
 
-    // 1. Required fields check karo
-    if (!product) {
+    // Check required fields
+    if (!product || !name || !name.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Please select a product.",
+        message: "Product and variant name are required.",
       });
     }
 
-    if (!name || !name.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "Variant name is required.",
-      });
-    }
-
-    // if (!sku || !sku.trim()) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "SKU is required. Please enter a SKU.",
-    //   });
-    // }
-
-    // if (unitValue === undefined || unitValue === "") {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Please enter unit value.",
-    //   });
-    // }
-
-    // if (!unit) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Please select a unit.",
-    //   });
-    // }
-
-    // if (mrp === undefined || mrp === "") {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Please enter MRP.",
-    //   });
-    // }
-
-    // if (sellingPrice === undefined || sellingPrice === "") {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Please enter selling price.",
-    //   });
-    // }
-
-    // 2. Number fields validate karo
-    // if (
-    //   !Number.isFinite(Number(unitValue)) ||
-    //   Number(unitValue) <= 0
-    // ) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Unit value must be greater than 0.",
-    //   });
-    // }
-
-    // if (
-    //   !Number.isFinite(Number(mrp)) ||
-    //   Number(mrp) <= 0
-    // ) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "MRP must be a valid number greater than 0.",
-    //   });
-    // }
-
-    // if (
-    //   !Number.isFinite(Number(sellingPrice)) ||
-    //   Number(sellingPrice) < 0
-    // ) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Selling price must be 0 or greater.",
-    //   });
-    // }
-
-    // if (Number(sellingPrice) > Number(mrp)) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Selling price cannot be greater than MRP.",
-    //   });
-    // }
-
-    // if (
-    //   discountPercentage !== undefined &&
-    //   discountPercentage !== "" &&
-    //   (
-    //     !Number.isFinite(Number(discountPercentage)) ||
-    //     Number(discountPercentage) < 0 ||
-    //     Number(discountPercentage) > 100
-    //   )
-    // ) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Discount percentage must be between 0 and 100.",
-    //   });
-    // }
-
-    // 3. Product exist karta hai ya nahi
+    // Check whether product exists
     const existingProduct = await Product.findById(product);
 
     if (!existingProduct) {
       return res.status(404).json({
         success: false,
-        message: "Selected product was not found. Please select another product.",
+        message: "Product not found.",
       });
     }
+      const existingVariant = await ProductVariant.findOne({
+               product: product,
+               name: name.trim()
+                });
 
-    // 4. SKU pehle se use toh nahi ho raha
-    // const existingSku = await ProductVariant.findOne({
-    //   sku: sku.trim(),
-    // });
+if (existingVariant) {
+  return res.status(400).json({
+    success: false,
+    message: "This variant already exists."
+  });
+}
 
-   
-
-    // 5. Images upload karo
+    // Upload images
     let images = [];
 
     if (req.files && req.files.images) {
@@ -154,9 +62,7 @@ const createProductVariant = async (req, res) => {
         uploadedImages = [uploadedImages];
       }
 
-      for (let i = 0; i < uploadedImages.length; i++) {
-        const image = uploadedImages[i];
-
+      for (let image of uploadedImages) {
         if (!image.mimetype.startsWith("image/")) {
           return res.status(400).json({
             success: false,
@@ -164,39 +70,34 @@ const createProductVariant = async (req, res) => {
           });
         }
 
-        const result = await cloudinary.uploader.upload(
+        const uploadedImage = await cloudinary.uploader.upload(
           image.tempFilePath,
           {
             folder: "productVariants",
           }
         );
 
-        images.push(result.secure_url);
+        images.push(uploadedImage.secure_url);
       }
     }
+  
 
-    // 6. Variant create karo
+    // Create product variant
     const variant = await ProductVariant.create({
       product,
       name: name.trim(),
-      sku: sku.trim(),
+      sku,
       barcode,
       unitValue: Number(unitValue),
       unit,
       mrp: Number(mrp),
       sellingPrice: Number(sellingPrice),
-      discountPercentage:
-        discountPercentage === "" ||
-        discountPercentage === undefined
-          ? 0
-          : Number(discountPercentage),
-      weight: weight === "" || weight === undefined
-        ? 0
-        : Number(weight),
+      discountPercentage: Number(discountPercentage) || 0,
+      weight: Number(weight) || 0,
       dimensions: {
-        length: length || 0,
-        width: width || 0,
-        height: height || 0,
+        length: Number(length) || 0,
+        width: Number(width) || 0,
+        height: Number(height) || 0,
       },
       images,
       status: status || "ACTIVE",
@@ -208,56 +109,32 @@ const createProductVariant = async (req, res) => {
       variant,
     });
   } catch (error) {
-    console.log("Create Product Variant Error:", error);
+    console.log(error);
 
-    // Duplicate key error
-    if (error.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        message: "This SKU already exists. Please use a unique SKU.",
-      });
-    }
-
-    // Mongoose validation error
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map(
-        (item) => item.message
-      );
-
-      return res.status(400).json({
-        success: false,
-        message: messages.join(", "),
-      });
-    }
-
-    // Invalid MongoDB ID
-    if (error.name === "CastError") {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid product or variant data. Please check your inputs.",
-      });
-    }
-
-    // Cloudinary error
-    if (
-      error.message &&
-      (
-        error.message.toLowerCase().includes("cloudinary") ||
-        error.message.toLowerCase().includes("upload")
-      )
-    ) {
-      return res.status(500).json({
-        success: false,
-        message: "Image upload failed. Please try uploading the image again.",
-      });
-    }
-
-    // Other errors
     return res.status(500).json({
       success: false,
-      message: "Something went wrong. Please try again later.",
+      message: "Failed to create product variant.",
+    });
+  }
+};
+const getProductVariants = async (req, res) => {
+  try {
+    const variants = await ProductVariant.find()
+      .populate("product", "name")
+      .sort({ _id: -1 });
+
+    return res.status(200).json({
+      success: true,
+      variants
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to get product variants."
     });
   }
 };
 
-module.exports = { createProductVariant };
+module.exports = { createProductVariant,getProductVariants };

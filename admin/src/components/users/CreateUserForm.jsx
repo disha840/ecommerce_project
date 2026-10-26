@@ -2,6 +2,16 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api";
 import { toast } from "react-toastify";
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiLock,
+  FiShield,
+  FiX,
+  FiUserPlus,
+  FiSave,
+} from "react-icons/fi";
 
 const initialFormData = {
   firstName: "",
@@ -49,7 +59,6 @@ function CreateUserForm({
     getRole();
   }, []);
 
-  // Fill form for editing
   useEffect(() => {
     if (editData) {
       setFormData({
@@ -70,7 +79,6 @@ function CreateUserForm({
     }
   }, [editData]);
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -80,7 +88,6 @@ function CreateUserForm({
     }));
   };
 
-  // Create or update user
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -119,72 +126,88 @@ function CreateUserForm({
   };
 
   const inputStyle =
-    "w-full px-4 py-3 rounded-xl border border-[#EBD9D9] bg-[#FFF9F6] text-[#713F50] placeholder:text-[#AD9299] outline-none focus:border-[#B77B8C] disabled:opacity-60";
+    "w-full rounded-lg border border-[#D9E8EF] bg-[#F8FCFD] px-4 py-3 text-[#102A43] outline-none transition placeholder:text-[#829AB1] focus:border-[#087F95] focus:ring-2 focus:ring-[#22B8CF]/20 disabled:cursor-not-allowed disabled:opacity-60";
 
   const labelStyle =
-    "block text-sm font-semibold text-[#713F50] mb-2";
+    "mb-2 block text-sm font-semibold text-[#102A43]";
 
   const userFields = [
-    ["firstName", "First Name *", "Enter first name", "text", true],
-    ["lastName", "Last Name", "Enter last name", "text", false],
-    ["email", "Email *", "Enter email", "email", true],
-    ["phone", "Phone", "Enter phone number", "tel", false],
+    ["firstName", "First Name *", "Enter first name", "text", true, <FiUser />],
+    ["lastName", "Last Name", "Enter last name", "text", false, <FiUser />],
+    ["email", "Email *", "Enter email", "email", true, <FiMail />],
+    ["phone", "Phone", "Enter phone number", "tel", false, <FiPhone />],
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 py-8">
-      <div className="w-full max-w-4xl rounded-2xl bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#102A43]/60 p-4 backdrop-blur-sm">
+      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#F7E9E9] px-6 py-5">
-          <div>
-            <h2 className="text-2xl font-bold text-[#713F50]">
-              {isEdit ? "Edit User" : "Create User"}
-            </h2>
+        <div className="flex shrink-0 items-center justify-between border-b border-[#D9E8EF] bg-[#F8FCFD] px-5 py-4 sm:px-7">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#D7F2F6] text-[#087F95]">
+              {isEdit ? <FiSave size={22} /> : <FiUserPlus size={22} />}
+            </div>
 
-            <p className="mt-1 text-sm text-[#A17B86]">
-              {isEdit
-                ? "Update user information."
-                : "Add a new user to your store."}
-            </p>
+            <div>
+              <h2 className="text-xl font-bold text-[#102A43]">
+                {isEdit ? "Edit User" : "Create User"}
+              </h2>
+
+              <p className="mt-1 text-sm text-[#627D98]">
+                {isEdit
+                  ? "Update user information."
+                  : "Add a new user to your store."}
+              </p>
+            </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="h-9 w-9 rounded-lg bg-[#F0DDE1] font-bold text-[#713F50] hover:bg-[#EBD9D9] disabled:opacity-50"
+            className="rounded-lg p-2 text-[#627D98] transition hover:bg-[#D7F2F6] hover:text-[#102A43] disabled:opacity-50"
+            aria-label="Close modal"
           >
-            ✕
+            <FiX size={22} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="max-h-[75vh] overflow-y-auto px-6 py-6">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          {/* Form Content */}
+          <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+            <div className="mb-5">
+              <h3 className="text-lg font-bold text-[#102A43]">
+                User Information
+              </h3>
 
-            {/* User Information */}
-            <h3 className="mb-4 text-lg font-bold text-[#713F50]">
-              User Information
-            </h3>
+              <p className="mt-1 text-sm text-[#627D98]">
+                Enter the user's details below.
+              </p>
+            </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               {userFields.map(
-                ([name, label, placeholder, type, required]) => (
+                ([name, label, placeholder, type, required, icon]) => (
                   <div key={name}>
-                    <label className={labelStyle}>
-                      {label}
-                    </label>
+                    <label className={labelStyle}>{label}</label>
 
-                    <input
-                      type={type}
-                      name={name}
-                      value={formData[name]}
-                      onChange={handleChange}
-                      placeholder={placeholder}
-                      required={required}
-                      disabled={loading}
-                      className={inputStyle}
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#087F95]">
+                        {icon}
+                      </span>
+
+                      <input
+                        type={type}
+                        name={name}
+                        value={formData[name]}
+                        onChange={handleChange}
+                        placeholder={placeholder}
+                        required={required}
+                        disabled={loading}
+                        className={`${inputStyle} pl-10`}
+                      />
+                    </div>
                   </div>
                 )
               )}
@@ -195,55 +218,67 @@ function CreateUserForm({
                   Password {isEdit ? "" : "*"}
                 </label>
 
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder={
-                    isEdit
-                      ? "New password (optional)"
-                      : "Enter password"
-                  }
-                  required={!isEdit}
-                  disabled={loading}
-                  className={inputStyle}
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#087F95]">
+                    <FiLock />
+                  </span>
+
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder={
+                      isEdit
+                        ? "New password (optional)"
+                        : "Enter password"
+                    }
+                    required={!isEdit}
+                    disabled={loading}
+                    className={`${inputStyle} pl-10`}
+                  />
+                </div>
               </div>
 
               {/* Role */}
               <div>
                 <label className={labelStyle}>Role *</label>
 
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  required
-                  disabled={loading || roleLoading}
-                  className={inputStyle}
-                >
-                  <option value="">
-                    {roleLoading ? "Loading roles..." : "Select role"}
-                  </option>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#087F95]">
+                    <FiShield />
+                  </span>
 
-                  {role.map((r) => (
-                    <option key={r._id} value={r._id}>
-                      {r.name}
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    required
+                    disabled={loading || roleLoading}
+                    className={`${inputStyle} pl-10`}
+                  >
+                    <option value="">
+                      {roleLoading ? "Loading roles..." : "Select role"}
                     </option>
-                  ))}
-                </select>
+
+                    {role.map((r) => (
+                      <option key={r._id} value={r._id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 border-t border-[#F7E9E9] px-6 py-4">
+          <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-[#D9E8EF] bg-[#F8FCFD] px-5 py-4 sm:flex-row sm:justify-end sm:px-7">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="rounded-xl border border-[#EBD9D9] px-6 py-3 text-sm font-semibold text-[#713F50] hover:bg-[#F7E9E9] disabled:opacity-50"
+              className="rounded-lg border border-[#D9E8EF] bg-white px-5 py-2.5 text-sm font-semibold text-[#102A43] transition hover:bg-[#F0FAFC] disabled:opacity-50"
             >
               Cancel
             </button>
@@ -251,17 +286,19 @@ function CreateUserForm({
             <button
               type="submit"
               disabled={loading || roleLoading}
-              className="flex min-w-36 items-center justify-center gap-2 rounded-xl bg-[#96566A] px-6 py-3 text-sm font-semibold text-white hover:bg-[#713F50] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex items-center justify-center gap-2 rounded-lg bg-[#087F95] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066779] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading && (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              {loading ? (
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  {isEdit ? <FiSave size={17} /> : <FiUserPlus size={17} />}
+                  {isEdit ? "Update User" : "Create User"}
+                </>
               )}
-
-              {loading
-                ? "Saving..."
-                : isEdit
-                  ? "Update User"
-                  : "Create User"}
             </button>
           </div>
         </form>

@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   ShoppingBag,
@@ -7,19 +8,20 @@ import {
 
 const Header = () => {
   return (
-    <header className="bg-[#FFF9F6] text-[#713F50] px-4 sm:px-6 py-3 flex items-center justify-between gap-4 border-b border-[#EBD9D9] shadow-sm">
+    <header className="flex items-center justify-between gap-4 border-b border-[#D9E8EF] bg-white px-4 py-3 text-[#102A43] shadow-sm sm:px-6">
 
       {/* Logo */}
-      <div className="flex items-center gap-3 shrink-0">
-        <div className="w-11 h-11 rounded-xl bg-[#F0DDE1] text-[#96566A] flex items-center justify-center">
+      <div className="flex shrink-0 items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#D7F2F6] text-[#087F95]">
           <ShoppingBag size={23} strokeWidth={1.8} />
         </div>
 
         <div>
-          <h1 className="text-xl font-bold tracking-tight">
+          <h1 className="text-xl font-bold tracking-tight text-[#102A43]">
             MyStore
           </h1>
-          <p className="text-[10px] tracking-[3px] text-[#96566A] font-medium">
+
+          <p className="text-[10px] font-semibold tracking-[3px] text-[#087F95]">
             ADMIN PANEL
           </p>
         </div>
@@ -32,27 +34,36 @@ const Header = () => {
         <button
           type="button"
           aria-label="Notifications"
-          className="relative p-2 rounded-xl hover:bg-[#F7E9E9] transition-colors"
+          className="relative rounded-xl p-2 text-[#486581] transition-colors hover:bg-[#F0FAFC] hover:text-[#087F95]"
         >
           <Bell size={22} strokeWidth={1.8} />
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-[#B65D70] rounded-full border-2 border-[#FFF9F6]" />
+
+          <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#22B8CF]" />
         </button>
 
         {/* Profile */}
         <button
           type="button"
-          className="flex items-center gap-2 sm:gap-3 rounded-xl p-1.5 hover:bg-[#F7E9E9] transition-colors"
+          className="flex items-center gap-2 rounded-xl p-1.5 transition-colors hover:bg-[#F0FAFC] sm:gap-3"
         >
-          <div className="hidden sm:block text-right">
-            <p className="text-sm font-semibold">Disha</p>
-            <p className="text-xs text-[#A17B86]">Admin</p>
+          <div className="hidden text-right sm:block">
+            <p className="text-sm font-semibold text-[#102A43]">
+              Disha
+            </p>
+
+            <p className="text-xs text-[#627D98]">
+              Admin
+            </p>
           </div>
 
-          <div className="w-10 h-10 rounded-full bg-[#96566A] text-white flex items-center justify-center font-semibold">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#D7F2F6] bg-[#102A43] font-semibold text-white">
             D
           </div>
 
-          <ChevronDown size={16} className="hidden sm:block text-[#96566A]" />
+          <ChevronDown
+            size={16}
+            className="hidden text-[#087F95] sm:block"
+          />
         </button>
 
       </div>

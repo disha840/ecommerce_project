@@ -260,11 +260,13 @@ const changePassword=async(req,res)=>{
     }
 }
 
-const getdata=(req,res)=>{
+const checkAuth=(req,res)=>{
     const token=req.cookies.token;
+    console.log("my tokan",token)
+
     if (!token) {
     return res.status(200).json({
-        message: "Token not provided"
+        message: "No user"
     });
 }
     const decoded=jwt.verify(token,process.env.JWT_SECRET)
@@ -290,4 +292,4 @@ const logout = (req, res) => {
   });
 };
 
-module.exports={signup,login,generateotp,resendOtop,verifyotp,changePassword,getdata,logout}
+module.exports={signup,login,generateotp,resendOtop,verifyotp,changePassword,checkAuth,logout}

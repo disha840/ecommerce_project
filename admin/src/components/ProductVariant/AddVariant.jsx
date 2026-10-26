@@ -1,15 +1,12 @@
 
-
 import React, { useEffect, useState } from "react";
 import { FiArrowLeft, FiUploadCloud } from "react-icons/fi";
 import api from "../../api";
 
 function AddVariant({ onClose }) {
-
-  // Products store karne ke liye
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Form ki saari values
   const [formData, setFormData] = useState({
     product: "",
     name: "",
@@ -28,9 +25,7 @@ function AddVariant({ onClose }) {
     status: "ACTIVE",
   });
 
-  const [loading, setLoading] = useState(false);
-
-  // Step 1: Backend se products lana
+  // Fetch products
   useEffect(() => {
     getProducts();
   }, []);
@@ -39,7 +34,6 @@ function AddVariant({ onClose }) {
     try {
       const response = await api.get("/products/showproducts");
 
-      // API response ke according products set karna
       if (Array.isArray(response.data)) {
         setProducts(response.data);
       } else if (Array.isArray(response.data.products)) {
@@ -52,7 +46,7 @@ function AddVariant({ onClose }) {
     }
   }
 
-  // Step 2: Input change hone par formData update karna
+  // Handle input changes
   function handleChange(event) {
     const name = event.target.name;
     const value = event.target.value;
@@ -63,7 +57,7 @@ function AddVariant({ onClose }) {
     });
   }
 
-  // Step 3: Images select karna
+  // Handle image selection
   function handleImageChange(event) {
     const selectedImages = Array.from(event.target.files);
 
@@ -73,7 +67,7 @@ function AddVariant({ onClose }) {
     });
   }
 
-  // Step 4: Discount calculate karna
+  // Calculate discount
   function handlePriceChange(event) {
     const name = event.target.name;
     const value = event.target.value;
@@ -95,12 +89,11 @@ function AddVariant({ onClose }) {
       Number(updatedMrp) > 0 &&
       updatedSellingPrice !== ""
     ) {
-      discount =
-        (
-          ((Number(updatedMrp) - Number(updatedSellingPrice)) /
-            Number(updatedMrp)) *
-          100
-        ).toFixed(2);
+      discount = (
+        ((Number(updatedMrp) - Number(updatedSellingPrice)) /
+          Number(updatedMrp)) *
+        100
+      ).toFixed(2);
     }
 
     setFormData({
@@ -110,7 +103,7 @@ function AddVariant({ onClose }) {
     });
   }
 
-  // Step 5: Variant create karna
+  // Create variant
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -141,13 +134,9 @@ function AddVariant({ onClose }) {
         data.append("images", formData.images[i]);
       }
 
-      // IMPORTANT:
-      // Is URL ko apne actual backend create route se match karna.
       await api.post("/productvariant/createvariant", data);
 
-      console.log("Form data ready:", formData);
-
-      alert("Form ready hai. Ab actual create API route connect karna hai.");
+      onClose();
     } catch (error) {
       console.log("Create variant error:", error);
     } finally {
@@ -156,30 +145,42 @@ function AddVariant({ onClose }) {
   }
 
   const inputClass =
-    "w-full rounded-lg border border-[#EBD9D9] px-4 py-3 text-sm outline-none focus:border-[#96566A]";
+    "w-full rounded-lg border border-[#D9E8EF] bg-[#F8FCFD] px-4 py-3 text-sm text-[#102A43] outline-none placeholder:text-[#627D98] focus:border-[#22B8CF] focus:ring-2 focus:ring-[#22B8CF]/20";
 
   const labelClass =
-    "mb-2 block text-sm font-medium text-[#713F50]";
+    "mb-2 block text-sm font-medium text-[#102A43]";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4">
-      <div className="my-auto w-full max-w-5xl rounded-xl bg-[#FFF9F6] p-6">
-
+    <div
+      className="fixed inset-0 z-100 flex items-start justify-center overflow-y-auto bg-[#102A43]/40 p-4 backdrop-blur-sm"
+      onClick={() => {
+        if (!loading) {
+          onClose();
+        }
+      }}
+    >
+      {/* Modal */}
+      <div
+        className="my-auto w-full max-w-5xl rounded-2xl border border-[#D9E8EF] bg-[#F0FAFC] p-6 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
         {/* Header */}
         <div className="mb-6 flex items-center gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-[#EBD9D9] bg-white p-3 text-[#713F50]"
+            disabled={loading}
+            className="rounded-lg border border-[#D9E8EF] bg-white p-3 text-[#087F95] transition hover:bg-[#D7F2F6] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <FiArrowLeft size={20} />
           </button>
 
           <div>
-            <h1 className="text-2xl font-bold text-[#713F50]">
+            <h1 className="text-2xl font-bold text-[#102A43]">
               Add Variant
             </h1>
-            <p className="mt-1 text-sm text-[#A17B86]">
+
+            <p className="mt-1 text-sm text-[#627D98]">
               Add a new variant for a product
             </p>
           </div>
@@ -187,17 +188,17 @@ function AddVariant({ onClose }) {
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div className="rounded-xl border border-[#EBD9D9] bg-white p-6">
-
-            <h2 className="mb-5 text-lg font-semibold text-[#713F50]">
+          <div className="rounded-xl border border-[#D9E8EF] bg-white p-6">
+            <h2 className="mb-5 text-lg font-semibold text-[#102A43]">
               Variant Information
             </h2>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
               {/* Product */}
               <div className="md:col-span-2">
-                <label className={labelClass}>Product *</label>
+                <label className={labelClass}>
+                  Product *
+                </label>
 
                 <select
                   name="product"
@@ -223,7 +224,10 @@ function AddVariant({ onClose }) {
 
               {/* Variant Name */}
               <div>
-                <label className={labelClass}>Variant Name *</label>
+                <label className={labelClass}>
+                  Variant Name *
+                </label>
+
                 <input
                   name="name"
                   value={formData.name}
@@ -237,6 +241,7 @@ function AddVariant({ onClose }) {
               {/* SKU */}
               <div>
                 <label className={labelClass}>SKU</label>
+
                 <input
                   name="sku"
                   value={formData.sku}
@@ -249,6 +254,7 @@ function AddVariant({ onClose }) {
               {/* Barcode */}
               <div>
                 <label className={labelClass}>Barcode</label>
+
                 <input
                   name="barcode"
                   value={formData.barcode}
@@ -260,7 +266,10 @@ function AddVariant({ onClose }) {
 
               {/* Unit Value */}
               <div>
-                <label className={labelClass}>Unit Value</label>
+                <label className={labelClass}>
+                  Unit Value
+                </label>
+
                 <input
                   name="unitValue"
                   type="number"
@@ -274,6 +283,7 @@ function AddVariant({ onClose }) {
               {/* Unit */}
               <div>
                 <label className={labelClass}>Unit</label>
+
                 <select
                   name="unit"
                   value={formData.unit}
@@ -297,10 +307,14 @@ function AddVariant({ onClose }) {
 
               {/* MRP */}
               <div>
-                <label className={labelClass}>MRP (₹)</label>
+                <label className={labelClass}>
+                  MRP (₹)
+                </label>
+
                 <input
                   name="mrp"
                   type="number"
+                  min="0"
                   value={formData.mrp}
                   onChange={handlePriceChange}
                   placeholder="Enter MRP"
@@ -310,10 +324,14 @@ function AddVariant({ onClose }) {
 
               {/* Selling Price */}
               <div>
-                <label className={labelClass}>Selling Price (₹)</label>
+                <label className={labelClass}>
+                  Selling Price (₹)
+                </label>
+
                 <input
                   name="sellingPrice"
                   type="number"
+                  min="0"
                   value={formData.sellingPrice}
                   onChange={handlePriceChange}
                   placeholder="Enter selling price"
@@ -326,6 +344,7 @@ function AddVariant({ onClose }) {
                 <label className={labelClass}>
                   Discount Percentage (%)
                 </label>
+
                 <input
                   value={formData.discountPercentage}
                   readOnly
@@ -336,6 +355,7 @@ function AddVariant({ onClose }) {
               {/* Weight */}
               <div>
                 <label className={labelClass}>Weight</label>
+
                 <input
                   name="weight"
                   type="number"
@@ -349,6 +369,7 @@ function AddVariant({ onClose }) {
               {/* Length */}
               <div>
                 <label className={labelClass}>Length</label>
+
                 <input
                   name="length"
                   type="number"
@@ -362,6 +383,7 @@ function AddVariant({ onClose }) {
               {/* Width */}
               <div>
                 <label className={labelClass}>Width</label>
+
                 <input
                   name="width"
                   type="number"
@@ -375,6 +397,7 @@ function AddVariant({ onClose }) {
               {/* Height */}
               <div>
                 <label className={labelClass}>Height</label>
+
                 <input
                   name="height"
                   type="number"
@@ -387,16 +410,23 @@ function AddVariant({ onClose }) {
             </div>
 
             {/* Images */}
-            <div className="mt-7 border-t border-[#EBD9D9] pt-6">
-              <label className={labelClass}>Variant Images</label>
+            <div className="mt-7 border-t border-[#D9E8EF] pt-6">
+              <label className={labelClass}>
+                Variant Images
+              </label>
 
-              <label className="flex cursor-pointer flex-col items-center rounded-xl border-2 border-dashed border-[#EBD9D9] bg-[#FFF9F6] px-6 py-8">
+              <label className="flex cursor-pointer flex-col items-center rounded-xl border-2 border-dashed border-[#22B8CF] bg-[#F8FCFD] px-6 py-8 transition hover:bg-[#EAF7FA]">
                 <FiUploadCloud
                   size={32}
-                  className="mb-3 text-[#96566A]"
+                  className="mb-3 text-[#087F95]"
                 />
-                <span className="text-sm text-[#713F50]">
+
+                <span className="text-sm font-medium text-[#102A43]">
                   Upload variant images
+                </span>
+
+                <span className="mt-1 text-xs text-[#627D98]">
+                  Select one or more images
                 </span>
 
                 <input
@@ -408,9 +438,22 @@ function AddVariant({ onClose }) {
                 />
               </label>
 
-              <p className="mt-2 text-sm text-[#A17B86]">
+              <p className="mt-2 text-sm text-[#627D98]">
                 {formData.images.length} images selected
               </p>
+
+              {formData.images.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {formData.images.map((image, index) => (
+                    <p
+                      key={`${image.name}-${index}`}
+                      className="text-xs text-[#087F95]"
+                    >
+                      {image.name}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Status */}
@@ -429,11 +472,12 @@ function AddVariant({ onClose }) {
             </div>
 
             {/* Buttons */}
-            <div className="mt-8 flex justify-end gap-3 border-t border-[#EBD9D9] pt-6">
+            <div className="mt-8 flex justify-end gap-3 border-t border-[#D9E8EF] pt-6">
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg border border-[#EBD9D9] px-6 py-3 text-sm text-[#713F50]"
+                disabled={loading}
+                className="rounded-lg border border-[#D9E8EF] bg-white px-6 py-3 text-sm font-medium text-[#627D98] transition hover:bg-[#F0FAFC] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Cancel
               </button>
@@ -441,12 +485,11 @@ function AddVariant({ onClose }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-lg bg-[#96566A] px-6 py-3 text-sm font-semibold text-white hover:bg-[#713F50]"
+                className="rounded-lg bg-[#087F95] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#066779] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? "Saving..." : "Save Variant"}
               </button>
             </div>
-
           </div>
         </form>
       </div>

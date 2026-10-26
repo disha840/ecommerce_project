@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import api from "../../api";
 import {
@@ -13,31 +12,29 @@ import { useNavigate } from "react-router-dom";
 import DeleteSubcategoryModal from "../../components/Subcategory/DeleteSubCategory";
 
 const Subcategory = () => {
-  const navigate=useNavigate()
+  const navigate = useNavigate();
+
   const [showModal, setShowModal] = useState(false);
   const [data, setData] = useState([]);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
-  const [edit,setshowEdit]=useState(false);
-  const [editData,setEditData]=useState(null);
-  const [deleting,setDeleting]=useState(false);
-  const [deleteId,setDeleteId]=useState(null);
+  const [edit, setshowEdit] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
-
-  // Get all subcategories
+  // GET ALL SUBCATEGORIES
   async function getdata() {
     try {
       const response = await api.get(
         "/subcategory/showsubcategories"
       );
 
-    
-
       setData(
         response.data.subcategory ||
-        response.data.subcategories ||
-        response.data.data ||
-        []
+          response.data.subcategories ||
+          response.data.data ||
+          []
       );
     } catch (error) {
       console.log(error.response?.data || error.message);
@@ -49,60 +46,77 @@ const Subcategory = () => {
     getdata();
   }, []);
 
-  
+  // SEARCH SUBCATEGORIES
   const filteredData = data.filter((item) =>
     item.name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  function viewHandler(id){
-          navigate(`/admin/viewsubcategory/${id}`)
+  // VIEW SUBCATEGORY
+  function viewHandler(id) {
+    navigate(`/admin/viewsubcategory/${id}`);
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF9F6] p-6 text-[#713F50]">
+    <div className="min-h-screen bg-[#F0FAFC] p-4 text-[#102A43] sm:p-6">
 
+      {/* MODALS */}
       {showModal && (
         <AddSubcategory
-          onClose={() => {setShowModal(false); }}  getdata={getdata}
+          onClose={() => {
+            setShowModal(false);
+          }}
+          getdata={getdata}
         />
       )}
+
       {deleting && (
         <DeleteSubcategoryModal
           onClose={() => {
             setDeleting(false);
-          }}                      subId={deleteId}  onDeleted={()=> getdata()}
+          }}
+          subId={deleteId}
+          onDeleted={() => getdata()}
         />
       )}
-      {
-        edit &&<AddSubcategory onClose={()=>setshowEdit(false)} getdata={getdata} editData={editData}/>
-      }
 
-      {/* Header */}
+      {edit && (
+        <AddSubcategory
+          onClose={() => setshowEdit(false)}
+          getdata={getdata}
+          editData={editData}
+        />
+      )}
+
+      {/* HEADER */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Subcategories</h1>
-        <p className="mt-1 text-sm text-[#A17B86]">
+        <h1 className="text-2xl font-bold text-[#102A43]">
+          Subcategories
+        </h1>
+
+        <p className="mt-1 text-sm text-[#627D98]">
           Manage all your product subcategories
         </p>
       </div>
 
-      {/* Statistics */}
+      {/* STATISTICS */}
       <div className="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-3">
 
-        <div className="rounded-2xl border border-[#EBD9D9] bg-white p-5 shadow-sm">
-          <p className="text-sm text-[#A17B86]">
+        <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
+          <p className="text-sm text-[#627D98]">
             Total Subcategories
           </p>
-          <h2 className="mt-2 text-3xl font-bold">
+
+          <h2 className="mt-2 text-3xl font-bold text-[#102A43]">
             {data.length}
           </h2>
         </div>
-        
 
-        <div className="rounded-2xl border border-[#EBD9D9] bg-white p-5 shadow-sm">
-          <p className="text-sm text-[#A17B86]">
+        <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
+          <p className="text-sm text-[#627D98]">
             Active Subcategories
           </p>
-          <h2 className="mt-2 text-3xl font-bold text-[#96566A]">
+
+          <h2 className="mt-2 text-3xl font-bold text-[#087F95]">
             {data.filter(
               (item) =>
                 item.status?.toLowerCase() === "active"
@@ -110,10 +124,11 @@ const Subcategory = () => {
           </h2>
         </div>
 
-        <div className="rounded-2xl border border-[#EBD9D9] bg-white p-5 shadow-sm">
-          <p className="text-sm text-[#A17B86]">
+        <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
+          <p className="text-sm text-[#627D98]">
             Inactive Subcategories
           </p>
+
           <h2 className="mt-2 text-3xl font-bold text-red-600">
             {data.filter(
               (item) =>
@@ -124,59 +139,66 @@ const Subcategory = () => {
 
       </div>
 
-      {/* Search + Add */}
-      <div className="mb-5 flex flex-col items-stretch justify-between gap-4 rounded-2xl border border-[#EBD9D9] bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+      {/* SEARCH + ADD */}
+      <div className="mb-5 flex flex-col items-stretch justify-between gap-4 rounded-2xl border border-[#D9E8EF] bg-white p-4 shadow-sm sm:flex-row sm:items-center">
 
         <div className="relative w-full max-w-md">
           <FiSearch
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A17B86]"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#087F95]"
             size={18}
           />
+
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search subcategory by name..."
-            className="w-full rounded-xl border border-[#EBD9D9] bg-[#FFF9F6] py-3 pl-11 pr-4 text-sm outline-none focus:border-[#B77B8C] focus:ring-2 focus:ring-[#F0DDE1]"
+            className="w-full rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] py-3 pl-11 pr-4 text-sm text-[#102A43] outline-none placeholder:text-[#829AB1] focus:border-[#22B8CF] focus:ring-2 focus:ring-[#D7F2F6]"
           />
         </div>
 
         <button
+          type="button"
           onClick={() => setShowModal(true)}
-          className="shrink-0 rounded-xl bg-[#96566A] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#713F50]"
+          className="shrink-0 rounded-xl bg-[#087F95] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#066779]"
         >
           <FiPlus className="mr-2 inline" size={16} />
           Add Subcategory
         </button>
+
       </div>
 
-      {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-[#EBD9D9] bg-white shadow-sm">
+      {/* SUBCATEGORY TABLE */}
+      <div className="overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-sm">
 
-        <div className="border-b border-[#F7E9E9] p-5">
-          <h2 className="text-lg font-semibold">
+        <div className="border-b border-[#D9E8EF] p-5">
+          <h2 className="text-lg font-semibold text-[#102A43]">
             All Subcategories
           </h2>
-          <p className="mt-1 text-sm text-[#A17B86]">
+
+          <p className="mt-1 text-sm text-[#627D98]">
             List of all product subcategories
           </p>
         </div>
 
         {error && (
-          <p className="p-4 text-sm text-red-600">{error}</p>
+          <p className="p-4 text-sm text-red-600">
+            {error}
+          </p>
         )}
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-[#F7E9E9]">
+
+            <thead className="bg-[#EAF7FA] text-[#102A43]">
               <tr>
-                <th className="px-5 py-4">S.No</th>
-                <th className="px-5 py-4">Subcategory Name</th>
-                <th className="px-5 py-4">Description</th>
-                <th className="px-5 py-4">Parent Category</th>
-                <th className="px-5 py-4">Status</th>
-                <th className="px-5 py-4">Created At</th>
-                <th className="px-5 py-4 text-center">Action</th>
+                <th className="whitespace-nowrap px-5 py-4">S.No</th>
+                <th className="whitespace-nowrap px-5 py-4">Subcategory Name</th>
+                <th className="whitespace-nowrap px-5 py-4">Description</th>
+                <th className="whitespace-nowrap px-5 py-4">Parent Category</th>
+                <th className="whitespace-nowrap px-5 py-4">Status</th>
+                <th className="whitespace-nowrap px-5 py-4">Created At</th>
+                <th className="whitespace-nowrap px-5 py-4 text-center">Action</th>
               </tr>
             </thead>
 
@@ -185,7 +207,7 @@ const Subcategory = () => {
                 <tr>
                   <td
                     colSpan="7"
-                    className="px-5 py-12 text-center text-[#A17B86]"
+                    className="px-5 py-12 text-center text-[#627D98]"
                   >
                     {error
                       ? "Unable to load subcategories"
@@ -196,27 +218,37 @@ const Subcategory = () => {
                 filteredData.map((item, index) => (
                   <tr
                     key={item._id}
-                    className="border-t border-[#F7E9E9] hover:bg-[#FFF9F6]"
+                    className="border-t border-[#EAF2F5] transition hover:bg-[#F4FBFC]"
                   >
-                    <td className="px-5 py-5">{index + 1}</td>
+                    <td className="whitespace-nowrap px-5 py-5">
+                      {index + 1}
+                    </td>
 
-                    <td className="px-5 py-5 font-medium">
+                    <td className="whitespace-nowrap px-5 py-5 font-medium text-[#102A43]">
                       {item.name}
                     </td>
 
-                    <td className="px-5 py-5 text-[#A17B86]">
+                    <td className="px-5 py-5 text-[#627D98]">
                       {item.description || "-"}
                     </td>
 
-                    <td className="px-5 py-5">
+                    <td className="whitespace-nowrap px-5 py-5 text-[#102A43]">
                       {item.parentCategory?.name || "-"}
                     </td>
 
-                    <td className="px-5 py-5">
-                      {item.status || "-"}
+                    <td className="whitespace-nowrap px-5 py-5">
+                      <span
+                        className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
+                          item.status?.toLowerCase() === "active"
+                            ? "bg-[#D7F2F6] text-[#087F95]"
+                            : "bg-red-100 text-red-600"
+                        }`}
+                      >
+                        {item.status || "-"}
+                      </span>
                     </td>
 
-                    <td className="px-5 py-5 text-[#A17B86]">
+                    <td className="whitespace-nowrap px-5 py-5 text-[#627D98]">
                       {item.createdAt
                         ? new Date(
                             item.createdAt
@@ -224,40 +256,49 @@ const Subcategory = () => {
                         : "-"}
                     </td>
 
-                    <td className="px-5 py-5">
+                    <td className="whitespace-nowrap px-5 py-5">
                       <div className="flex justify-center gap-2">
+
                         <button
-                          className="rounded-lg bg-[#F0DDE1] px-3 py-2 text-[#96566A]"
-                          title="View" onClick={()=> viewHandler(item._id)}
+                          type="button"
+                          className="rounded-lg bg-[#D7F2F6] px-3 py-2 text-[#087F95] transition hover:bg-[#BCEAF0]"
+                          title="View"
+                          onClick={() => viewHandler(item._id)}
                         >
                           <FiEye size={17} />
                         </button>
 
                         <button
-                          className="rounded-lg bg-[#F7E9E9] px-3 py-2"
-                          title="Edit" onClick={()=>{
-                            setshowEdit(true)
-                            setEditData(item)
+                          type="button"
+                          className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-[#D7F2F6]"
+                          title="Edit"
+                          onClick={() => {
+                            setshowEdit(true);
+                            setEditData(item);
                           }}
                         >
                           <FiEdit2 size={17} />
                         </button>
 
                         <button
-                          className="rounded-lg bg-[#F7E9E9] px-3 py-2"
-                          title="Delete" onClick={()=>{
+                          type="button"
+                          className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-red-100 hover:text-red-600"
+                          title="Delete"
+                          onClick={() => {
                             setDeleteId(item._id);
-                            setDeleting(true)
+                            setDeleting(true);
                           }}
                         >
                           <FiTrash2 size={17} />
                         </button>
+
                       </div>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
+
           </table>
         </div>
       </div>

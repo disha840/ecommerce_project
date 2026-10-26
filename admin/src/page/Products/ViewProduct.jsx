@@ -6,6 +6,7 @@ function ViewProduct() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -17,7 +18,6 @@ function ViewProduct() {
       } catch (error) {
         console.log(error.message);
         setError("Unable to load product details.");
-        console.log(error.message)
       } finally {
         setLoading(false);
       }
@@ -30,7 +30,7 @@ function ViewProduct() {
 
   if (loading) {
     return (
-      <p className="p-6 text-[#A17B86]">
+      <p className="min-h-screen bg-[#F0FAFC] p-6 text-[#627D98]">
         Loading product details...
       </p>
     );
@@ -38,15 +38,15 @@ function ViewProduct() {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-[#FFF9F6] p-6">
-        <div className="mx-auto max-w-4xl rounded-xl border border-[#EBD9D9] bg-white p-6">
-          <p className="mb-4 text-[#713F50]">
+      <div className="min-h-screen bg-[#F0FAFC] p-6">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-[#D9E8EF] bg-white p-6 shadow-sm">
+          <p className="mb-4 text-[#087F95]">
             {error || "Product not found."}
           </p>
 
           <button
             onClick={() => navigate("/admin/products")}
-            className="rounded-lg bg-[#96566A] px-4 py-2 text-white transition hover:bg-[#713F50]"
+            className="rounded-lg bg-[#087F95] px-4 py-2 text-white transition hover:bg-[#066779]"
           >
             Back to Products
           </button>
@@ -97,37 +97,37 @@ function ViewProduct() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FFF9F6] p-6">
-      <div className="mx-auto max-w-5xl rounded-xl border border-[#EBD9D9] bg-white p-6 shadow-md">
+    <div className="min-h-screen bg-[#F0FAFC] p-6 text-[#102A43]">
+      <div className="mx-auto max-w-5xl rounded-2xl border border-[#D9E8EF] bg-white p-6 shadow-sm">
         {/* Header */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-[#713F50]">
+            <h2 className="text-2xl font-bold text-[#102A43]">
               Product Details
             </h2>
 
-            <p className="mt-1 text-sm text-[#A17B86]">
+            <p className="mt-1 text-sm text-[#627D98]">
               Complete information about this product
             </p>
           </div>
 
           <button
             onClick={() => navigate("/admin/products")}
-            className="rounded-lg bg-[#96566A] px-4 py-2 text-white transition hover:bg-[#713F50]"
+            className="rounded-lg bg-[#087F95] px-4 py-2 text-white transition hover:bg-[#066779]"
           >
             Back
           </button>
         </div>
 
         {/* Product Images */}
-        {product?.images?.length > 0 && (
+        {product.images?.length > 0 && (
           <div className="mb-6">
-            <h3 className="mb-3 font-semibold text-[#713F50]">
+            <h3 className="mb-3 font-semibold text-[#102A43]">
               Product Images
             </h3>
 
             <div className="flex flex-wrap gap-4">
-              {product?.images.map((image, index) => {
+              {product.images.map((image, index) => {
                 const imageUrl =
                   typeof image === "string"
                     ? image
@@ -137,8 +137,8 @@ function ViewProduct() {
                   <img
                     key={index}
                     src={imageUrl}
-                    alt={`${product?.name} ${index + 1}`}
-                    className="h-28 w-28 rounded-lg border border-[#EBD9D9] object-cover"
+                    alt={`${product.name} ${index + 1}`}
+                    className="h-28 w-28 rounded-xl border border-[#D9E8EF] object-cover"
                   />
                 ) : null;
               })}
@@ -148,20 +148,18 @@ function ViewProduct() {
 
         {/* Product Information */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {details?.map(([label, value]) => (
+          {details.map(([label, value]) => (
             <div
               key={label}
-              className={`rounded-lg border border-[#EBD9D9] p-4 ${
-                label === "Description"
-                  ? "sm:col-span-2"
-                  : ""
+              className={`rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] p-4 ${
+                label === "Description" ? "sm:col-span-2" : ""
               }`}
             >
-              <p className="text-sm text-[#A17B86]">
+              <p className="text-sm text-[#627D98]">
                 {label}
               </p>
 
-              <p className="mt-1 font-semibold text-[#713F50]">
+              <p className="mt-1 font-semibold text-[#102A43]">
                 {value ?? "N/A"}
               </p>
             </div>

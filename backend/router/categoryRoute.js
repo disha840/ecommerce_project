@@ -1,14 +1,61 @@
-const express=require("express");
-const router=express.Router()
-const {createCategory, showCategory, deleteCategory,viewCategory,searchCategory,updateCategory,toggleStatus}=require("../controller/categoryController");
+const express = require("express");
+const router = express.Router();
 
+const auth = require("../middleware/authMiddleware");
+const checkPermission = require("../middleware/permissions");
 
+const {
+  createCategory,
+  showCategory,
+  deleteCategory,
+  viewCategory,
+  searchCategory,
+  updateCategory,
+  toggleStatus
+} = require("../controller/categoryController");
 
-router.post("/createcategory",createCategory)
-router.get("/showcategories",showCategory)
-router.get("/viewcategory/:id",viewCategory)
-router.get("/searched",searchCategory)
-router.delete("/deletecategory/:id",deleteCategory)
-router.put("/updatecategory/:id",updateCategory)
-router.put("/toggle-status/:id",toggleStatus)
-module.exports=router
+router.use(auth);
+
+router.post(
+  "/createcategory",
+  checkPermission("categories","create"),
+  createCategory
+);
+
+router.get(
+  "/showcategories",
+  checkPermission("categories","read"),
+  showCategory
+);
+
+router.get(
+  "/viewcategory/:id",
+  checkPermission("categories","read"),
+  viewCategory
+);
+
+router.get(
+  "/searched",
+  checkPermission("categories","read"),
+  searchCategory
+);
+
+router.delete(
+  "/deletecategory/:id",
+  checkPermission("categories","delete"),
+  deleteCategory
+);
+
+router.put(
+  "/updatecategory/:id",
+  checkPermission("categories","update"),
+  updateCategory
+);
+
+router.put(
+  "/toggle-status/:id",
+  checkPermission("categories","update"),
+  toggleStatus
+);
+
+module.exports = router;

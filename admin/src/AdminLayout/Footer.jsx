@@ -1,40 +1,53 @@
+
 import React from "react";
 import { ShoppingBag } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-[#FFF9F6] text-[#713F50] px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#EBD9D9]">
+    <footer className="flex flex-col items-center justify-between gap-4 border-t border-[#D9E8EF] bg-white px-4 py-4 text-[#102A43] sm:flex-row sm:px-6">
 
       {/* Brand */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-[#F0DDE1] text-[#96566A] flex items-center justify-center">
-          <ShoppingBag size={17} strokeWidth={1.8} />
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D7F2F6] text-[#087F95]">
+          <ShoppingBag size={18} strokeWidth={1.8} />
         </div>
 
         <div>
-          <p className="text-sm font-bold tracking-tight leading-none">
+          <p className="text-sm font-bold leading-none tracking-tight text-[#102A43]">
             MyStore
           </p>
-          <p className="text-[9px] tracking-[3px] text-[#96566A] font-medium mt-1">
+
+          <p className="mt-1 text-[9px] font-semibold tracking-[2px] text-[#087F95]">
             ADMIN PANEL
           </p>
         </div>
       </div>
 
       {/* Copyright */}
-      <p className="text-xs text-[#A17B86] text-center">
+      <p className="text-center text-xs text-[#627D98]">
         © 2026 MyStore. All rights reserved.
       </p>
 
       {/* Links */}
       <nav className="flex items-center gap-4 text-xs font-medium">
-        <a href="#" className="text-[#96566A] hover:text-[#B65D70] transition-colors">
+        <a
+          href="#"
+          className="text-[#486581] transition-colors hover:text-[#087F95]"
+        >
           Privacy
         </a>
-        <a href="#" className="text-[#96566A] hover:text-[#B65D70] transition-colors">
+
+        <a
+          href="#"
+          className="text-[#486581] transition-colors hover:text-[#087F95]"
+        >
           Terms
         </a>
-        <a href="#" className="text-[#96566A] hover:text-[#B65D70] transition-colors">
+
+        <a
+          href="#"
+          className="text-[#486581] transition-colors hover:text-[#087F95]"
+        >
           Support
         </a>
       </nav>

@@ -28,9 +28,7 @@ const FormModal = ({ onClose }) => {
         });
         setManagers(res.data.managers || []);
       } catch (error) {
-        console.error(
-          error.response?.data || error.message
-        );
+        console.error(error.response?.data || error.message);
       }
     };
 
@@ -65,7 +63,6 @@ const FormModal = ({ onClose }) => {
     const latitude = formData.latitude.trim();
     const longitude = formData.longitude.trim();
 
-    // Validate coordinates
     if (latitude === "" || longitude === "") {
       alert("Please enter both latitude and longitude.");
       return;
@@ -74,20 +71,12 @@ const FormModal = ({ onClose }) => {
     const lat = Number(latitude);
     const lng = Number(longitude);
 
-    if (
-      !Number.isFinite(lat) ||
-      lat < -90 ||
-      lat > 90
-    ) {
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
       alert("Latitude must be between -90 and 90.");
       return;
     }
 
-    if (
-      !Number.isFinite(lng) ||
-      lng < -180 ||
-      lng > 180
-    ) {
+    if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
       alert("Longitude must be between -180 and 180.");
       return;
     }
@@ -103,8 +92,6 @@ const FormModal = ({ onClose }) => {
         address: formData.address.trim(),
         serviceRadius: Number(formData.serviceRadius),
         status: formData.status,
-
-        // Match backend schema
         location: {
           latitude: lat,
           longitude: lng,
@@ -116,9 +103,7 @@ const FormModal = ({ onClose }) => {
       alert(res.message || "Store created successfully");
       onClose();
     } catch (error) {
-      console.error(
-        error.response?.data || error
-      );
+      console.error(error.response?.data || error);
 
       alert(
         error.response?.data?.message ||
@@ -129,228 +114,239 @@ const FormModal = ({ onClose }) => {
     }
   };
 
+  const inputStyle =
+    "w-full rounded-lg border border-[#D9E8EF] bg-[#F8FCFD] px-4 py-3 text-sm text-[#102A43] outline-none transition placeholder:text-[#829AB1] focus:border-[#087F95] focus:ring-2 focus:ring-[#22B8CF]/20 disabled:cursor-not-allowed disabled:opacity-60";
+
+  const labelStyle =
+    "mb-2 block text-sm font-semibold text-[#102A43]";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#EBD9D9] bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#102A43]/60 p-4 backdrop-blur-sm">
+      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-2xl">
 
         {/* HEADER */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#EBD9D9] bg-white px-6 py-5">
-          <div>
-            <h2 className="text-xl font-bold text-[#713F50]">
-              Add Store
-            </h2>
-            <p className="mt-1 text-sm text-[#A17B86]">
-              Enter store information below.
-            </p>
+        <div className="flex shrink-0 items-center justify-between border-b border-[#D9E8EF] bg-[#F8FCFD] px-5 py-4 sm:px-7">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#D7F2F6] text-[#087F95]">
+              <FiMapPin size={22} />
+            </div>
+
+            <div>
+              <h2 className="text-xl font-bold text-[#102A43]">
+                Add Store
+              </h2>
+              <p className="mt-1 text-sm text-[#627D98]">
+                Enter store information below.
+              </p>
+            </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-[#A17B86] transition hover:bg-[#F0DDE1] hover:text-[#713F50]"
+            disabled={loading}
+            className="rounded-lg p-2 text-[#627D98] transition hover:bg-[#D7F2F6] hover:text-[#102A43] disabled:opacity-50"
+            aria-label="Close modal"
           >
-            <FiX size={21} />
+            <FiX size={22} />
           </button>
         </div>
 
         {/* FORM */}
         <form
           onSubmit={handleSubmit}
-          className="space-y-5 p-6"
+          className="flex min-h-0 flex-1 flex-col"
         >
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
 
-            {/* STORE NAME */}
+            {/* STORE INFORMATION */}
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[#713F50]">
-                Store Name *
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                placeholder="e.g. Jaipur Central Store"
-                className="w-full rounded-xl border border-[#EBD9D9] bg-[#FFF9F6] px-4 py-2.5 text-sm outline-none placeholder:text-[#A17B86] focus:border-[#96566A] focus:bg-white"
-              />
+              <h3 className="text-lg font-bold text-[#102A43]">
+                Store Information
+              </h3>
+              <p className="mt-1 text-sm text-[#627D98]">
+                Enter the store details below.
+              </p>
             </div>
 
-            {/* STORE CODE */}
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-[#713F50]">
-                Store Code *
-              </label>
-              <input
-                type="text"
-                name="code"
-                value={formData.code}
-                onChange={handleChange}
-                required
-                placeholder="e.g. JPR001"
-                className="w-full rounded-xl border border-[#EBD9D9] bg-[#FFF9F6] px-4 py-2.5 text-sm outline-none placeholder:text-[#A17B86] focus:border-[#96566A] focus:bg-white"
-              />
-            </div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
-            {/* STORE MANAGER */}
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-[#713F50]">
-                Store Manager *
-              </label>
-              <select
-                name="manager"
-                value={formData.manager}
-                onChange={handleChange}
-                required
-                className="w-full rounded-xl border border-[#EBD9D9] bg-[#FFF9F6] px-4 py-2.5 text-sm text-[#713F50] outline-none focus:border-[#96566A]"
-              >
-                <option value="">Select manager</option>
-
-                {managers.map((m) => (
-                  <option key={m._id} value={m._id}>
-                    {m.firstName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* PHONE */}
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-[#713F50]">
-                Phone Number *
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                placeholder="Enter phone number"
-                className="w-full rounded-xl border border-[#EBD9D9] bg-[#FFF9F6] px-4 py-2.5 text-sm outline-none placeholder:text-[#A17B86] focus:border-[#96566A] focus:bg-white"
-              />
-            </div>
-
-            {/* SERVICE RADIUS */}
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-[#713F50]">
-                Service Radius (km) *
-              </label>
-              <input
-                type="number"
-                name="serviceRadius"
-                value={formData.serviceRadius}
-                onChange={handleChange}
-                required
-                min="1"
-                placeholder="10"
-                className="w-full rounded-xl border border-[#EBD9D9] bg-[#FFF9F6] px-4 py-2.5 text-sm outline-none placeholder:text-[#A17B86] focus:border-[#96566A] focus:bg-white"
-              />
-            </div>
-
-            {/* STATUS */}
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-[#713F50]">
-                Status *
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                required
-                className="w-full rounded-xl border border-[#EBD9D9] bg-[#FFF9F6] px-4 py-2.5 text-sm text-[#713F50] outline-none focus:border-[#96566A]"
-              >
-                <option value="ACTIVE">Active</option>
-                <option value="INACTIVE">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          {/* ADDRESS */}
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-[#713F50]">
-              Store Address *
-            </label>
-            <textarea
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              required
-              placeholder="Enter complete store address"
-              rows={3}
-              className="w-full resize-y rounded-xl border border-[#EBD9D9] bg-[#FFF9F6] px-4 py-2.5 text-sm outline-none placeholder:text-[#A17B86] focus:border-[#96566A] focus:bg-white"
-            />
-          </div>
-
-          {/* GEOLOCATION */}
-          <div className="rounded-xl border border-[#EBD9D9] bg-[#FFF9F6] p-4">
-            <div className="mb-4 flex items-center gap-2">
-              <div className="rounded-lg bg-[#F0DDE1] p-2 text-[#96566A]">
-                <FiMapPin size={19} />
-              </div>
-
+              {/* STORE NAME */}
               <div>
-                <h3 className="text-sm font-semibold text-[#713F50]">
-                  Store Coordinates
-                </h3>
-                <p className="mt-1 text-xs text-[#A17B86]">
-                  Enter both longitude and latitude.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-              {/* LONGITUDE */}
-              <div>
-                <label className="mb-2 block text-sm font-medium text-[#713F50]">
-                  Longitude *
-                </label>
+                <label className={labelStyle}>Store Name *</label>
                 <input
-                  type="number"
-                  name="longitude"
-                  value={formData.longitude}
+                  type="text"
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
                   required
-                  step="any"
-                  min="-180"
-                  max="180"
-                  placeholder="e.g. 75.7873"
-                  className="w-full rounded-xl border border-[#EBD9D9] bg-white px-4 py-2.5 text-sm outline-none placeholder:text-[#A17B86] focus:border-[#96566A]"
+                  placeholder="e.g. Jaipur Central Store"
+                  className={inputStyle}
                 />
               </div>
 
-              {/* LATITUDE */}
+              {/* STORE CODE */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-[#713F50]">
-                  Latitude *
+                <label className={labelStyle}>Store Code *</label>
+                <input
+                  type="text"
+                  name="code"
+                  value={formData.code}
+                  onChange={handleChange}
+                  required
+                  placeholder="e.g. JPR001"
+                  className={inputStyle}
+                />
+              </div>
+
+              {/* STORE MANAGER */}
+              <div>
+                <label className={labelStyle}>Store Manager *</label>
+                <select
+                  name="manager"
+                  value={formData.manager}
+                  onChange={handleChange}
+                  required
+                  className={inputStyle}
+                >
+                  <option value="">Select manager</option>
+
+                  {managers.map((m) => (
+                    <option key={m._id} value={m._id}>
+                      {m.firstName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* PHONE */}
+              <div>
+                <label className={labelStyle}>Phone Number *</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter phone number"
+                  className={inputStyle}
+                />
+              </div>
+
+              {/* SERVICE RADIUS */}
+              <div>
+                <label className={labelStyle}>
+                  Service Radius (km) *
                 </label>
                 <input
                   type="number"
-                  name="latitude"
-                  value={formData.latitude}
+                  name="serviceRadius"
+                  value={formData.serviceRadius}
                   onChange={handleChange}
                   required
-                  step="any"
-                  min="-90"
-                  max="90"
-                  placeholder="e.g. 26.9124"
-                  className="w-full rounded-xl border border-[#EBD9D9] bg-white px-4 py-2.5 text-sm outline-none placeholder:text-[#A17B86] focus:border-[#96566A]"
+                  min="1"
+                  placeholder="10"
+                  className={inputStyle}
                 />
+              </div>
+
+              {/* STATUS */}
+              <div>
+                <label className={labelStyle}>Status *</label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  required
+                  className={inputStyle}
+                >
+                  <option value="ACTIVE">Active</option>
+                  <option value="INACTIVE">Inactive</option>
+                </select>
               </div>
             </div>
 
-            <p className="mt-3 text-xs text-[#A17B86]">
-              Coordinates identify the exact store location.
-            </p>
+            {/* ADDRESS */}
+            <div>
+              <label className={labelStyle}>Store Address *</label>
+              <textarea
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                required
+                placeholder="Enter complete store address"
+                rows={3}
+                className={`${inputStyle} resize-y`}
+              />
+            </div>
+
+            {/* GEOLOCATION */}
+            <div className="rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] p-4">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="rounded-lg bg-[#D7F2F6] p-2 text-[#087F95]">
+                  <FiMapPin size={19} />
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-semibold text-[#102A43]">
+                    Store Coordinates
+                  </h3>
+                  <p className="mt-1 text-xs text-[#627D98]">
+                    Enter both longitude and latitude.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+                {/* LONGITUDE */}
+                <div>
+                  <label className={labelStyle}>Longitude *</label>
+                  <input
+                    type="number"
+                    name="longitude"
+                    value={formData.longitude}
+                    onChange={handleChange}
+                    required
+                    step="any"
+                    min="-180"
+                    max="180"
+                    placeholder="e.g. 75.7873"
+                    className={inputStyle}
+                  />
+                </div>
+
+                {/* LATITUDE */}
+                <div>
+                  <label className={labelStyle}>Latitude *</label>
+                  <input
+                    type="number"
+                    name="latitude"
+                    value={formData.latitude}
+                    onChange={handleChange}
+                    required
+                    step="any"
+                    min="-90"
+                    max="90"
+                    placeholder="e.g. 26.9124"
+                    className={inputStyle}
+                  />
+                </div>
+              </div>
+
+              <p className="mt-3 text-xs text-[#627D98]">
+                Coordinates identify the exact store location.
+              </p>
+            </div>
           </div>
 
-          {/* BUTTONS */}
-          <div className="flex flex-col-reverse gap-3 border-t border-[#EBD9D9] pt-5 sm:flex-row sm:justify-end">
+          {/* FOOTER */}
+          <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-[#D9E8EF] bg-[#F8FCFD] px-5 py-4 sm:flex-row sm:justify-end sm:px-7">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="rounded-xl border border-[#EBD9D9] px-5 py-2.5 text-sm font-semibold text-[#713F50] transition hover:bg-[#FFF9F6]"
+              className="rounded-lg border border-[#D9E8EF] bg-white px-5 py-2.5 text-sm font-semibold text-[#102A43] transition hover:bg-[#F0FAFC] disabled:opacity-50"
             >
               Cancel
             </button>
@@ -358,7 +354,7 @@ const FormModal = ({ onClose }) => {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-[#96566A] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#814659] disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-lg bg-[#087F95] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066779] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Creating..." : "Create Store"}
             </button>

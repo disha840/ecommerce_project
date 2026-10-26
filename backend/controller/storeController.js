@@ -10,7 +10,7 @@ const User=require("../models/userModel.js")
       .populate("role");
 
     const storeManagers = managers.filter(
-      (user) => user.role?.name === "store manager"
+      (user) => user.role?.name === "store_manager"
     );
 
     res.status(200).json({
@@ -24,6 +24,7 @@ const User=require("../models/userModel.js")
     });
   }
 };
+
 const createStore = async (req, res) => {
   try {
     const {

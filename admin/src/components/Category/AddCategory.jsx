@@ -109,23 +109,23 @@ const AddCategory = ({ onClose, getdata, editData }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-100 flex items-center justify-center bg-[#102A43]/60 p-4 backdrop-blur-sm"
       onClick={() => {
         if (!loading) onClose();
       }}
     >
       <div
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#EBD9D9] bg-white shadow-2xl"
+        className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="flex items-center justify-between border-b border-[#F7E9E9] p-6">
+        <div className="flex shrink-0 items-center justify-between border-b border-[#D9E8EF] bg-[#F8FCFD] px-5 py-4 sm:px-7">
           <div>
-            <h2 className="text-xl font-bold text-[#713F50]">
+            <h2 className="text-xl font-bold text-[#102A43]">
               {editData ? "Edit Category" : "Add New Category"}
             </h2>
 
-            <p className="mt-1 text-sm text-[#A17B86]">
+            <p className="mt-1 text-sm text-[#627D98]">
               {editData
                 ? "Update category details"
                 : "Create a new product category"}
@@ -136,17 +136,20 @@ const AddCategory = ({ onClose, getdata, editData }) => {
             type="button"
             disabled={loading}
             onClick={onClose}
-            className="text-2xl text-[#A17B86] hover:text-[#713F50] disabled:opacity-50"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-2xl text-[#627D98] transition hover:bg-[#D7F2F6] hover:text-[#087F95] disabled:opacity-50"
           >
             ×
           </button>
         </div>
 
         {/* FORM */}
-        <form className="space-y-5 p-6" onSubmit={submitHandler}>
+        <form
+          className="flex-1 space-y-5 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6"
+          onSubmit={submitHandler}
+        >
           {/* CATEGORY NAME */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-[#713F50]">
+            <label className="mb-2 block text-sm font-medium text-[#102A43]">
               Category Name
             </label>
 
@@ -155,7 +158,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
               name="category"
               value={formData.category}
               placeholder="Enter category name"
-              className="w-full rounded-xl border border-[#EBD9D9] bg-white px-4 py-3 text-sm text-[#713F50] outline-none placeholder:text-[#AD9299] focus:border-[#B77B8C] focus:ring-2 focus:ring-[#F0DDE1]"
+              className="w-full rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] px-4 py-3 text-sm text-[#102A43] outline-none placeholder:text-[#829AB1] focus:border-[#22B8CF] focus:ring-2 focus:ring-[#D7F2F6]"
               onChange={inputHandler}
               required
             />
@@ -163,7 +166,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
 
           {/* DESCRIPTION */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-[#713F50]">
+            <label className="mb-2 block text-sm font-medium text-[#102A43]">
               Description
             </label>
 
@@ -172,14 +175,14 @@ const AddCategory = ({ onClose, getdata, editData }) => {
               name="description"
               value={formData.description}
               placeholder="Enter category description"
-              className="w-full resize-none rounded-xl border border-[#EBD9D9] bg-white px-4 py-3 text-sm text-[#713F50] outline-none placeholder:text-[#AD9299] focus:border-[#B77B8C] focus:ring-2 focus:ring-[#F0DDE1]"
+              className="w-full resize-none rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] px-4 py-3 text-sm text-[#102A43] outline-none placeholder:text-[#829AB1] focus:border-[#22B8CF] focus:ring-2 focus:ring-[#D7F2F6]"
               onChange={inputHandler}
             />
           </div>
 
           {/* CATEGORY IMAGE */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-[#713F50]">
+            <label className="mb-2 block text-sm font-medium text-[#102A43]">
               Category Image
             </label>
 
@@ -188,7 +191,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
                 <img
                   src={URL.createObjectURL(image)}
                   alt="Selected category"
-                  className="h-24 w-24 rounded-lg border border-[#EBD9D9] object-cover"
+                  className="h-24 w-24 rounded-xl border border-[#D9E8EF] object-cover"
                 />
               </div>
             ) : imageUrl ? (
@@ -196,15 +199,17 @@ const AddCategory = ({ onClose, getdata, editData }) => {
                 <img
                   src={imageUrl}
                   alt="Current category"
-                  className="h-24 w-24 rounded-lg border border-[#EBD9D9] object-cover"
+                  className="h-24 w-24 rounded-xl border border-[#D9E8EF] object-cover"
                 />
               </div>
             ) : null}
 
-            <div className="rounded-xl border-2 border-dashed border-[#EBD9D9] bg-[#FFF9F6] p-8 text-center">
-              <div className="mb-3 text-3xl text-[#A17B86]">↑</div>
+            <div className="rounded-xl border-2 border-dashed border-[#BCEAF0] bg-[#F8FCFD] p-6 text-center sm:p-8">
+              <div className="mb-3 text-3xl font-bold text-[#087F95]">
+                ↑
+              </div>
 
-              <p className="text-sm font-medium text-[#96566A]">
+              <p className=" text-sm font-medium text-[#102A43]">
                 {image
                   ? image.name
                   : editData?.image
@@ -212,7 +217,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
                     : "Upload category image"}
               </p>
 
-              <p className="mt-1 text-xs text-[#A17B86]">
+              <p className="mt-1 text-xs text-[#627D98]">
                 PNG, JPG or WEBP
               </p>
 
@@ -220,7 +225,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
                 type="file"
                 name="image"
                 accept="image/png,image/jpeg,image/webp"
-                className="mx-auto mt-4 block max-w-full text-sm text-[#713F50]"
+                className="mx-auto mt-4 block max-w-full text-sm text-[#627D98] file:mr-3 file:rounded-lg file:border-0 file:bg-[#D7F2F6] file:px-4 file:py-2 file:font-medium file:text-[#087F95] hover:file:bg-[#BCEAF0]"
                 onChange={inputHandler}
               />
             </div>
@@ -228,7 +233,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
 
           {/* STATUS */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-[#713F50]">
+            <label className="mb-2 block text-sm font-medium text-[#102A43]">
               Status
             </label>
 
@@ -236,7 +241,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
               value={formData.status}
               name="status"
               onChange={inputHandler}
-              className="w-full rounded-xl border border-[#EBD9D9] bg-white px-4 py-3 text-sm text-[#713F50] outline-none focus:border-[#B77B8C]"
+              className="w-full rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] px-4 py-3 text-sm text-[#102A43] outline-none focus:border-[#22B8CF] focus:ring-2 focus:ring-[#D7F2F6]"
             >
               <option value="ACTIVE">ACTIVE</option>
               <option value="INACTIVE">INACTIVE</option>
@@ -244,12 +249,12 @@ const AddCategory = ({ onClose, getdata, editData }) => {
           </div>
 
           {/* FOOTER */}
-          <div className="flex justify-end gap-3 border-t border-[#F7E9E9] pt-5">
+          <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-[#D9E8EF] pt-5 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="rounded-xl border border-[#EBD9D9] px-5 py-3 text-sm font-medium text-[#713F50] hover:bg-[#FFF9F6] disabled:opacity-50"
+              className="rounded-xl border border-[#D9E8EF] px-5 py-3 text-sm font-medium text-[#102A43] transition hover:bg-[#F0FAFC] disabled:opacity-50"
             >
               Cancel
             </button>
@@ -257,7 +262,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-[#96566A] px-5 py-3 text-sm font-medium text-white hover:bg-[#713F50] disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl bg-[#087F95] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#066779] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading
                 ? "Saving..."

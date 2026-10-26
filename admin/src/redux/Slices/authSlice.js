@@ -1,18 +1,57 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice ,createAsyncThunk} from "@reduxjs/toolkit";
+import api from "../../api";
+
+export const checkAuth = createAsyncThunk(
+    "auth/checkAuth",
+    async () => {
+      try{
+ console.log("slice called")
+        const response = await api.get("/admin/checkauth");
+        console.log("called ")
+        return response.data.decoded;
+      }
+      catch(error){
+        console.log("my error",error?.response?.data?.message)
+      }
+     
+    }
+);
 
 const authSlice = createSlice({
   name: "auth",
 
   initialState: {
-    user: null
+    user: null,
+    loading: false,
+    isLoggedIn: false
   },
+ 
 
   reducers: {
     setUser: (state, action) => {
       console.log("user at redux" ,action.payload)
       state.user = action.payload;
+       state.isLoggedIn = true;
     }
-  }
+  },
+  extraReducers: (builder) => {
+        builder
+            .addCase(checkAuth.pending, (state) => {
+                state.loading = true;
+            })
+
+            .addCase(checkAuth.fulfilled, (state, action) => {
+                state.user = action.payload;
+                state.isLoggedIn = true;
+                state.loading = false;
+            })
+
+            .addCase(checkAuth.rejected, (state) => {
+                state.user = null;
+                state.isLoggedIn = false;
+                state.loading = false;
+            });
+    }
 });
 
 export const { setUser } = authSlice.actions;

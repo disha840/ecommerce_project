@@ -121,26 +121,26 @@ const FormModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#102A43]/60 p-4 backdrop-blur-sm"
       onClick={() => setShowModal(false)}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[#EBD9D9] bg-white shadow-2xl"
+        className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-2xl"
       >
         {/* HEADER */}
-        <div className="flex shrink-0 items-center justify-between border-b border-[#F7E9E9] px-6 py-5">
+        <div className="flex shrink-0 items-center justify-between border-b border-[#D9E8EF] bg-[#F8FCFD] px-5 py-5 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F0DDE1] text-[#96566A]">
-              <FiShield size={20} />
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#D7F2F6] text-[#087F95]">
+              <FiShield size={21} />
             </div>
 
             <div>
-              <h2 className="text-xl font-bold text-[#713F50]">
+              <h2 className="text-xl font-bold text-[#102A43]">
                 {role ? "Edit Role" : "Add New Role"}
               </h2>
 
-              <p className="mt-1 text-sm text-[#A17B86]">
+              <p className="mt-1 text-sm text-[#627D98]">
                 {role
                   ? "Update role name and permissions."
                   : "Create a new role with specific permissions."}
@@ -151,7 +151,7 @@ const FormModal = ({
           <button
             type="button"
             onClick={() => setShowModal(false)}
-            className="rounded-lg p-2 text-[#A17B86] transition hover:bg-[#F7E9E9] hover:text-[#713F50]"
+            className="rounded-lg p-2 text-[#627D98] transition hover:bg-[#D7F2F6] hover:text-[#087F95]"
           >
             <FiX size={22} />
           </button>
@@ -159,17 +159,17 @@ const FormModal = ({
 
         {/* FORM */}
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="space-y-5 p-6">
+          <div className="space-y-6 p-5 sm:p-6">
             {/* ROLE NAME */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-[#713F50]">
+              <label className="mb-2 block text-sm font-semibold text-[#102A43]">
                 Role Name
               </label>
 
               <div className="relative">
                 <FiShield
                   size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#96566A]"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#087F95]"
                 />
 
                 <input
@@ -177,7 +177,7 @@ const FormModal = ({
                   placeholder="Enter role name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-xl border border-[#EBD9D9] py-2.5 pl-10 pr-4 text-sm text-[#713F50] outline-none transition placeholder:text-[#AD9299] focus:border-[#B77B8C] focus:ring-2 focus:ring-[#96566A]/10"
+                  className="w-full rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] py-3 pl-10 pr-4 text-sm text-[#102A43] outline-none transition placeholder:text-[#94A8B8] focus:border-[#087F95] focus:bg-white focus:ring-2 focus:ring-[#22B8CF]/20"
                 />
               </div>
             </div>
@@ -185,25 +185,25 @@ const FormModal = ({
             {/* PERMISSIONS */}
             <div>
               <div className="mb-3">
-                <label className="block text-sm font-semibold text-[#713F50]">
+                <label className="block text-sm font-semibold text-[#102A43]">
                   Permissions
                 </label>
 
-                <p className="mt-1 text-xs text-[#A17B86]">
+                <p className="mt-1 text-xs leading-5 text-[#627D98]">
                   Select the permissions this role should have for each module.
                 </p>
               </div>
 
-              <div className="overflow-x-auto rounded-xl border border-[#EBD9D9]">
-                <div className="grid w-full grid-cols-[1fr_repeat(4,72px)] border-b border-[#EBD9D9] bg-[#F7E9E9] px-4 py-3">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-[#713F50]">
+              <div className="overflow-x-auto rounded-xl border border-[#D9E8EF]">
+                <div className="grid w-full grid-cols-[1fr_repeat(4,72px)] border-b border-[#D9E8EF] bg-[#F0FAFC] px-4 py-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-[#102A43]">
                     Module
                   </div>
 
                   {actions.map((action) => (
                     <div
                       key={action.value}
-                      className="text-center text-xs font-semibold uppercase tracking-wide text-[#713F50]"
+                      className="text-center text-xs font-semibold uppercase tracking-wide text-[#102A43]"
                     >
                       {action.label}
                     </div>
@@ -213,14 +213,14 @@ const FormModal = ({
                 {modules.map((module) => (
                   <div
                     key={module}
-                    className="grid w-full grid-cols-[1fr_repeat(4,72px)] items-center border-b border-[#F7E9E9] px-4 py-3 last:border-b-0 hover:bg-[#FFF9F6]"
+                    className="grid w-full grid-cols-[1fr_repeat(4,72px)] items-center border-b border-[#D9E8EF] px-4 py-3 last:border-b-0 transition hover:bg-[#F8FCFD]"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0DDE1] text-[#96566A]">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#D7F2F6] text-[#087F95]">
                         <FiShield size={15} />
                       </div>
 
-                      <span className="text-sm font-medium text-[#713F50]">
+                      <span className="text-sm font-medium text-[#102A43]">
                         {formatModuleName(module)}
                       </span>
                     </div>
@@ -235,7 +235,7 @@ const FormModal = ({
                         >
                           <input
                             type="checkbox"
-                            className="accent-[#96566A]"
+                            className="h-4 w-4 cursor-pointer accent-[#087F95]"
                             checked={permissions.includes(permission)}
                             onChange={(e) =>
                               handlePermission(
@@ -255,12 +255,12 @@ const FormModal = ({
         </div>
 
         {/* FOOTER */}
-        <div className="flex shrink-0 justify-end gap-3 border-t border-[#F7E9E9] bg-white px-6 py-4">
+        <div className="flex shrink-0 justify-end gap-3 border-t border-[#D9E8EF] bg-[#F8FCFD] px-5 py-4 sm:px-6">
           <button
             type="button"
             onClick={() => setShowModal(false)}
             disabled={loading}
-            className="rounded-xl border border-[#EBD9D9] px-5 py-2.5 text-sm font-semibold text-[#713F50] transition hover:bg-[#F7E9E9] disabled:opacity-60"
+            className="rounded-xl border border-[#D9E8EF] bg-white px-5 py-2.5 text-sm font-semibold text-[#102A43] transition hover:bg-[#F0FAFC] disabled:opacity-60"
           >
             Cancel
           </button>
@@ -269,9 +269,10 @@ const FormModal = ({
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="flex items-center gap-2 rounded-xl bg-[#96566A] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#713F50] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex items-center gap-2 rounded-xl bg-[#087F95] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066779] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <FiPlus size={18} />
+
             {loading
               ? "Saving..."
               : role

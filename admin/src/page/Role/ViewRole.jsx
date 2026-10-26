@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api";
 import { useNavigate, useParams } from "react-router-dom";
-import { FiShield, FiArrowLeft } from "react-icons/fi";
+import { FiShield, FiArrowLeft, FiCalendar, FiClock } from "react-icons/fi";
 
 function ViewRole() {
   const [role, setRole] = useState(null);
@@ -25,9 +25,17 @@ function ViewRole() {
 
   if (!role) {
     return (
-      <p className="p-6 text-[#A17B86]">
-        Loading role details...
-      </p>
+      <div className="flex min-h-screen items-center justify-center bg-[#F0FAFC] p-6">
+        <div className="rounded-2xl border border-[#D9E8EF] bg-white px-8 py-6 text-center shadow-sm">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[#D7F2F6] text-[#087F95]">
+            <FiShield size={24} />
+          </div>
+
+          <p className="font-medium text-[#627D98]">
+            Loading role details...
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -53,21 +61,21 @@ function ViewRole() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF9F6] p-6">
-      <div className="mx-auto max-w-4xl rounded-xl border border-[#EBD9D9] bg-white p-6 shadow-md">
+    <div className="min-h-screen bg-[#F0FAFC] p-4 sm:p-6">
+      <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-sm">
         {/* HEADER */}
-        <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-4 border-b border-[#D9E8EF] bg-[#F8FCFD] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F0DDE1] text-[#96566A]">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#D7F2F6] text-[#087F95]">
               <FiShield size={24} />
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold text-[#713F50]">
+              <h2 className="text-2xl font-bold text-[#102A43]">
                 Role Details
               </h2>
 
-              <p className="mt-1 text-sm text-[#A17B86]">
+              <p className="mt-1 text-sm text-[#627D98]">
                 Complete information about this role
               </p>
             </div>
@@ -76,53 +84,73 @@ function ViewRole() {
           <button
             type="button"
             onClick={backToRoles}
-            className="flex items-center gap-2 rounded-lg bg-[#96566A] px-4 py-2 text-white transition hover:bg-[#713F50]"
+            className="flex items-center justify-center gap-2 rounded-xl bg-[#087F95] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066779]"
           >
             <FiArrowLeft size={18} />
-            Back
+            Back to Roles
           </button>
         </div>
 
-        {/* ROLE INFORMATION */}
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {details.map(([label, value]) => (
-            <div
-              key={label}
-              className="rounded-lg border border-[#EBD9D9] p-4"
-            >
-              <p className="text-sm text-[#A17B86]">
-                {label}
-              </p>
+        <div className="space-y-6 p-5 sm:p-6">
+          {/* ROLE INFORMATION */}
+          <div>
+            <h3 className="mb-4 text-lg font-bold text-[#102A43]">
+              Basic Information
+            </h3>
 
-              <p className="mt-1 font-semibold text-[#713F50]">
-                {value ?? "N/A"}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* PERMISSIONS */}
-        <div className="rounded-xl border border-[#EBD9D9] p-5">
-          <h3 className="mb-4 text-lg font-bold text-[#713F50]">
-            Permissions
-          </h3>
-
-          {role.permissions?.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {role.permissions.map((permission) => (
-                <span
-                  key={permission}
-                  className="rounded-full bg-[#F7E9E9] px-3 py-2 text-sm font-medium text-[#96566A]"
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {details.map(([label, value]) => (
+                <div
+                  key={label}
+                  className="rounded-xl border border-[#D9E8EF] bg-white p-4 transition hover:bg-[#F8FCFD]"
                 >
-                  {permission}
-                </span>
+                  <p className="text-sm font-medium text-[#627D98]">
+                    {label}
+                  </p>
+
+                  <p className="mt-2  font-semibold text-[#102A43]">
+                    {value ?? "N/A"}
+                  </p>
+                </div>
               ))}
             </div>
-          ) : (
-            <p className="text-sm text-[#A17B86]">
-              No permissions assigned
-            </p>
-          )}
+          </div>
+
+          {/* PERMISSIONS */}
+          <div className="rounded-xl border border-[#D9E8EF] p-5">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#D7F2F6] text-[#087F95]">
+                <FiShield size={20} />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#102A43]">
+                  Permissions
+                </h3>
+
+                <p className="mt-1 text-sm text-[#627D98]">
+                  Access assigned to this role
+                </p>
+              </div>
+            </div>
+
+            {role.permissions?.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {role.permissions.map((permission) => (
+                  <span
+                    key={permission}
+                    className="rounded-full border border-[#D9E8EF] bg-[#D7F2F6] px-3 py-2 text-sm font-medium text-[#087F95]"
+                  >
+                    {permission}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-lg bg-[#F0FAFC] p-4 text-sm text-[#627D98]">
+                No permissions assigned
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

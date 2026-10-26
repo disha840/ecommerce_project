@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import api from "../../api";
 
@@ -29,7 +27,7 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const inputClass =
-    "w-full rounded-xl border border-[#EBD9D9] bg-[#FFF9F6] px-4 py-3 text-sm outline-none focus:border-[#B77B8C]";
+    "w-full rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] px-4 py-3 text-sm outline-none focus:border-[#22B8CF] focus:ring-2 focus:ring-[#D7F2F6]";
 
   // Load existing product data when editing
   useEffect(() => {
@@ -113,7 +111,9 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
         );
       } catch (error) {
         console.log("Fetch options error:", error);
-        setErrorMessage("Failed to load categories, subcategories or brands.");
+        setErrorMessage(
+          "Failed to load categories, subcategories or brands."
+        );
       }
     }
 
@@ -248,24 +248,19 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
       data.append("tags", JSON.stringify(tags));
       data.append("isFeatured", String(formData.isFeatured));
       data.append("isActive", String(formData.isActive));
-
-      // Keep existing images that were not removed
       data.append("existingImages", JSON.stringify(existingImages));
 
-      // Add newly selected images
       images.forEach((image) => {
         data.append("images", image);
       });
 
-      let response;
-
       if (isEdit) {
-        response = await api.put(
+        await api.put(
           `/products/updateproduct/${product._id}`,
           data
         );
       } else {
-        response = await api.post("/products/createproduct", data);
+        await api.post("/products/createproduct", data);
       }
 
       if (onCreated) {
@@ -291,17 +286,17 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-[#102A43]/60 p-4">
+      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-[#D9E8EF] bg-white p-6 text-[#102A43] shadow-xl">
 
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-[#713F50]">
+            <h2 className="text-xl font-bold text-[#102A43]">
               {isEdit ? "Edit Product" : "Add Product"}
             </h2>
 
-            <p className="mt-1 text-sm text-[#A17B86]">
+            <p className="mt-1 text-sm text-[#627D98]">
               {isEdit
                 ? "Update your product details"
                 : "Add a new product to your store"}
@@ -311,7 +306,7 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
           <button
             type="button"
             onClick={onClose}
-            className="text-2xl text-[#A17B86] hover:text-[#713F50]"
+            className="rounded-lg px-2 text-2xl text-[#627D98] hover:bg-[#D7F2F6] hover:text-[#087F95]"
           >
             &times;
           </button>
@@ -321,7 +316,7 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
 
           {/* Basic Information */}
           <div className="mb-6">
-            <h3 className="mb-4 font-semibold text-[#713F50]">
+            <h3 className="mb-4 font-semibold text-[#087F95]">
               Basic Information
             </h3>
 
@@ -376,7 +371,7 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
 
           {/* Category Information */}
           <div className="mb-6">
-            <h3 className="mb-4 font-semibold text-[#713F50]">
+            <h3 className="mb-4 font-semibold text-[#087F95]">
               Category Information
             </h3>
 
@@ -452,18 +447,18 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
 
           {/* Product Images */}
           <div className="mb-6">
-            <h3 className="mb-3 font-semibold text-[#713F50]">
+            <h3 className="mb-3 font-semibold text-[#087F95]">
               Product Images
             </h3>
 
-            <label className="block cursor-pointer rounded-xl border-2 border-dashed border-[#EBD9D9] bg-[#FFF9F6] p-8 text-center hover:border-[#B77B8C]">
+            <label className="block cursor-pointer rounded-xl border-2 border-dashed border-[#D9E8EF] bg-[#F8FCFD] p-8 text-center hover:border-[#22B8CF] hover:bg-[#F0FAFC]">
               <div className="mb-3 text-4xl">🖼️</div>
 
-              <p className="text-sm text-[#A17B86]">
+              <p className="text-sm text-[#627D98]">
                 Click to select more images
               </p>
 
-              <p className="mt-1 text-xs text-[#AD9299]">
+              <p className="mt-1 text-xs text-[#627D98]">
                 PNG, JPG or JPEG — select multiple images
               </p>
 
@@ -476,10 +471,10 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
               />
             </label>
 
-            {/* Existing images */}
+            {/* Existing Images */}
             {existingImages.length > 0 && (
               <div className="mt-4">
-                <p className="mb-3 text-sm font-medium text-[#713F50]">
+                <p className="mb-3 text-sm font-medium">
                   Existing Images
                 </p>
 
@@ -487,7 +482,7 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
                   {existingImages.map((image, index) => (
                     <div
                       key={`${image}-${index}`}
-                      className="relative overflow-hidden rounded-xl border border-[#EBD9D9]"
+                      className="relative overflow-hidden rounded-xl border border-[#D9E8EF]"
                     >
                       <img
                         src={image}
@@ -500,7 +495,7 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
                         onClick={() =>
                           handleRemoveExistingImage(index)
                         }
-                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white text-xl font-bold text-red-600 shadow-md"
+                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white text-xl font-bold text-[#087F95] shadow-md hover:bg-[#D7F2F6]"
                       >
                         &times;
                       </button>
@@ -510,10 +505,10 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
               </div>
             )}
 
-            {/* New image previews */}
+            {/* New Image Previews */}
             {images.length > 0 && (
               <div className="mt-4">
-                <p className="mb-3 text-sm font-medium text-[#713F50]">
+                <p className="mb-3 text-sm font-medium">
                   New Images
                 </p>
 
@@ -521,7 +516,7 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
                   {images.map((image, index) => (
                     <div
                       key={`${image.name}-${image.size}-${image.lastModified}`}
-                      className="relative overflow-hidden rounded-xl border border-[#EBD9D9]"
+                      className="relative overflow-hidden rounded-xl border border-[#D9E8EF]"
                     >
                       <img
                         src={URL.createObjectURL(image)}
@@ -532,12 +527,12 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(index)}
-                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white text-xl font-bold text-red-600 shadow-md"
+                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white text-xl font-bold text-[#087F95] shadow-md hover:bg-[#D7F2F6]"
                       >
                         &times;
                       </button>
 
-                      <p className="truncate px-2 py-2 text-xs">
+                      <p className="truncate px-2 py-2 text-xs text-[#627D98]">
                         {image.name}
                       </p>
                     </div>
@@ -549,7 +544,7 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
 
           {/* Product Tags */}
           <div className="mb-6">
-            <label className="mb-2 block text-sm font-medium text-[#713F50]">
+            <label className="mb-2 block text-sm font-medium">
               Product Tags
             </label>
 
@@ -571,7 +566,7 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
               <button
                 type="button"
                 onClick={handleAddTag}
-                className="shrink-0 rounded-xl bg-[#96566A] px-5 py-3 text-sm font-medium text-white hover:bg-[#713F50]"
+                className="shrink-0 rounded-xl bg-[#087F95] px-5 py-3 text-sm font-medium text-white hover:bg-[#066779]"
               >
                 Add Tag
               </button>
@@ -582,14 +577,14 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
                 {tags.map((tag, index) => (
                   <div
                     key={`${tag}-${index}`}
-                    className="flex items-center gap-2 rounded-full border border-[#EBD9D9] bg-[#FFF9F6] px-3 py-2 text-sm text-[#713F50]"
+                    className="flex items-center gap-2 rounded-full border border-[#D9E8EF] bg-[#F0FAFC] px-3 py-2 text-sm text-[#087F95]"
                   >
                     <span>{tag}</span>
 
                     <button
                       type="button"
                       onClick={() => handleRemoveTag(index)}
-                      className="flex h-5 w-5 items-center justify-center rounded-full bg-[#F0DDE1] text-base leading-none"
+                      className="flex h-5 w-5 items-center justify-center rounded-full bg-[#D7F2F6] text-base leading-none hover:bg-[#BCEAF0]"
                     >
                       &times;
                     </button>
@@ -601,54 +596,58 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
 
           {/* Settings */}
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#EBD9D9] p-4">
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#D9E8EF] p-4 hover:bg-[#F8FCFD]">
               <input
                 type="checkbox"
                 name="isFeatured"
                 checked={formData.isFeatured}
                 onChange={handleChange}
-                className="h-4 w-4 accent-[#96566A]"
+                className="h-4 w-4 accent-[#087F95]"
               />
 
               <div>
-                <p className="text-sm font-medium">Featured Product</p>
-                <p className="text-xs text-[#A17B86]">
+                <p className="text-sm font-medium">
+                  Featured Product
+                </p>
+                <p className="text-xs text-[#627D98]">
                   Show in featured products
                 </p>
               </div>
             </label>
 
-            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#EBD9D9] p-4">
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#D9E8EF] p-4 hover:bg-[#F8FCFD]">
               <input
                 type="checkbox"
                 name="isActive"
                 checked={formData.isActive}
                 onChange={handleChange}
-                className="h-4 w-4 accent-[#96566A]"
+                className="h-4 w-4 accent-[#087F95]"
               />
 
               <div>
-                <p className="text-sm font-medium">Active Product</p>
-                <p className="text-xs text-[#A17B86]">
+                <p className="text-sm font-medium">
+                  Active Product
+                </p>
+                <p className="text-xs text-[#627D98]">
                   Make product available
                 </p>
               </div>
             </label>
           </div>
 
-          {/* Error */}
+          {/* Error Message */}
           {errorMessage && (
-            <p className="mb-4 text-sm text-red-600">
+            <p className="mb-4 rounded-lg bg-[#D7F2F6] p-3 text-sm text-[#087F95]">
               {errorMessage}
             </p>
           )}
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 border-t border-[#F7E9E9] pt-5">
+          <div className="flex justify-end gap-3 border-t border-[#D9E8EF] pt-5">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-[#EBD9D9] px-5 py-3 text-sm font-medium text-[#713F50]"
+              className="rounded-xl border border-[#D9E8EF] px-5 py-3 text-sm font-medium text-[#627D98] hover:bg-[#F0FAFC]"
             >
               Cancel
             </button>
@@ -656,7 +655,7 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-[#96566A] px-6 py-3 text-sm font-medium text-white hover:bg-[#713F50] disabled:opacity-60"
+              className="rounded-xl bg-[#087F95] px-6 py-3 text-sm font-medium text-white hover:bg-[#066779] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading
                 ? "Saving..."

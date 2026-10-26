@@ -1,10 +1,33 @@
-const express=require("express");
-const router=express.Router();
-const {getStoreManagers,createStore,getStores}=require("../controller/storeController")
+const express = require("express");
+const router = express.Router();
 
+const auth = require("../middleware/authMiddleware");
+const checkPermission = require("../middleware/permissions");
 
-router.get("/managers",getStoreManagers)
-router.post("/createStore",createStore);
-router.get("/getstores",getStores)
+const {
+  getStoreManagers,
+  createStore,
+  getStores
+} = require("../controller/storeController");
 
-module.exports=router;
+router.use(auth);
+
+router.get(
+  "/managers",
+  checkPermission("store","read"),
+  getStoreManagers
+);
+
+router.post(
+  "/createStore",
+  checkPermission("store","create"),
+  createStore
+);
+
+router.get(
+  "/getstores",
+  checkPermission("store","read"),
+  getStores
+);
+
+module.exports = router;

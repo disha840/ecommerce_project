@@ -23,7 +23,13 @@ function ViewCategory() {
   }, [id]);
 
   if (!category) {
-    return <p className="p-6 text-[#A17B86]">Loading category details...</p>;
+    return (
+      <div className="min-h-screen bg-[#F0FAFC] p-6">
+        <p className="text-[#627D98]">
+          Loading category details...
+        </p>
+      </div>
+    );
   }
 
   const details = [
@@ -49,26 +55,31 @@ function ViewCategory() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF9F6] p-6">
-      <div className="mx-auto max-w-4xl rounded-xl border border-[#EBD9D9] bg-white p-6 shadow-md">
-        <div className="mb-6 flex items-center justify-between">
+    <div className="min-h-screen bg-[#F0FAFC] p-4 text-[#102A43] sm:p-6">
+      <div className="mx-auto max-w-4xl rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm sm:p-7">
+
+        {/* HEADER */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-[#713F50]">
+            <h2 className="text-2xl font-bold text-[#102A43]">
               Category Details
             </h2>
-            <p className="mt-1 text-sm text-[#A17B86]">
+
+            <p className="mt-1 text-sm text-[#627D98]">
               Complete information about this category
             </p>
           </div>
 
           <button
+            type="button"
             onClick={() => backToCategories()}
-            className="rounded-lg bg-[#96566A] px-4 py-2 text-white hover:bg-[#713F50] transition"
+            className="rounded-xl bg-[#087F95] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#066779]"
           >
             Back
           </button>
         </div>
 
+        {/* CATEGORY IMAGE */}
         {category.image && (
           <div className="mb-6">
             <img
@@ -78,26 +89,43 @@ function ViewCategory() {
                   : `http://localhost:5000${category.image}`
               }
               alt="Category"
-              className="h-24 w-24 rounded-lg object-cover"
+              className="h-28 w-28 rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] object-cover"
             />
           </div>
         )}
 
+        {/* CATEGORY DETAILS */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {details.map(([label, value]) => (
             <div
               key={label}
-              className={`rounded-lg border border-[#EBD9D9] p-4 ${
+              className={`rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] p-4 transition hover:border-[#22B8CF] ${
                 label === "Description" ? "sm:col-span-2" : ""
               }`}
             >
-              <p className="text-sm text-[#A17B86]">{label}</p>
-              <p className="mt-1 font-semibold text-[#713F50]">
+              <p className="text-sm font-medium text-[#627D98]">
+                {label}
+              </p>
+
+              <p className="mt-2  font-semibold text-[#102A43]">
                 {value ?? "N/A"}
               </p>
+
+              {label === "Status" && (
+                <span
+                  className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium ${
+                    value === "ACTIVE"
+                      ? "bg-[#D7F2F6] text-[#087F95]"
+                      : "bg-red-100 text-red-600"
+                  }`}
+                >
+                  {value ?? "N/A"}
+                </span>
+              )}
             </div>
           ))}
         </div>
+
       </div>
     </div>
   );

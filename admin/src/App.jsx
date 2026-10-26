@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import SignUp from './Pages/SignUp'
 import Login from './Pages/Login'
 import ForgotPassw from './Pages/ForgotPassw'
@@ -36,18 +36,21 @@ import ProtectedRoute from './components/ProtectedRoute'
 
 
 
-
 const App = () => {
+  
+
   return (
     <div>
    <BrowserRouter>
    <Routes>
-    <Route path='/' element={<Main/>}/>
+    <Route path='/' element={<Login/>}/>
   
 
 
 
-  <Route element={<ProtectedRoute />}>
+  {/* <Route element={<ProtectedRoute />}> */}
+
+  <Route element={<Admin />}>
 
      <Route path='/admin/dashboard' element={<Dashboard/>}/>
 
@@ -80,7 +83,7 @@ const App = () => {
     
     <Route path='/create' element={<CreateUser/>} />
     <Route path='/signup' element={<SignUp/>}/>
-    <Route path='/login' element={<Login/>}/>
+    {/* <Route path='/login' element={<Login/>}/> */}
     <Route path='/forgotpassw' element={<ForgotPassw/>}/>
     <Route path='/verifyotp' element={<VeryfyOtp/>}/>
     <Route path='/resetpassword' element={<ResetPass/>}/>

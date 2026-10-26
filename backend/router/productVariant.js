@@ -1,6 +1,18 @@
-const express=require("express");
-const { createProductVariant } = require("../controller/variantController");
-const router=express.Router();
+const express = require("express");
+const auth = require("../middleware/authMiddleware");
+const checkPermission = require("../middleware/permissions");
 
-router.post("/createvariant",createProductVariant)
-module.exports=router;
+const { createProductVariant,getProductVariants } = require("../controller/variantController");
+
+const router = express.Router();
+
+router.use(auth);
+
+router.post(
+  "/createvariant",
+  checkPermission("product-variant","create"),
+  createProductVariant
+);
+router.get("/getproductvariants",checkPermission("product-variant","read"),getProductVariants)
+
+module.exports = router;
