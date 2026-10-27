@@ -6,6 +6,7 @@ import { FiArrowLeft, FiTag } from "react-icons/fi";
 function ViewBrand() {
   const [brand, setBrand] = useState(null);
   const [loading, setLoading] = useState(true);
+
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -30,22 +31,26 @@ function ViewBrand() {
 
   if (loading) {
     return (
-      <p className="p-6 text-[#A17B86]">
-        Loading brand details...
-      </p>
+      <div className="min-h-screen bg-[#F0FAFC] p-6">
+        <p className="text-[#627D98]">
+          Loading brand details...
+        </p>
+      </div>
     );
   }
 
   if (!brand) {
     return (
-      <div className="min-h-screen bg-[#FFF9F6] p-6">
-        <div className="mx-auto max-w-4xl rounded-xl border border-[#EBD9D9] bg-white p-6">
-          <p className="text-[#713F50]">Brand not found.</p>
+      <div className="min-h-screen bg-[#F0FAFC] p-4 sm:p-6">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-[#D9E8EF] bg-white p-6 shadow-sm">
+          <p className="text-[#102A43]">
+            Brand not found.
+          </p>
 
           <button
             type="button"
             onClick={() => navigate("/admin/brand")}
-            className="mt-4 rounded-lg bg-[#96566A] px-4 py-2 text-white hover:bg-[#713F50]"
+            className="mt-4 rounded-lg bg-[#087F95] px-4 py-2 text-white transition hover:bg-[#066779]"
           >
             Back to Brands
           </button>
@@ -74,21 +79,22 @@ function ViewBrand() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FFF9F6] p-6">
-      <div className="mx-auto max-w-4xl rounded-xl border border-[#EBD9D9] bg-white p-6 shadow-md">
+    <div className="min-h-screen bg-[#F0FAFC] p-4 sm:p-6">
+      <div className="mx-auto max-w-4xl rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm sm:p-6">
+
         {/* HEADER */}
-        <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F0DDE1] text-[#96566A]">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#D7F2F6] text-[#087F95]">
               <FiTag size={24} />
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold text-[#713F50]">
+              <h2 className="text-2xl font-bold text-[#102A43]">
                 Brand Details
               </h2>
 
-              <p className="mt-1 text-sm text-[#A17B86]">
+              <p className="mt-1 text-sm text-[#627D98]">
                 Complete information about this brand
               </p>
             </div>
@@ -97,7 +103,7 @@ function ViewBrand() {
           <button
             type="button"
             onClick={() => navigate("/admin/brand")}
-            className="flex items-center gap-2 rounded-lg bg-[#96566A] px-4 py-2 text-white transition hover:bg-[#713F50]"
+            className="flex items-center justify-center gap-2 self-start rounded-lg bg-[#087F95] px-4 py-2 text-white transition hover:bg-[#066779] sm:self-auto"
           >
             <FiArrowLeft size={18} />
             Back
@@ -110,7 +116,7 @@ function ViewBrand() {
             <img
               src={brand.image}
               alt={brand.name || "Brand"}
-              className="h-28 w-28 rounded-xl border border-[#EBD9D9] bg-white object-contain p-2"
+              className="h-28 w-28 rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] object-contain p-2"
             />
           </div>
         )}
@@ -120,16 +126,19 @@ function ViewBrand() {
           {details.map(([label, value]) => (
             <div
               key={label}
-              className="rounded-lg border border-[#EBD9D9] p-4"
+              className="rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] p-4 transition hover:border-[#22B8CF]"
             >
-              <p className="text-sm text-[#A17B86]">{label}</p>
+              <p className="text-sm text-[#627D98]">
+                {label}
+              </p>
 
-              <p className="mt-1  font-semibold text-[#713F50]">
+              <p className="mt-1  font-semibold text-[#102A43]">
                 {value || "N/A"}
               </p>
             </div>
           ))}
         </div>
+
       </div>
     </div>
   );
