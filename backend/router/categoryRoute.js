@@ -14,7 +14,7 @@ const {
   toggleStatus
 } = require("../controller/categoryController");
 
-router.use(auth);
+// router.use(auth);
 
 router.post(
   "/createcategory",
@@ -24,13 +24,11 @@ router.post(
 
 router.get(
   "/showcategories",
-  checkPermission("categories","read"),
   showCategory
 );
 
 router.get(
   "/viewcategory/:id",
-  checkPermission("categories","read"),
   viewCategory
 );
 

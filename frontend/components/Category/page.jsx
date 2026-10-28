@@ -14,10 +14,9 @@ useEffect(() => {
       const response = await fetch(
         "http://localhost:3000/category/showcategories"
       );
+      console.log(response)
 
       const data = await response.json();
-
-
       setCategories(data.category);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -49,7 +48,7 @@ useEffect(() => {
   </div>
 
   <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
-    {categories.map((category, index) => {
+    {categories.length>0 &&categories.map((category, index) => {
       const colors = [
         "bg-red-50",
         "bg-green-50",

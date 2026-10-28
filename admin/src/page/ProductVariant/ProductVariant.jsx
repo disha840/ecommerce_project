@@ -7,6 +7,9 @@ import {
   FiPackage,
   FiDollarSign,
   FiTag,
+  FiEye,
+  FiEdit2,
+  FiTrash2,
 } from "react-icons/fi";
 
 import AddVariant from "../../components/ProductVariant/AddVariant";
@@ -18,7 +21,8 @@ function ProductVariant() {
 
   const getProductVariants = async () => {
     try {
-      const response = await api.get("/productvariant/getall");
+      const response = await api.get("/productvariant/getproductvariants");
+      console.log(response);
       setVariants(response.data.variants);
     } catch (error) {
       console.log(error);
@@ -53,7 +57,6 @@ function ProductVariant() {
 
       {/* Statistics Cards */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
         {/* Total Variants */}
         <div className="rounded-xl border border-[#D9E8EF] bg-white p-5">
           <div className="flex items-center justify-between">
@@ -82,9 +85,11 @@ function ProductVariant() {
               </p>
 
               <h2 className="mt-2 text-2xl font-bold text-[#087F95]">
-                {variants.filter(
-                  (variant) => variant.status === "ACTIVE"
-                ).length}
+                {
+                  variants.filter(
+                    (variant) => variant.status === "ACTIVE"
+                  ).length
+                }
               </h2>
             </div>
 
@@ -255,8 +260,33 @@ function ProductVariant() {
                       </span>
                     </td>
 
-                    <td className="whitespace-nowrap px-5 py-4 text-[#627D98]">
-                      -
+                    {/* Action Icons */}
+                    <td className="whitespace-nowrap px-5 py-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          title="View Variant"
+                          className="rounded-lg border border-[#D9E8EF] p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
+                        >
+                          <FiEye size={17} />
+                        </button>
+
+                        <button
+                          type="button"
+                          title="Edit Variant"
+                          className="rounded-lg border border-[#D9E8EF] p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
+                        >
+                          <FiEdit2 size={17} />
+                        </button>
+
+                        <button
+                          type="button"
+                          title="Delete Variant"
+                          className="rounded-lg border border-[#D9E8EF] p-2 text-[#627D98] transition hover:bg-[#EAF7FA] hover:text-[#102A43]"
+                        >
+                          <FiTrash2 size={17} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

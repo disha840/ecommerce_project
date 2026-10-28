@@ -1,29 +1,43 @@
 
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 export default function Product() {
+const router =  useRouter()
+
     const [products, setProducts] = useState([]);
 
 useEffect(() => {
   const fetchProducts = async () => {
-    try {
+   try {
       const response = await fetch(
-        "http://localhost:3000/products/showproducts"
+        "http://localhost:3000/productvariant/getproductvariants"
       );
 
       const data = await response.json();
 
       console.log("Products response:", data);
 
-      setProducts(data.products);
+      if (response.ok && Array.isArray(data.variants)) {
+        setProducts(data.variants);
+      } else {
+        setProducts([]);
+        console.log(data.message || "Products fetch nahi hue");
+      }
     } catch (error) {
       console.error("Error fetching products:", error);
+      setProducts([]);
     }
-  };
+  }
 
   fetchProducts();
 }, []);
+
+const viewProduct=(slug)=>{
+
+}
+
   return (
     
 <section className="mx-auto max-w-7xl px-6 py-12 md:px-10">
@@ -48,7 +62,7 @@ useEffect(() => {
   </div>
 
   <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-4">
-    {products.map((product) => {
+    {products&& products.map((product) => {
       const price = Number(product.price ?? 0);
       const originalPrice = Number(
         product.originalPrice ?? product.mrp ?? price
@@ -64,6 +78,7 @@ useEffect(() => {
       return (
         <div
           key={product._id}
+          // onClick={()=>viewProduct(product.slug)}
           className="group overflow-hidden rounded-2xl border border-gray-100 bg-white transition hover:-translate-y-1 hover:shadow-lg"
         >
           <div className="relative flex h-40 items-center justify-center bg-emerald-50 sm:h-52">

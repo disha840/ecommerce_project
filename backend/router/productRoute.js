@@ -12,7 +12,7 @@ const {
   deleteProduct
 } = require("../controller/productController");
 
-router.use(auth);
+// router.use(auth);
 
 router.post(
   "/createproduct",
@@ -22,7 +22,6 @@ router.post(
 
 router.get(
   "/showproducts",
-  checkPermission("products","read"),
   showProducts
 );
 

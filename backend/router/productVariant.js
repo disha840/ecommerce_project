@@ -6,13 +6,13 @@ const { createProductVariant,getProductVariants } = require("../controller/varia
 
 const router = express.Router();
 
-router.use(auth);
+// router.use(auth);
 
 router.post(
   "/createvariant",
   checkPermission("product-variant","create"),
   createProductVariant
 );
-router.get("/getproductvariants",checkPermission("product-variant","read"),getProductVariants)
+router.get("/getproductvariants",getProductVariants)
 
 module.exports = router;
