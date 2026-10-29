@@ -10,7 +10,10 @@ async function createBrand(req, res) {
       .trim()
       .replace(/\s+/g, "-");
 
-    let image = "";
+    let image = {
+      url: "",
+      public_id: ""
+    };
 
     if (req.files?.image) {
       const file = req.files.image;
@@ -20,7 +23,10 @@ async function createBrand(req, res) {
         { folder: "brands" }
       );
 
-      image = result.secure_url;
+      image = {
+        url: result.secure_url,
+        public_id: result.public_id
+      };
     }
 
     const brand = await Brand.create({
@@ -28,19 +34,20 @@ async function createBrand(req, res) {
       slug,
       description,
       status,
-      image,
+      image
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Brand created successfully",
-      brand,
+      brand
     });
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
+    return res.status(500).json({
+      message: error.message
     });
   }
 }
+
 async function showBrand(req,res){
 try{
       const brand=await Brand.find();
@@ -50,21 +57,48 @@ try{
      res.status(500).send({message:"internal server error"})
   }
 }
-const deleteBrand=async(req,res)=>{
-  try{
-    const id=req.params.id;
-    const brand=await Brand.findOneAndDelete({_id:id});
-    if(!brand){
-      return res.status(404).send({message:"brand not found"})
-      
+
+const deleteBrand = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const brand = await Brand.findById(id);
+
+    if (!brand) {
+      return res.status(404).send({
+        message: "Brand not found"
+      });
     }
 
-    res.status(200).send({message:"brand deleted sucessfully"})
+    // Delete image from Cloudinary
+    if (brand.image?.public_id) {
+      const result = await cloudinary.uploader.destroy(
+        brand.image.public_id
+      );
+
+      if (
+        result.result !== "ok" &&
+        result.result !== "not found"
+      ) {
+        throw new Error("Failed to delete brand image from Cloudinary");
+      }
+    }
+
+    // Delete brand from MongoDB
+    await Brand.findByIdAndDelete(id);
+
+    return res.status(200).send({
+      message: "Brand deleted successfully"
+    });
+  } catch (error) {
+    console.error("Delete brand error:", error);
+
+    return res.status(500).send({
+      message: error.message || "Internal server error"
+    });
   }
-  catch(error){
-    res.status(500).send({message:"internal server error"})
-  }
-}
+};
+
 const viewBrand = async (req, res) => {
   try {
     const { id } = req.params;

@@ -16,7 +16,6 @@ const {
 
 router.post(
   "/createproduct",
-  checkPermission("products","create"),
   createProduct
 );
 
@@ -27,19 +26,16 @@ router.get(
 
 router.put(
   "/updateproduct/:id",
-  checkPermission("products","update"),
   updateProduct
 );
 
 router.get(
   "/viewproduct/:id",
-  checkPermission("products","read"),
   viewProduct
 );
 
 router.delete(
   "/deleteproduct/:id",
-  checkPermission("products","delete"),
   deleteProduct
 );
 

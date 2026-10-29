@@ -17,9 +17,16 @@ const brandSchema = new mongoose.Schema(
       default: ""
     },
     image: {
-      type: String,
-      default: ""
-    },
+  url: {
+    type: String,
+    default: ""
+  },
+  public_id: {
+    type: String,
+    default: ""
+  }
+}
+    ,
     status: {
       type: String,
       enum: ["Active", "Inactive"],

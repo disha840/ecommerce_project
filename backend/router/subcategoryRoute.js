@@ -12,35 +12,31 @@ const {
 
 const router = express.Router();
 
-router.use(auth);
+// router.use(auth);
 
 router.post(
   "/createsubcategory",
-  checkPermission("subcategories","create"),
   createSubcategory
 );
 
 router.get(
   "/showsubcategories",
-  checkPermission("subcategories","read"),
   ShowSubCategory
 );
 
 router.put(
   "/updatesubcategory/:id",
-  checkPermission("subcategories","update"),
   updateSubcategory
 );
 
 router.get(
-  "/viewsubcategory/:id",
-  checkPermission("subcategories","read"),
+  "/viewsubcategory/:id"
+,
   viewSubCategory
 );
 
 router.delete(
   "/deletesubcategory/:id",
-  checkPermission("subcategories","delete"),
   deleteSubCategory
 );
 

@@ -35,6 +35,11 @@ const subcategorySchema = new mongoose.Schema(
       enum: ["ACTIVE", "INACTIVE"],
       default: "ACTIVE",
     },
+     public_id: {
+    type: String,
+    default: ""
+    
+  }
   },
   {
     timestamps: true,

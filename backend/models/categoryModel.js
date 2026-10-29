@@ -17,18 +17,24 @@ const categorySchema = new mongoose.Schema(
       default: ""
     },
     image: {
-      type: String,
-      default: ""
+      url: {
+        type: String,
+        default: ""
+      },
+      public_id: {
+        type: String,
+        default: ""
+      }
     },
     status: {
       type: String,
       enum: ["ACTIVE", "INACTIVE"],
-      default: "Active"
+      default: "ACTIVE"
     }
   },
   { timestamps: true }
 );
 
-
 const Category = mongoose.model("Category", categorySchema);
+
 module.exports = Category;

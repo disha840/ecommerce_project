@@ -17,6 +17,7 @@ async function createCategory(req,res){
         { folder: "categories" }
       );
       image = result.secure_url;
+      public_id = result.public_id;
     }
     const category = await Category.create({
       name,
@@ -24,6 +25,7 @@ async function createCategory(req,res){
       description,
       status,
       image,
+      public_id
     });
     res.status(201).json({
       message: "Category created successfully",
@@ -51,12 +53,15 @@ try{
 const deleteCategory=async(req,res)=>{
   try{
     const id=req.params.id;
-    const category=await Category.findOneAndDelete({_id:id});
+    const category=await Category.findById(id);
   
     if(!category){
       return res.status(404).send({message:"category not found"})
-      
     }
+    if (category.public_id) {
+      await cloudinary.uploader.destroy(category.public_id);
+    }
+    await Category.findByIdAndDelete(id);
     console.log(category)
     res.status(200).send({message:"category deleted sucessfully"})
   }

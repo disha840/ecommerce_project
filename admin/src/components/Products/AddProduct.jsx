@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import api from "../../api";
 
@@ -217,14 +218,14 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
     e.preventDefault();
     setErrorMessage("");
 
+    // Subcategory is optional
     if (
       !formData.name.trim() ||
       !formData.category ||
-      !formData.subcategory ||
       !formData.brand
     ) {
       setErrorMessage(
-        "Please enter product name and select category, subcategory and brand."
+        "Please enter product name and select category and brand."
       );
       return;
     }
@@ -243,7 +244,7 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
       data.append("unit", formData.unit);
       data.append("description", formData.description);
       data.append("category", formData.category);
-      data.append("subcategory", formData.subcategory);
+      data.append("subcategory", formData.subcategory || "");
       data.append("brand", formData.brand);
       data.append("tags", JSON.stringify(tags));
       data.append("isFeatured", String(formData.isFeatured));
@@ -400,7 +401,7 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
 
               <div>
                 <label className="mb-2 block text-sm font-medium">
-                  Subcategory
+                  Subcategory (Optional)
                 </label>
 
                 <select
@@ -409,7 +410,6 @@ const AddProduct = ({ onClose, onCreated, product = null }) => {
                   onChange={handleChange}
                   className={inputClass}
                   disabled={!formData.category}
-                  required
                 >
                   <option value="">Select Subcategory</option>
 

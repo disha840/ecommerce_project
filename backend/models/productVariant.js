@@ -71,16 +71,29 @@ const productVariantSchema = new mongoose.Schema(
       height: { type: Number, default: null },
     },
 
-    images: {
-      type: [String],
-      default: [],
+    images: [
+  {
+    url: {
+      type: String,
+      required: true
     },
+    public_id: {
+      type: String,
+      required: true
+    }
+  }
+],
 
     status: {
       type: String,
       enum: ["ACTIVE", "INACTIVE"],
       default: "ACTIVE",
     },
+    slug:{
+      type: String,
+      required: true,
+      unique: true
+    }
   },
   {
     timestamps: true,

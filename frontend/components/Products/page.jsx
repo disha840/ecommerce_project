@@ -35,7 +35,7 @@ useEffect(() => {
 }, []);
 
 const viewProduct=(slug)=>{
-
+router.push("/")
 }
 
   return (

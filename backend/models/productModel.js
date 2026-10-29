@@ -12,7 +12,7 @@ const productSchema = new mongoose.Schema(
     subcategory: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Subcategory",
-      required: true,
+      
     },
 
     brand: {
@@ -41,10 +41,18 @@ const productSchema = new mongoose.Schema(
       trim: true,
     },
 
-    images: {
-      type: [String],
-      required: true,
+    images: [
+  {
+    url: {
+      type: String,
+      required: true
     },
+    public_id: {
+      type: String,
+      required: true
+    }
+  }
+  ],
 
     unit: {
       type: String,

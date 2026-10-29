@@ -13,122 +13,76 @@ const createProduct = async (req, res) => {
       subcategory,
       brand,
       unit,
-      isFeatured,
-      isActive,
     } = req.body;
 
     // Validate required fields
-    if (!name?.trim() || !category || !subcategory || !brand) {
+    if (!name?.trim() || !category || !brand) {
       return res.status(400).json({
-        success: false,
-        message: "Name, category, subcategory and brand are required",
+        message: "Name, category and brand are required",
       });
     }
 
-    // Validate MongoDB IDs
-    const isValidId = (id) => /^[a-f\d]{24}$/i.test(id);
-
-    if (![category, subcategory, brand].every(isValidId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid category, subcategory or brand ID",
-      });
-    }
-
-    // Check that category, subcategory and brand exist
-    const [categoryExists, subcategoryExists, brandExists] =
-      await Promise.all([
-        Category.findById(category),
-        Subcategory.findById(subcategory),
-        Brand.findById(brand),
-      ]);
+    // Check category and brand
+    const categoryExists = await Category.findById(category);
+    const brandExists = await Brand.findById(brand);
 
     if (!categoryExists) {
       return res.status(404).json({
-        success: false,
         message: "Category not found",
-      });
-    }
-
-    if (!subcategoryExists) {
-      return res.status(404).json({
-        success: false,
-        message: "Subcategory not found",
       });
     }
 
     if (!brandExists) {
       return res.status(404).json({
-        success: false,
         message: "Brand not found",
       });
     }
 
-    // Ensure subcategory belongs to selected category
-    const parentCategoryId =
-      subcategoryExists.parentCategory?._id?.toString() ||
-      subcategoryExists.parentCategory?.toString();
+    // Check subcategory only if provided
+    if (subcategory) {
+      const subcategoryExists = await Subcategory.findById(subcategory);
 
-    if (parentCategoryId !== category) {
-      return res.status(400).json({
-        success: false,
-        message: "Subcategory does not belong to the selected category",
-      });
-    }
-
-    // Handle multiple images
-    let files = req.files?.images;
-
-    if (!files) {
-      return res.status(400).json({
-        success: false,
-        message: "Please upload at least one product image",
-      });
-    }
-
-    // express-fileupload returns an object for one file
-    // and an array for multiple files
-    if (!Array.isArray(files)) {
-      files = [files];
-    }
-
-    // Upload images to Cloudinary
-    const uploadedImages = await Promise.all(
-      files.map(async (file) => {
-        const result = await cloudinary.uploader.upload(
-          file.tempFilePath,
-          {
-            folder: "products",
-            resource_type: "image",
-          }
-        );
-
-        return result.secure_url;
-      })
-    );
-
-    // Parse tags
-    let tags = [];
-
-    if (req.body.tags) {
-      try {
-        tags = JSON.parse(req.body.tags);
-      } catch {
-        return res.status(400).json({
-          success: false,
-          message: "Tags must be a valid JSON array",
+      if (!subcategoryExists) {
+        return res.status(404).json({
+          message: "Subcategory not found",
         });
       }
     }
 
-    if (!Array.isArray(tags)) {
+    // Upload images
+    let files = req.files?.images;
+
+    if (!files) {
       return res.status(400).json({
-        success: false,
-        message: "Tags must be an array",
+        message: "Please upload at least one product image",
       });
     }
 
-    // Generate slug from product name
+    if (!Array.isArray(files)) {
+      files = [files];
+    }
+
+    const uploadedImages = [];
+
+    for (const file of files) {
+      const result = await cloudinary.uploader.upload(file.tempFilePath, {
+        folder: "products",
+      });
+
+      uploadedImages.push({
+        url: result.secure_url,
+        public_id: result.public_id,
+      });
+    }
+
+    // Get tags
+    let tags = [];
+
+    if (req.body.tags) {
+      tags = JSON.parse(req.body.tags);
+    }
+
+    // Generate slug
     const baseSlug = name
       .trim()
       .toLowerCase()
@@ -139,34 +93,34 @@ const createProduct = async (req, res) => {
     let counter = 1;
 
     while (await Product.exists({ slug })) {
-      slug = `${baseSlug}-${counter++}`;
+      slug = `${baseSlug}-${counter}`;
+      counter++;
     }
 
-    // Save product in MongoDB
+    // Create product
     const product = await Product.create({
       name: name.trim(),
       slug,
       description,
       category,
-      subcategory,
+      subcategory: subcategory || null,
       brand,
       unit,
       images: uploadedImages,
-      tags: tags.map((tag) => String(tag).trim()).filter(Boolean),
+      tags: Array.isArray(tags) ? tags : [],
       isFeatured: req.body.isFeatured === "true",
       isActive: req.body.isActive === "true",
     });
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       message: "Product added successfully",
       product,
     });
   } catch (error) {
-    console.error("Create product error:", error);
+    console.log("Create product error:", error);
 
-    return res.status(500).json({
-      success: false,
+    res.status(500).json({
       message: "Failed to create product",
       error: error.message,
     });
@@ -283,7 +237,10 @@ const updateProduct=async(req,res)=>{
           { folder: "products" }
         );
 
-        uploadedImages.push(result.secure_url);
+        uploadedImages.push({
+  url: result.secure_url,
+  public_id: result.public_id
+});
       }
     }
 
@@ -336,7 +293,7 @@ const viewProduct=async(req,res)=>{
 
 const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const product = await Product.findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
@@ -345,12 +302,31 @@ const deleteProduct = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    // Delete images from Cloudinary
+    for (const image of product.images) {
+      console.log("Public ID:", image.public_id);
+
+      if (image.public_id) {
+        const result = await cloudinary.uploader.destroy(
+          image.public_id
+        );
+
+        console.log("Cloudinary result:", result);
+      }
+    }
+
+    // Delete product from MongoDB
+    await Product.findByIdAndDelete(req.params.id);
+
+    return res.status(200).json({
       success: true,
       message: "Product deleted successfully",
     });
+
   } catch (error) {
-    res.status(500).json({
+    console.log("Delete product error:", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });

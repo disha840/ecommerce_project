@@ -21,6 +21,7 @@ const createProductVariant = async (req, res) => {
       width,
       height,
       status,
+    
     } = req.body;
 
     // Check required fields
@@ -51,6 +52,11 @@ if (existingVariant) {
     message: "This variant already exists."
   });
 }
+const slug = name
+  .toLowerCase()
+  .trim()
+  .replace(/[^a-z0-9]+/g, "-")
+  .replace(/^-|-$/g, "");
 
     // Upload images
     let images = [];
@@ -77,7 +83,10 @@ if (existingVariant) {
           }
         );
 
-        images.push(uploadedImage.secure_url);
+       images.push({
+            url: uploadedImage.secure_url,
+           public_id: uploadedImage.public_id
+           });
       }
     }
   
@@ -101,6 +110,7 @@ if (existingVariant) {
       },
       images,
       status: status || "ACTIVE",
+      slug
     });
 
     return res.status(201).json({
@@ -117,6 +127,7 @@ if (existingVariant) {
     });
   }
 };
+
 const getProductVariants = async (req, res) => {
   try {
     const variants = await ProductVariant.find()
@@ -137,4 +148,43 @@ const getProductVariants = async (req, res) => {
   }
 };
 
-module.exports = { createProductVariant,getProductVariants };
+const deleteProductVariant = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    // Find variant
+    const variant = await ProductVariant.findById(id);
+
+    if (!variant) {
+      return res.status(404).json({
+        message: "Product variant not found",
+      });
+    }
+
+    const publicIds = (variant.images || [])
+      .map((image) => image.public_id)
+      .filter((publicId) => publicId);
+
+    // Delete all images from Cloudinary
+    for (const publicId of publicIds) {
+      const result = await cloudinary.uploader.destroy(publicId);
+
+      if (result.result !== "ok" && result.result !== "not found") {
+        throw new Error(`Failed to delete Cloudinary image: ${publicId}`);
+      }
+    }
+
+    // Delete variant from MongoDB
+    await ProductVariant.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      message: "Product variant deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Internal server error",
+    });
+  }
+};
+
+module.exports = { createProductVariant,getProductVariants,deleteProductVariant };

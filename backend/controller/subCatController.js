@@ -52,6 +52,7 @@ const createSubcategory = async (req, res) => {
       description,
       parentCategory,
       image: result.secure_url,
+      public_id:result.public_id
     });
 
     return res.status(201).json({
@@ -75,7 +76,7 @@ const createSubcategory = async (req, res) => {
 };
 const ShowSubCategory=async(req,res)=>{
     try{
-          const subcategory=await Subcategory.find().sort({createdAt:-1});
+          const subcategory=await Subcategory.find().sort({createdAt:-1}).populate("parentCategory", "name");
           res.status(200).send({subcategory:subcategory,message:"fetch all subcategories sucessfully"})
       }
       catch(error){
@@ -139,12 +140,16 @@ async function viewSubCategory(req,res){
 const deleteSubCategory=async(req,res)=>{
   try{
     const id=req.params.id;
-    const subcategory=await Subcategory.findOneAndDelete({_id:id});
+    const subcategory=await Subcategory.findById(id);
   
     if(!subcategory){
       return res.status(404).send({message:"subcategory not found"})
       
     }
+      if (subcategory.public_id) {
+          await cloudinary.uploader.destroy(subcategory.public_id);
+        }
+        await Subcategory.findByIdAndDelete(id);
     console.log(subcategory)
     res.status(200).send({message:"subcategory deleted sucessfully"})
   }

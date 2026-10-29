@@ -11,29 +11,25 @@ const {
   viewBrand
 } = require("../controller/brandController");
 
-router.use(auth);
+// router.use(auth);
 
 router.post(
   "/createbrand",
-  checkPermission("brand","create"),
   createBrand
 );
 
 router.get(
   "/showbrand",
-  checkPermission("brand","read"),
   showBrand
 );
 
 router.get(
   "/viewbrand/:id",
-  checkPermission("brand","read"),
   viewBrand
 );
 
 router.delete(
   "/deletebrand/:id",
-  checkPermission("brand","delete"),
   deleteBrand
 );
 

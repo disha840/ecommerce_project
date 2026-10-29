@@ -18,7 +18,6 @@ const {
 
 router.post(
   "/createcategory",
-  checkPermission("categories","create"),
   createCategory
 );
 
@@ -34,25 +33,21 @@ router.get(
 
 router.get(
   "/searched",
-  checkPermission("categories","read"),
   searchCategory
 );
 
 router.delete(
   "/deletecategory/:id",
-  checkPermission("categories","delete"),
   deleteCategory
 );
 
 router.put(
   "/updatecategory/:id",
-  checkPermission("categories","update"),
   updateCategory
 );
 
 router.put(
   "/toggle-status/:id",
-  checkPermission("categories","update"),
   toggleStatus
 );
 

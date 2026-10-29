@@ -14,10 +14,13 @@ import {
 
 import AddVariant from "../../components/ProductVariant/AddVariant";
 import api from "../../api";
+import DeleteVariantModal from "../../components/ProductVariant/DeleteVariant";
 
 function ProductVariant() {
   const [showModal, setShowModal] = useState(false);
   const [variants, setVariants] = useState([]);
+  const [deletemodal,setShowDelete]=useState(false);
+  const [deleteId,setDeleteId]=useState(null)
 
   const getProductVariants = async () => {
     try {
@@ -43,6 +46,7 @@ function ProductVariant() {
           }}
         />
       )}
+      {deletemodal&& <DeleteVariantModal variantId={deleteId} onClose={()=> setShowDelete(false)}  onDeleted={getProductVariants}/>}
 
       {/* Header */}
       <div className="mb-6">
@@ -282,7 +286,11 @@ function ProductVariant() {
                         <button
                           type="button"
                           title="Delete Variant"
-                          className="rounded-lg border border-[#D9E8EF] p-2 text-[#627D98] transition hover:bg-[#EAF7FA] hover:text-[#102A43]"
+                          className="rounded-lg border border-[#D9E8EF] p-2 text-[#627D98] transition hover:bg-[#EAF7FA] hover:text-[#102A43]" onClick={()=>{
+                            setShowDelete(true)
+                            setDeleteId(variant._id)
+
+                          }}
                         >
                           <FiTrash2 size={17} />
                         </button>
