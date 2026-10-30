@@ -8,7 +8,6 @@ const productVariantSchema = new mongoose.Schema(
       ref: "Product",
       required: true,
     },
-
     name: {
       type: String,
       required: true,
@@ -33,7 +32,6 @@ const productVariantSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
-
     unit: {
       type: String,
       required: true,

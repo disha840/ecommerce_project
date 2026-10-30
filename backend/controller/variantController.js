@@ -186,5 +186,49 @@ const deleteProductVariant = async (req, res) => {
     });
   }
 };
+async function getVariants(req,res){
+try{
+  const {slug}=req.params;
+  const product=await Product.findOne({slug});
+  if (!product) {
+      return res.status(404).send({
+        message: "Product not found"
+      });
+    }
+    const variants=await ProductVariant.find({product:product._id});
+    res.status(200).send({
+       success: true,
+      variants: variants
+    });
+}
+catch(err){
+  console.log(err)
+  res.status(500).send({
+      message: err.message
+    });
+}
+}
 
-module.exports = { createProductVariant,getProductVariants,deleteProductVariant };
+const getOneVariant = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const variant = await ProductVariant.findOne({ slug });
+
+    if (!variant) {
+      return res.status(404).send({
+        message: "Variant not found",
+      });
+    }
+
+    res.status(200).send({
+      variant,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: error.message,
+    });
+  }
+};
+
+module.exports = { createProductVariant,getProductVariants,deleteProductVariant,getVariants,getOneVariant };
