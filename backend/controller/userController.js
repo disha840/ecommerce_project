@@ -1,6 +1,7 @@
 const User=require("../models/userModel")
 const crypto=require("crypto")
 const mailer=require("../mailer")
+const jwt = require("jsonwebtoken")
 const bcrypt=require("bcrypt")
 const Role=require("../models/roleModel")
 const createUser=async (req, res) => {
@@ -12,7 +13,6 @@ const createUser=async (req, res) => {
       phone,
       role,
       status,
-      
     } = req.body;
 
 
@@ -236,7 +236,239 @@ const getRole=async(req,res)=>{
 
 }
 
+const customerSignup = async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      password,
+    } = req.body;
 
+    // Check required fields
+    if (!firstName || !email || !password) {
+      return res.status(400).send({
+        message: "First name, email and password are required",
+      });
+    }
 
+    // Check email format
+    if (!email.includes("@") || !email.includes(".")) {
+      return res.status(400).send({
+        message: "Invalid email",
+      });
+    }
 
-module.exports={createUser,getAllUser,viewUser,updateUser,deleteUser,searchUser,getRole,toggleStatus}
+    // Check password length
+    if (password.length < 6) {
+      return res.status(400).send({
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    // Check existing user
+    const existingUser = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
+
+    if (existingUser) {
+      return res.status(400).send({
+        message: "Email already registered",
+      });
+    }
+
+    // Find customer role created manually from Admin Panel
+    const customerRole = await Role.findOne({
+      name: "customer",
+    });
+
+    if (!customerRole) {
+      return res.status(404).send({
+        message: "Customer role not found",
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 8);
+
+    // Create customer
+    const newCustomer = await User.create({
+      firstName: firstName.trim(),
+      lastName: lastName ? lastName.trim() : "",
+      email: email.toLowerCase().trim(),
+      phone,
+      password: hashedPassword,
+      role: customerRole._id,
+      status: "ACTIVE",
+    });
+
+    return res.status(201).send({
+      message: "Customer registered successfully",
+      user: {
+        id: newCustomer._id,
+        firstName: newCustomer.firstName,
+        lastName: newCustomer.lastName,
+        email: newCustomer.email,
+      },
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).send({
+      message: "Internal server error",
+    });
+  }
+};
+
+const customerLogin = async (req, res) => {
+  try {
+
+    const { email, password } = req.body;
+
+    if (!email) {
+      return res.status(400).send({
+        message: "email is required"
+      });
+    }
+
+    if (!password) {
+      return res.status(400).send({
+        message: "password is required"
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).send({
+        message: "user not found"
+      });
+    }
+
+    const passwordMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!passwordMatch) {
+      return res.status(401).send({
+        message: "invalid password"
+      });
+    }
+
+    const userRole = await User.findById(user._id).populate(
+      "role",
+      "name"
+    );
+
+    if (!userRole.role || userRole.role.name !== "customer") {
+      return res.status(403).send({
+        message: "only customers can login"
+      });
+    }
+
+    if (user.status !== "ACTIVE") {
+      return res.status(403).send({
+        message: "your account is inactive"
+      });
+    }
+
+    const clientToken = jwt.sign(
+      {
+        id: user._id,
+        role: userRole.role.name
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d"
+      }
+    );
+
+    res.cookie("clientToken", clientToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
+    return res.status(200).send({
+      message: "login successful",
+      status: true,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: userRole.role.name
+      }
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).send({
+      message: "internal server error"
+    });
+  }
+};
+const checkUserAuth = async (req, res) => {
+  try {
+    const token = req.cookies.clientToken;
+
+    console.log(">>>>>>>>>token",token)
+
+    if (!token) {
+      console.log("hello")
+      return res.status(200).json({
+        user:null,message:"user not login"
+
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+console.log(decoded)
+    if(!decoded){
+     return  res.status(401).send({message:"access denied"})
+    }
+    // const user = await User.findById(decoded.id).select("-password");
+
+      const user = await User.findById(decoded.id).populate(
+      "role",
+      "name"
+    );
+
+    
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    console.log("my user",user)
+
+    return res.status(200).json({
+      success: true,
+      message: "User authenticated successfully",
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role.name
+      }
+    });
+
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired token",
+    });
+  }
+};
+
+module.exports={createUser,getAllUser,viewUser,updateUser,deleteUser,searchUser,getRole,toggleStatus,customerSignup,customerLogin,checkUserAuth}

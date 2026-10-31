@@ -14,60 +14,61 @@ const {
   deleteUser,
   searchUser,
   getRole,
-  toggleStatus
+  toggleStatus,
+  customerSignup,
+  customerLogin,
+  checkUserAuth
+
 } = require("../controller/userController");
 
 require("dotenv").config();
 
-router.use(auth);
+// router.use(auth);
 
 router.post(
   "/createuser",
-  checkPermission("users", "create"),
   createUser
 );
 
 router.put(
   "/toggle-status/:id",
-  checkPermission("users", "update"),
   toggleStatus
 );
 
 router.get(
   "/allusers",
-  checkPermission("users", "read"),
   getAllUser
 );
 
 router.get(
   "/viewuser/:id",
-  checkPermission("users", "read"),
   viewUser
 );
 
 router.get(
   "/searched",
-  checkPermission("users", "read"),
+
   searchUser
 );
 
 router.put(
   "/updateuser/:id",
-  checkPermission("users", "update"),
   updateUser
 );
 
 router.delete(
   "/deleteuser/:id",
-  checkPermission("users", "delete"),
   deleteUser
 );
 
 router.get(
   "/getrole",
-  checkPermission("users", "read"),
   getRole
 );
+router.post("/signup", customerSignup);
+router.post("/login", customerLogin);
+
+router.get("/checkauth",checkUserAuth)
 
 module.exports = router;
 

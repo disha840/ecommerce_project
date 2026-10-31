@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar/page";
+import Provider from "@/redux/provider"
 import Footer from "@/components/Footer/page";
 
 const geistSans = Geist({
@@ -28,9 +29,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       
 
       <body className="min-h-full flex flex-col"  suppressHydrationWarning>
+<Provider>
         <Navbar/>
         {children}
         <Footer/>
+        </Provider>
+
         </body>
       
     </html>
