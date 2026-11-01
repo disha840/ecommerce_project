@@ -13,6 +13,7 @@ const roleRoute=require("./router/rolesRoute")
 const brandRoute=require("./router/brandRoute")
 const subcategoryRoute=require("./router/subcategoryRoute")
 const storeRoute=require("./router/storeRoute")
+const cartRoute=require("./router/cartRoute");
 const app=express();
 
 app.use(cors({
@@ -32,7 +33,9 @@ app.use("/role",roleRoute)
 app.use("/subcategory",subcategoryRoute)
 app.use("/products",productRoute);
 app.use("/productvariant",productvariantRoute)
+app.use("/cart",cartRoute)
 app.use("/store",storeRoute);
+
 app.listen(3000,()=>{
     console.log("server is running");
 })

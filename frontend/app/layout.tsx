@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar/page";
@@ -30,7 +31,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 
       <body className="min-h-full flex flex-col"  suppressHydrationWarning>
 <Provider>
-        <Navbar/>
+         <Suspense fallback={<div>Loading Navbar...</div>}>
+                    <Navbar />
+                </Suspense>
         {children}
         <Footer/>
         </Provider>

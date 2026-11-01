@@ -18,6 +18,7 @@ const FormModal = ({
     "store",
     "product-variant",
     "brand",
+    "inventory"
   ];
 
   const actions = [

@@ -17,7 +17,8 @@ const {
   toggleStatus,
   customerSignup,
   customerLogin,
-  checkUserAuth
+  checkUserAuth,
+  logout
 
 } = require("../controller/userController");
 
@@ -69,6 +70,7 @@ router.post("/signup", customerSignup);
 router.post("/login", customerLogin);
 
 router.get("/checkauth",checkUserAuth)
+router.post("/logout", logout);
 
 module.exports = router;
 

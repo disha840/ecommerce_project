@@ -79,4 +79,29 @@ const getStores = async (req, res) => {
     });
   }
 };
-module.exports={createStore,getStoreManagers,getStores}
+const deleteStore = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const store = await Store.findByIdAndDelete(id);
+
+    if (!store) {
+      return res.status(404).json({
+        success: false,
+        message: "Store not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Store deleted successfully"
+    });
+
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+module.exports={createStore,getStoreManagers,getStores,deleteStore}

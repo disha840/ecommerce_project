@@ -1,5 +1,6 @@
 
 "use client";
+
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -35,6 +36,7 @@ const page = () => {
       fetchVariants();
     }
   }, [slug]);
+   
 
   return (
     <section className="min-h-screen bg-slate-50">
@@ -151,7 +153,7 @@ const page = () => {
 
                     {/* Add Button */}
 
-                    <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95">
+                    <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95" >
                       <span className="text-lg">+</span>
                       Add to Cart
                     </button>
@@ -170,3 +172,5 @@ const page = () => {
 };
 
 export default page;
+
+

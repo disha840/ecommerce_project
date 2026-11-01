@@ -1,6 +1,5 @@
 
 "use client";
-
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -38,6 +37,11 @@ export default function Product() {
   const viewProduct = (slug) => {
     router.push(`/products/${slug}`);
   };
+
+ 
+
+
+
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-12 md:px-10">
@@ -120,19 +124,6 @@ export default function Product() {
                 </p>
 
                 <div className="mt-4 flex items-center justify-between gap-2">
-
-                  <div>
-                    <span className="font-bold text-gray-900">
-                      ₹{price}
-                    </span>
-
-                    {discount > 0 && (
-                      <span className="ml-2 text-xs text-gray-400 line-through">
-                        ₹{originalPrice}
-                      </span>
-                    )}
-                  </div>
-
                   <button
                     onClick={(event) => event.stopPropagation()}
                     className="rounded-lg border border-emerald-600 px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-600 hover:text-white"

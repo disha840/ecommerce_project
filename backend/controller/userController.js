@@ -470,5 +470,18 @@ console.log(decoded)
     });
   }
 };
+const logout = (req, res) => {
+  res.clearCookie("clientToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax"
+  });
 
-module.exports={createUser,getAllUser,viewUser,updateUser,deleteUser,searchUser,getRole,toggleStatus,customerSignup,customerLogin,checkUserAuth}
+  return res.status(200).json({
+    status: true,
+    message: "Logout successfully"
+  });
+};
+
+
+module.exports={createUser,getAllUser,viewUser,updateUser,deleteUser,searchUser,getRole,toggleStatus,customerSignup,customerLogin,checkUserAuth,logout}

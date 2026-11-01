@@ -1,8 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authen from "./Slices/AuthSlice"
+import cartReducer from "./Slices/cartSlice"
+import uiReducer from "./Slices/uiSlice"
 export const store = configureStore({
   reducer: {
-    auth:authen
-    
+    auth:authen,
+    cart:cartReducer,
+    ui:uiReducer
   }
 });

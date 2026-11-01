@@ -116,23 +116,11 @@ export default function Product() {
                   {product.name}
                 </h3>
 
-                <p className="mt-1 text-xs text-gray-500">
-                  {product.unit || ""}
-                </p>
+                
 
                 <div className="mt-4 flex items-center justify-between gap-2">
 
-                  <div>
-                    <span className="font-bold text-gray-900">
-                      ₹{price}
-                    </span>
-
-                    {discount > 0 && (
-                      <span className="ml-2 text-xs text-gray-400 line-through">
-                        ₹{originalPrice}
-                      </span>
-                    )}
-                  </div>
+                  
 
                   <button
                     onClick={(event) => event.stopPropagation()}

@@ -7,14 +7,14 @@ const checkPermission = require("../middleware/permissions");
 const {
   getStoreManagers,
   createStore,
-  getStores
+  getStores,
+  deleteStore
 } = require("../controller/storeController");
 
 router.use(auth);
 
 router.get(
   "/managers",
-  checkPermission("store","read"),
   getStoreManagers
 );
 
@@ -29,5 +29,6 @@ router.get(
   checkPermission("store","read"),
   getStores
 );
+router.delete("/delete/:id", deleteStore);
 
 module.exports = router;

@@ -1,16 +1,45 @@
 
 "use client";
-
+import api from "../../../axios/api";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-
+import { useDispatch } from "react-redux";
+import {getCart} from "@/redux/Slices/cartSlice"
+import {setShowLogin} from "@/redux/Slices/uiSlice"
+import { useSelector } from "react-redux";
 const Page = () => {
   const { slug } = useParams();
+  const dispatch = useDispatch();
 
   const [variant, setVariant] = useState(null);
   const [images, setImages] = useState([]);
+  
+   const { isLoggedIn } = useSelector((state) => state.auth);
   const [selectedImage, setSelectedImage] = useState(0);
+const handleAddToCart = async (variant) => {
+  if (!isLoggedIn) {
+    dispatch(setShowLogin(true));
+    return;
+}
+    try {
+        const response = await api.post("/cart/add", {
+            product: variant.product?._id || variant.product,
+            variant: variant._id,
+            quantity: 1
+        });
+        dispatch(getCart());
 
+        alert("Product added to cart successfully");
+        console.log(response.data);
+
+    } catch (error) {
+        console.log("Add to cart error:", error);
+
+        alert(
+            error.response?.data?.message || "Something went wrong"
+        );
+    }
+};
   const getVariant = async () => {
     try {
       const response = await fetch(
@@ -73,6 +102,7 @@ const Page = () => {
 
   // Discount se kitna paisa bacha
   const savings = variant.mrp - variant.sellingPrice;
+  
 
   return (
     <div className="min-h-screen  from-emerald-50 to-gray-50 p-8">
@@ -195,7 +225,10 @@ const Page = () => {
 
           </div>
 
-          <button className="mt-8 w-full rounded-xl bg-emerald-600 p-4 font-bold text-white shadow-lg hover:bg-emerald-700">
+          <button onClick={(event)=>{
+                       event.stopPropagation();
+                       handleAddToCart(variant);
+                    }} className="mt-8 w-full rounded-xl bg-emerald-600 p-4 font-bold text-white shadow-lg hover:bg-emerald-700"> 
             Add To Cart
           </button>
 

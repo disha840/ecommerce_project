@@ -12,9 +12,12 @@ import {
   FiMapPin,
   FiUsers,
 } from "react-icons/fi";
+import DeleteStoreModal from "../../components/Store/DeleteStore";
 
 const Store = () => {
   const [stores, setStores] = useState([]);
+  const [showdelete,setShowDelete]=useState(false)
+  const [deleteId,setDeleteId]=useState(null)
 
   const fetchStores = async () => {
     try {
@@ -34,6 +37,9 @@ const Store = () => {
   return (
     <div className="min-h-screen space-y-6 bg-[#F0FAFC] p-6 text-[#102A43]">
       {showmodel && <FormModal onClose={() => setShowmodal(false)} />}
+        {showdelete && <DeleteStoreModal storeId={deleteId} onClose={()=>{setShowDelete(false)
+          setDeleteId(null)
+        }} onDeleted ={fetchStores} />}
 
       {/* PAGE HEADER */}
       <div>
@@ -216,7 +222,9 @@ const Store = () => {
                       </button>
 
                       <button
-                        onClick={() => console.log("Delete store:", store._id)}
+                        onClick={() => {setDeleteId( store._id)
+                          setShowDelete(true)
+                        }}
                         className="rounded-lg p-2 text-[#627D98] transition hover:bg-[#F0FAFC]"
                         title="Delete Store"
                       >
