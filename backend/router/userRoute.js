@@ -18,7 +18,8 @@ const {
   customerSignup,
   customerLogin,
   checkUserAuth,
-  logout
+  logout,
+  updateProfile
 
 } = require("../controller/userController");
 
@@ -71,6 +72,7 @@ router.post("/login", customerLogin);
 
 router.get("/checkauth",checkUserAuth)
 router.post("/logout", logout);
+router.put("/update-profile",auth, updateProfile);
 
 module.exports = router;
 

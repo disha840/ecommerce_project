@@ -14,12 +14,11 @@ const Page = () => {
   const [variant, setVariant] = useState(null);
   const [images, setImages] = useState([]);
   
-   const { isLoggedIn } = useSelector((state) => state.auth);
+   const user = useSelector((state) => state.auth.user);
   const [selectedImage, setSelectedImage] = useState(0);
 const handleAddToCart = async (variant) => {
-  if (!isLoggedIn) {
-    dispatch(setShowLogin(true));
-    return;
+  if (!user) {
+   return dispatch(setShowLogin(true))
 }
     try {
         const response = await api.post("/cart/add", {

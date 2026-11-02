@@ -18,7 +18,7 @@ import Link from "next/link";
 const CartPage = () => {
 
     const dispatch = useDispatch();
-    const {isLoggedIn} =useSelector((state)=> state.auth)
+    const user =useSelector((state)=> state.auth.user)
    
     
 
@@ -33,10 +33,10 @@ const CartPage = () => {
 
     // Page load hone par cart fetch karna
     useEffect(() => {
-       if(isLoggedIn){
+    
          
          dispatch(getCart());
-       }
+       
        setMounted(true);
     }, [dispatch]);
 
@@ -56,7 +56,7 @@ const CartPage = () => {
     };
 
     // Server aur client ka first render same rakhna
-    if (!mounted || (isLoggedIn &&loading)) {
+    if (!mounted || (user &&loading)) {
         return (
             <div className="flex min-h-screen items-center justify-center">
                 Loading cart...

@@ -482,6 +482,70 @@ const logout = (req, res) => {
     message: "Logout successfully"
   });
 };
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const { firstName, lastName, email, phone } = req.body;
+
+    // Check required fields
+    if (!firstName || !email || !phone) {
+      return res.status(400).json({
+        success: false,
+        message: "First name, email and phone are required"
+      });
+    }
+
+    // Check whether email is already used by another user
+    const existingUser = await User.findOne({
+      email: email,
+      _id: { $ne: userId }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already exists"
+      });
+    }
+
+    // Update user profile
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        firstName,
+        lastName,
+        email,
+        phone
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+    console.log("hello")
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating profile",
+      error: error.message
+    });
+  }
+};
 
 
-module.exports={createUser,getAllUser,viewUser,updateUser,deleteUser,searchUser,getRole,toggleStatus,customerSignup,customerLogin,checkUserAuth,logout}
+module.exports={createUser,getAllUser,viewUser,updateUser,deleteUser,searchUser,getRole,toggleStatus,customerSignup,customerLogin,checkUserAuth,logout,updateProfile}

@@ -4,8 +4,14 @@ const jwt = require("jsonwebtoken");
 const authMiddleware = (req, res, next) => {
     try {
         // Cookie se token lena
-        const token = req.cookies?.token;
-
+        let token = null
+        if(req.cookies.clientToken){
+            token = req.cookies.clientToken
+        }
+        else{
+            token = req.cookies.token
+        }
+console.log("my token",token)
         // Token nahi mila
         if (!token) {
             return res.status(401).json({

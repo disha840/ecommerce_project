@@ -24,7 +24,7 @@ export const checkAuth = createAsyncThunk(
 
 const initialState = {
   user: null,
-  isLoggedIn: false,
+  // isLoggedIn: false,
   loading: false,
   error: null,
 };
@@ -36,15 +36,18 @@ const authSlice = createSlice({
   reducers: {
     setuser: (state, action) => {
       state.user = action.payload;
-      state.isLoggedIn = true;
+      // state.isLoggedIn = true;
       state.error = null;
     },
 
     logout: (state) => {
       state.user = null;
-      state.isLoggedIn = false;
+      // state.isLoggedIn = false;
       state.error = null;
     },
+    updateUser: (state, action) => {
+  state.user = action.payload;
+}
   },
 
   extraReducers: (builder) => {
@@ -70,6 +73,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { setuser, logout } = authSlice.actions;
+export const { setuser, logout,updateUser } = authSlice.actions;
 
 export default authSlice.reducer;

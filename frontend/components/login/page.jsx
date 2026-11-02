@@ -7,6 +7,7 @@ import {setuser} from "../../redux/Slices/AuthSlice"
 import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { getCart } from "@/redux/Slices/cartSlice";
 import { X } from "lucide-react";
 
 export default function Login({ setShowLogin,setShowSignup }) {
@@ -46,7 +47,8 @@ export default function Login({ setShowLogin,setShowSignup }) {
           closeLogin();
         }
 
-        router.push("/");
+        // router.push("/");
+        dispatch(getCart());
         router.refresh();
       }
     } catch (error) {

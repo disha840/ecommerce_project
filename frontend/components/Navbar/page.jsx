@@ -29,7 +29,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const router=useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
-const { user, isLoggedIn } = useSelector((state) => state.auth);
+const user  = useSelector((state) => state.auth.user);
 
 const dispatch = useDispatch();
 
@@ -52,17 +52,14 @@ const { items } = useSelector((state) => state.cart);
   }, [showLogin, showSignup]);
 
 useEffect(() => {
-  if(isLoggedIn){
+  
   dispatch(checkAuth());
-  }
   
 }, []);
 
  useEffect(() => {
-  if(isLoggedIn){
-        dispatch(getCart());
-  }
   
+        dispatch(getCart());
   
     },[]);
 
@@ -146,7 +143,7 @@ useEffect(() => {
           </div>
 
          
-          {isLoggedIn ? (
+          {user ? (
   <div className="relative">
     <button
       onClick={() => setShowDropdown(!showDropdown)}
@@ -186,7 +183,7 @@ useEffect(() => {
       <button
         onClick={() => {
           setShowDropdown(false);
-          // router.push("/profile");
+          router.push("/profile");
         }}
         className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-[#102A43] hover:bg-[#F0FAFC] transition-all duration-200"
       >
