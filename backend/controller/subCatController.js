@@ -157,8 +157,25 @@ const deleteSubCategory=async(req,res)=>{
     res.status(500).send({message:"internal server error"})
   }
 }
+const ShowSubCategoryByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
 
+    const subcategory = await Subcategory.find({
+      parentCategory: categoryId,
+    }).sort({ createdAt: -1 });
+
+    res.status(200).send({
+      subcategory,
+      message: "Fetch subcategories successfully",
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal server error",
+    });
+  }
+};
 
 module.exports = {
-  createSubcategory,ShowSubCategory,updateSubcategory,viewSubCategory,deleteSubCategory
+  createSubcategory,ShowSubCategory,updateSubcategory,viewSubCategory,deleteSubCategory,ShowSubCategoryByCategory
 };

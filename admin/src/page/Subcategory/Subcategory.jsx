@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import api from "../../api";
 import {
@@ -36,6 +37,8 @@ const Subcategory = () => {
           response.data.data ||
           []
       );
+
+      setError("");
     } catch (error) {
       console.log(error.response?.data || error.message);
       setError("Failed to load subcategories");
@@ -56,32 +59,43 @@ const Subcategory = () => {
     navigate(`/admin/viewsubcategory/${id}`);
   }
 
+  // CLOSE EDIT MODAL
+  function closeEditModal() {
+    setshowEdit(false);
+    setEditData(null);
+  }
+
   return (
     <div className="min-h-screen bg-[#F0FAFC] p-4 text-[#102A43] sm:p-6">
 
-      {/* MODALS */}
+      {/* ADD SUBCATEGORY MODAL */}
       {showModal && (
         <AddSubcategory
-          onClose={() => {
-            setShowModal(false);
-          }}
+          onClose={() => setShowModal(false)}
           getdata={getdata}
         />
       )}
 
+      {/* DELETE SUBCATEGORY MODAL */}
       {deleting && (
         <DeleteSubcategoryModal
           onClose={() => {
             setDeleting(false);
+            setDeleteId(null);
           }}
           subId={deleteId}
-          onDeleted={() => getdata()}
+          onDeleted={() => {
+            getdata();
+            setDeleting(false);
+            setDeleteId(null);
+          }}
         />
       )}
 
+      {/* EDIT SUBCATEGORY MODAL */}
       {edit && (
         <AddSubcategory
-          onClose={() => setshowEdit(false)}
+          onClose={closeEditModal}
           getdata={getdata}
           editData={editData}
         />
@@ -192,13 +206,33 @@ const Subcategory = () => {
 
             <thead className="bg-[#EAF7FA] text-[#102A43]">
               <tr>
-                <th className="whitespace-nowrap px-5 py-4">S.No</th>
-                <th className="whitespace-nowrap px-5 py-4">Subcategory Name</th>
-                <th className="whitespace-nowrap px-5 py-4">Description</th>
-                <th className="whitespace-nowrap px-5 py-4">Parent Category</th>
-                <th className="whitespace-nowrap px-5 py-4">Status</th>
-                <th className="whitespace-nowrap px-5 py-4">Created At</th>
-                <th className="whitespace-nowrap px-5 py-4 text-center">Action</th>
+                <th className="whitespace-nowrap px-5 py-4">
+                  S.No
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4">
+                  Subcategory Name
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4">
+                  Description
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4">
+                  Parent Category
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4">
+                  Status
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4">
+                  Created At
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4 text-center">
+                  Action
+                </th>
               </tr>
             </thead>
 
@@ -220,6 +254,7 @@ const Subcategory = () => {
                     key={item._id}
                     className="border-t border-[#EAF2F5] transition hover:bg-[#F4FBFC]"
                   >
+
                     <td className="whitespace-nowrap px-5 py-5">
                       {index + 1}
                     </td>
@@ -259,6 +294,7 @@ const Subcategory = () => {
                     <td className="whitespace-nowrap px-5 py-5">
                       <div className="flex justify-center gap-2">
 
+                        {/* VIEW */}
                         <button
                           type="button"
                           className="rounded-lg bg-[#D7F2F6] px-3 py-2 text-[#087F95] transition hover:bg-[#BCEAF0]"
@@ -268,18 +304,20 @@ const Subcategory = () => {
                           <FiEye size={17} />
                         </button>
 
+                        {/* EDIT */}
                         <button
                           type="button"
                           className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-[#D7F2F6]"
                           title="Edit"
                           onClick={() => {
-                            setshowEdit(true);
                             setEditData(item);
+                            setshowEdit(true);
                           }}
                         >
                           <FiEdit2 size={17} />
                         </button>
 
+                        {/* DELETE */}
                         <button
                           type="button"
                           className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-red-100 hover:text-red-600"
@@ -294,6 +332,7 @@ const Subcategory = () => {
 
                       </div>
                     </td>
+
                   </tr>
                 ))
               )}

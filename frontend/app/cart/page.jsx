@@ -2,6 +2,7 @@
 
 
 "use client";
+import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 
 import { useDispatch} from "react-redux";
@@ -16,7 +17,7 @@ import {
 import Link from "next/link";
 
 const CartPage = () => {
-
+const router = useRouter();
     const dispatch = useDispatch();
     const user =useSelector((state)=> state.auth.user)
    
@@ -244,7 +245,7 @@ const CartPage = () => {
 
                                 </div>
 
-                                <button
+                                <button   onClick={() => router.push("/checkout")}
                                     className="w-full rounded-xl bg-emerald-600 py-3 font-bold text-white transition hover:bg-emerald-700"
                                 >
                                     Proceed to Checkout

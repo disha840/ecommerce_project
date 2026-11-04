@@ -1,101 +1,164 @@
 
-const cloudinary =require("../cloudinary")
-const Category=require("../models/categoryModel")
-async function createCategory(req,res){
-    try{
-         const { name, description, status } = req.body;
-          const slug = name
+
+const cloudinary = require("../cloudinary");
+const Category = require("../models/categoryModel");
+
+// CREATE CATEGORY
+async function createCategory(req, res) {
+  try {
+    const { name, description, status } = req.body;
+
+    const slug = name
       .toLowerCase()
       .trim()
       .replace(/\s+/g, "-");
-      let image = "";
-       if (req.files?.image) {
+
+    let image = {
+      url: "",
+      public_id: ""
+    };
+
+    if (req.files?.image) {
       const file = req.files.image;
 
       const result = await cloudinary.uploader.upload(
         file.tempFilePath,
         { folder: "categories" }
       );
-      image = result.secure_url;
-      public_id = result.public_id;
+
+      image = {
+        url: result.secure_url,
+        public_id: result.public_id
+      };
     }
+
     const category = await Category.create({
       name,
       slug,
       description,
       status,
-      image,
-      public_id
+      image
     });
+
     res.status(201).json({
       message: "Category created successfully",
+      category
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
+    });
+  }
+}
+
+
+// SHOW ALL CATEGORIES
+async function showCategory(req, res) {
+  try {
+    const category = await Category.find().sort({
+      createdAt: -1
+    });
+
+    res.status(200).send({
       category,
+      message: "Fetch all categories successfully"
     });
 
-    }
-    catch(error){
-         res.status(500).json({
-      message: error.message,
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal server error"
     });
   }
 }
 
-async function showCategory(req,res){
-try{
-      const category=await Category.find().sort({createdAt:-1});
-      res.status(200).send({category:category,message:"fetch all categories sucessfully"})
-  }
-  catch(error){
-     res.status(500).send({message:"internal server error"})
-  }
-}
 
-const deleteCategory=async(req,res)=>{
-  try{
-    const id=req.params.id;
-    const category=await Category.findById(id);
-  
-    if(!category){
-      return res.status(404).send({message:"category not found"})
+// DELETE CATEGORY
+const deleteCategory = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const category = await Category.findById(id);
+
+    if (!category) {
+      return res.status(404).send({
+        message: "Category not found"
+      });
     }
-    if (category.public_id) {
-      await cloudinary.uploader.destroy(category.public_id);
+
+    if (category.image?.public_id) {
+      await cloudinary.uploader.destroy(
+        category.image.public_id
+      );
     }
+
     await Category.findByIdAndDelete(id);
-    console.log(category)
-    res.status(200).send({message:"category deleted sucessfully"})
-  }
-  catch(error){
-    res.status(500).send({message:"internal server error"})
-  }
-}
 
-const viewCategory=async(req,res)=>{
-  try{
-    const id=req.params.id;
-    const category=await Category.findOne({_id:id});
-    if(!category){
-      return res.send({message:"category not found"})
-    }
-    res.send({category:category})
-  }
-  catch(error){
-  res.status(500).send({message:"internal server error"})
-}
+    res.status(200).send({
+      message: "Category deleted successfully"
+    });
 
-}
-const searchCategory=async(req,res)=>{
-   try{
-      const search=req.query.search||"";
-      const users=await Category.find({
-          name:{$regex:search,$options:"i"} 
-      }).sort({createdAt: -1})
-      res.status(200).send({users})
-    }catch(error){
-      res.status(500).send({message:"internal server error"})
-    }
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal server error"
+    });
   }
-  const updateCategory = async (req, res) => {
+};
+
+
+// VIEW SINGLE CATEGORY
+const viewCategory = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const category = await Category.findById(id);
+
+    if (!category) {
+      return res.status(404).send({
+        message: "Category not found"
+      });
+    }
+
+    res.status(200).send({
+      category
+    });
+
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal server error"
+    });
+  }
+};
+
+
+// SEARCH CATEGORY
+const searchCategory = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+
+    const category = await Category.find({
+      name: {
+        $regex: search,
+        $options: "i"
+      }
+    }).sort({
+      createdAt: -1
+    });
+
+    res.status(200).send({
+      category
+    });
+
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal server error"
+    });
+  }
+};
+
+
+// UPDATE CATEGORY
+const updateCategory = async (req, res) => {
   try {
     const id = req.params.id;
     const data = req.body;
@@ -104,63 +167,100 @@ const searchCategory=async(req,res)=>{
 
     if (!category) {
       return res.status(404).send({
-        message: "Category not found",
+        message: "Category not found"
       });
     }
 
     if (req.files?.image) {
-      const image = req.files.image;
+      const file = req.files.image;
 
       const result = await cloudinary.uploader.upload(
-        image.tempFilePath,
+        file.tempFilePath,
         {
-          folder: "categories",
+          folder: "categories"
         }
       );
 
-      data.image = result.secure_url;
+      if (category.image?.public_id) {
+        await cloudinary.uploader.destroy(
+          category.image.public_id
+        );
+      }
+
+      data.image = {
+        url: result.secure_url,
+        public_id: result.public_id
+      };
     }
 
-    const c = await Category.findByIdAndUpdate(
+    if (data.name) {
+      data.slug = data.name
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "-");
+    }
+
+    const updatedCategory = await Category.findByIdAndUpdate(
       id,
       { $set: data },
-      { new: true, runValidators: true }
+      {
+        new: true,
+        runValidators: true
+      }
     );
 
-    return res.status(200).send({
+    res.status(200).send({
       message: "Category updated successfully",
-      category: c,
+      category: updatedCategory
     });
+
   } catch (error) {
     console.log(error);
 
-    return res.status(500).send({
-      message: "Internal server error",
+    res.status(500).send({
+      message: "Internal server error"
     });
   }
 };
 
-async function toggleStatus(req,res){
-   try {
+
+// TOGGLE CATEGORY STATUS
+async function toggleStatus(req, res) {
+  try {
     const category = await Category.findById(req.params.id);
 
     if (!category) {
-      return res.status(404).send({ message: "category not found" });
+      return res.status(404).send({
+        message: "Category not found"
+      });
     }
 
-    category.status = category.status == "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    category.status =
+      category.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
 
     await category.save();
 
     res.status(200).send({
       message: "Status updated successfully",
-      category,
+      category
     });
-  } catch (error) {
-    console.log(error)
-    res.status(500).send({ message: "Internal server error" });
-  }
 
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).send({
+      message: "Internal server error"
+    });
+  }
 }
 
-module.exports={createCategory,showCategory,deleteCategory,viewCategory,searchCategory,updateCategory,toggleStatus}
+
+module.exports = {
+  createCategory,
+  showCategory,
+  deleteCategory,
+  viewCategory,
+  searchCategory,
+  updateCategory,
+  toggleStatus
+};

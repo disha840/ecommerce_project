@@ -10,6 +10,7 @@ import Login from "@/components/login/page";
 import Signup from "@/components/signup/page";
 import {logout} from "@/redux/Slices/AuthSlice"
 import { checkAuth } from "@/redux/Slices/AuthSlice";
+import DeliveryLocation from "../location/DeliveryLocation"
 import { setShowLogin,setShowSignup } from "@/redux/Slices/uiSlice";
 import { clearCart } from "@/redux/Slices/cartSlice";
 import Router from "next/router";
@@ -119,18 +120,10 @@ useEffect(() => {
             </div>
           </Link>
 
-          <div className="hidden shrink-0 items-center gap-2 rounded-xl px-2 py-2 sm:flex">
-            <MapPin size={22} className="text-emerald-700" />
-
-            <div>
-              <p className="text-xs text-slate-500">Delivering to</p>
-
-              <p className="flex items-center gap-1 text-sm font-semibold text-slate-800">
-                Select your location
-                <ChevronDown size={14} />
-              </p>
-            </div>
-          </div>
+         {/* Delivery Location */}
+<div className="hidden shrink-0 sm:block">
+  <DeliveryLocation />
+</div>
 
           <div className="flex min-w-0 flex-1 items-center rounded-2xl border border-emerald-100 bg-emerald-50/50 p-1.5 transition focus-within:border-emerald-400">
             <Search size={20} className="ml-3 shrink-0 text-emerald-700" />

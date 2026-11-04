@@ -7,8 +7,8 @@ import ResetPass from './Pages/ResetPass'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { BrowserRouter,Routes,Route } from 'react-router-dom'
-import Main from './Pages/Main'
-import CreateUser from './Pages/CreateUser'
+// import Main from './Pages/Main'
+// import CreateUser from './Pages/CreateUser'
 import Admin from './AdminLayout/Admin'
 
 import Users from './page/UsersFolder/Users'
@@ -33,6 +33,8 @@ import ViewBrand from './page/Brand/ViewBrand'
 import ProductVariant from './page/ProductVariant/ProductVariant'
 import Store from './page/Store/Store'
 import ProtectedRoute from './components/ProtectedRoute'
+import ViewVariant from './page/ProductVariant/ViewVariant'
+import Orders from './page/orders/order'
 
 
 
@@ -74,6 +76,8 @@ const App = () => {
      <Route path='/admin/viewproduct/:id' element={<ViewProduct/>}/>
 
      <Route path='/admin/productvariant' element={<ProductVariant/>}/>
+     <Route path="/admin/viewvariant/:id" element={<ViewVariant/>}/>
+     <Route path='/admin/orders' element={<Orders/>}/>
      <Route path='/admin/store' element={<Store/>}/>
      
 
@@ -81,8 +85,8 @@ const App = () => {
   </Route>
     
     
-    <Route path='/create' element={<CreateUser/>} />
-    <Route path='/signup' element={<SignUp/>}/>
+    {/* <Route path='/create' element={<CreateUser/>} /> */}
+    {/* <Route path='/signup' element={<SignUp/>}/> */}
     {/* <Route path='/login' element={<Login/>}/> */}
     <Route path='/forgotpassw' element={<ForgotPassw/>}/>
     <Route path='/verifyotp' element={<VeryfyOtp/>}/>

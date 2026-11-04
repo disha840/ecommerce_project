@@ -9,7 +9,9 @@ const {
   showProducts,
   updateProduct,
   viewProduct,
-  deleteProduct
+  showFeaturedProducts,
+  deleteProduct,
+  showProductsBySubcategory,
 } = require("../controller/productController");
 
 // router.use(auth);
@@ -38,5 +40,7 @@ router.delete(
   "/deleteproduct/:id",
   deleteProduct
 );
+router.get("/showsubcategory/:subcategoryId", showProductsBySubcategory)
+router.get("/featured", showFeaturedProducts);
 
 module.exports = router;

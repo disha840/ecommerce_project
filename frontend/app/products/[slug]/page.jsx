@@ -1,15 +1,23 @@
 
+
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useParams } from "next/navigation";
+import api from "../../../axios/api";
+import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
-const page = () => {
+import { getCart } from "@/redux/Slices/cartSlice";
+import { setShowLogin } from "@/redux/Slices/uiSlice";
+
+const Page = () => {
   const { slug } = useParams();
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const [variants, setVariants] = useState([]);
+
+  const user = useSelector((state) => state.auth.user);
 
   const fetchVariants = async () => {
     try {
@@ -36,7 +44,36 @@ const page = () => {
       fetchVariants();
     }
   }, [slug]);
-   
+
+  // Add to Cart
+  const handleAddToCart = async (event, variant) => {
+    event.stopPropagation();
+
+    if (!user) {
+      return dispatch(setShowLogin(true));
+    }
+
+    try {
+      const response = await api.post("/cart/add", {
+        product: variant.product?._id || variant.product,
+        variant: variant._id,
+        quantity: 1,
+      });
+
+      dispatch(getCart());
+
+      alert("Product added to cart successfully");
+
+      console.log(response.data);
+
+    } catch (error) {
+      console.log("Add to cart error:", error);
+
+      alert(
+        error.response?.data?.message || "Something went wrong"
+      );
+    }
+  };
 
   return (
     <section className="min-h-screen bg-slate-50">
@@ -93,8 +130,10 @@ const page = () => {
               {variants.map((variant) => (
                 <div
                   key={variant._id}
-                  className="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl" onClick={() => router.push(`/variants/${variant.slug}`)}
+                  className="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl"
+                  onClick={() => router.push(`/variants/${variant.slug}`)}
                 >
+
                   {/* Image */}
 
                   <div className="relative flex h-40 items-center justify-center overflow-hidden bg-slate-100 sm:h-52">
@@ -114,6 +153,7 @@ const page = () => {
                         {variant.discountPercentage}% OFF
                       </span>
                     )}
+
                   </div>
 
                   {/* Details */}
@@ -147,13 +187,14 @@ const page = () => {
                         </span>
                       )}
 
-                      
-
                     </div>
 
-                    {/* Add Button */}
+                    {/* Add to Cart Button */}
 
-                    <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95" >
+                    <button
+                      onClick={(event) => handleAddToCart(event, variant)}
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95"
+                    >
                       <span className="text-lg">+</span>
                       Add to Cart
                     </button>
@@ -171,6 +212,4 @@ const page = () => {
   );
 };
 
-export default page;
-
-
+export default Page;

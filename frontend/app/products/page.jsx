@@ -124,12 +124,7 @@ export default function Product() {
                 </p>
 
                 <div className="mt-4 flex items-center justify-between gap-2">
-                  <button
-                    onClick={(event) => event.stopPropagation()}
-                    className="rounded-lg border border-emerald-600 px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-600 hover:text-white"
-                  >
-                    + Add
-                  </button>
+                  
 
                 </div>
               </div>

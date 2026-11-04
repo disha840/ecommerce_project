@@ -1,5 +1,7 @@
 
+
 import React, { useState, useEffect } from "react";
+
 import {
   FiSearch,
   FiPlus,
@@ -10,6 +12,7 @@ import {
   FiXCircle,
   FiShield,
 } from "react-icons/fi";
+
 import { toast } from "react-toastify";
 import api from "../../api";
 import FormModal from "../../components/Role/FormModal";
@@ -21,7 +24,7 @@ const Role = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showdelete, setShowDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
@@ -30,8 +33,6 @@ const Role = () => {
   // GET ALL ROLES
   const fetchRoles = async () => {
     try {
-      setLoading(true);
-
       const response = await api.get("/role/showroles");
       setRoles(response.data.roles || []);
     } catch (error) {
@@ -63,20 +64,48 @@ const Role = () => {
     (role.name || "").toLowerCase().includes(search.toLowerCase())
   );
 
+  // ACTIVE ROLES COUNT
   const activeRoles = roles.filter(
     (role) => role.status === "Active"
   ).length;
 
+  // INACTIVE ROLES COUNT
   const inactiveRoles = roles.filter(
     (role) => role.status !== "Active"
   ).length;
 
+  // VIEW ROLE
   const viewHandler = (id) => {
     navigate(`/admin/viewrole/${id}`);
   };
 
+  // CHANGE ROLE STATUS
+  const handleStatusChange = async (id) => {
+    try {
+      const response = await api.put(`/role/toggle-status/${id}`);
+
+      toast.success(
+        response.data.message || "Status updated successfully"
+      );
+
+      // Fetch updated roles without showing loading screen
+      fetchRoles();
+
+    } catch (error) {
+      console.log(
+        "Status change error:",
+        error.response?.data || error
+      );
+
+      toast.error(
+        error.response?.data?.message || "Failed to update status"
+      );
+    }
+  };
+
   return (
     <div className="m-6 space-y-6">
+
       {/* DELETE MODAL */}
       {showdelete && (
         <DeleteRoleModal
@@ -106,6 +135,7 @@ const Role = () => {
 
       {/* STATS */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+
         {/* TOTAL ROLES */}
         <div className="rounded-xl border border-[#D9E8EF] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
           <div className="flex items-center justify-between">
@@ -167,6 +197,7 @@ const Role = () => {
       {/* SEARCH AND ADD ROLE BUTTON */}
       <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
           <div className="relative w-full sm:max-w-md">
             <FiSearch
               className="absolute left-3 top-1/2 -translate-y-1/2 text-[#087F95]"
@@ -190,11 +221,13 @@ const Role = () => {
             <FiPlus size={18} />
             Add Role
           </button>
+
         </div>
       </div>
 
       {/* ROLES TABLE */}
       <div className="overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-sm">
+
         <div className="border-b border-[#D9E8EF] px-5 py-5 sm:px-6">
           <h2 className="text-lg font-bold text-[#102A43]">
             All Roles
@@ -207,6 +240,7 @@ const Role = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-max">
+
             <thead className="border-b border-[#D9E8EF] bg-[#F0FAFC]">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-[#102A43]">
@@ -232,6 +266,7 @@ const Role = () => {
             </thead>
 
             <tbody className="divide-y divide-[#D9E8EF]">
+
               {loading ? (
                 <tr>
                   <td
@@ -241,6 +276,7 @@ const Role = () => {
                     Loading roles...
                   </td>
                 </tr>
+
               ) : filteredRoles.length === 0 ? (
                 <tr>
                   <td
@@ -250,15 +286,18 @@ const Role = () => {
                     {search ? "No matching roles found" : "No roles found"}
                   </td>
                 </tr>
+
               ) : (
                 filteredRoles.map((role) => (
                   <tr
                     key={role._id}
                     className="transition hover:bg-[#F0FAFC]"
                   >
+
                     {/* ROLE */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
+
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D7F2F6] text-[#087F95]">
                           <FiShield size={18} />
                         </div>
@@ -272,12 +311,14 @@ const Role = () => {
                             Role ID: {role._id}
                           </p>
                         </div>
+
                       </div>
                     </td>
 
                     {/* PERMISSIONS */}
                     <td className="px-6 py-4">
                       <div className="flex max-w-sm flex-wrap gap-2">
+
                         {(role.permissions || []).map((permission) => (
                           <span
                             key={permission}
@@ -293,16 +334,19 @@ const Role = () => {
                             No permissions
                           </span>
                         )}
+
                       </div>
                     </td>
 
                     {/* STATUS */}
                     <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange(role._id)}
+                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                           role.status === "Active"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-red-50 text-red-600"
+                            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                            : "bg-red-50 text-red-600 hover:bg-red-100"
                         }`}
                       >
                         {role.status === "Active" ? (
@@ -312,7 +356,7 @@ const Role = () => {
                         )}
 
                         {role.status || "Inactive"}
-                      </span>
+                      </button>
                     </td>
 
                     {/* CREATED AT */}
@@ -325,6 +369,7 @@ const Role = () => {
                     {/* ACTIONS */}
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
+
                         <button
                           type="button"
                           title="View"
@@ -354,11 +399,14 @@ const Role = () => {
                         >
                           <FiTrash2 size={17} />
                         </button>
+
                       </div>
                     </td>
+
                   </tr>
                 ))
               )}
+
             </tbody>
           </table>
         </div>
@@ -373,6 +421,7 @@ const Role = () => {
           onCreated={fetchRoles}
         />
       )}
+
     </div>
   );
 };

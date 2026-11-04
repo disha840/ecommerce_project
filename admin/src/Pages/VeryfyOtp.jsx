@@ -1,188 +1,381 @@
-import React, { useEffect, useState } from 'react'
-import axios from 'axios';
-import { useLocation, useNavigate } from 'react-router-dom';
-import Loader from '../components/Loader';
-import { toast } from 'react-toastify';
+import React, { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import {
+  FiArrowRight,
+  FiArrowLeft,
+  FiShield,
+  FiShoppingBag,
+  FiMail,
+  FiClock,
+} from "react-icons/fi";
 
-const VeryfyOtp = () => {
-    const location=useLocation();
-    const navigate=useNavigate()
-    const [loading,setLoading]=useState(false);
+import Loader from "../components/Loader";
 
-    const [timer,setTimer]=useState(20*60);
-    const [otp,setOtp]=useState("");
+const OTP_LENGTH = 4;
+const OTP_TIME = 20 * 60;
 
-    function inputHandler(e,idx){
-        const value=[...otp];
-        value[idx]=e.target.value;
-        const val=value.join("")
-        setOtp(val)
+const VerifyOtp = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const email = location?.state?.email;
+
+  const [loading, setLoading] = useState(false);
+  const [timer, setTimer] = useState(OTP_TIME);
+  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
+  const [error, setError] = useState("");
+
+  const inputRefs = useRef([]);
+
+  // Email nahi mila to wapas Forgot Password page par bhejo
+  useEffect(() => {
+    if (!email) {
+      navigate("/forgotpassw", { replace: true });
     }
-    
-    useEffect(()=>{
-        const t=setInterval(() => {
-            setTimer(prev => {
-                if(prev<=0){
-                    clearInterval(t)
-                    return 0;
-                }
-                return prev-1
-            })   
-        }, 1000);
+  }, [email, navigate]);
 
-        return()=>{
-            clearInterval(t);
+  // Page khulte hi pehla input focus ho
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+
+  // Timer
+  useEffect(() => {
+    const t = setInterval(() => {
+      setTimer((prev) => {
+        if (prev <= 0) {
+          clearInterval(t);
+          return 0;
         }
-    },[])
+        return prev - 1;
+      });
+    }, 1000);
 
-    async function submitHandler(e){
-        e.preventDefault();
-console.log(otp)
-       try{
-        setLoading(true)
-         const response=await axios.post(
-            "http://localhost:3000/admin/verifyotp",
-            {
-                email:location?.state?.email,
-                otp:otp
-            }
-        );
-        setLoading(false)
-        toast.success("otp verified")
+    return () => clearInterval(t);
+  }, []);
 
-        navigate("/resetpassword",{state:{email:response.data.email}})   
-       }
-       catch(error){
-        setLoading(false)
-        toast.error("Invalid OTP. Please enter the correct OTP.");
-        console.log(error)
-       }
+  // Input change: sirf digit allowed + next input par auto jump
+  function inputHandler(e, idx) {
+    const digit = e.target.value.replace(/\D/g, "").slice(-1);
+
+    const newOtp = [...otp];
+    newOtp[idx] = digit;
+    setOtp(newOtp);
+    setError("");
+
+    if (digit && idx < OTP_LENGTH - 1) {
+      inputRefs.current[idx + 1]?.focus();
+    }
+  }
+
+  // Backspace / Arrow keys
+  function keyDownHandler(e, idx) {
+    if (e.key === "Backspace") {
+      if (!otp[idx] && idx > 0) {
+        const newOtp = [...otp];
+        newOtp[idx - 1] = "";
+        setOtp(newOtp);
+        inputRefs.current[idx - 1]?.focus();
+      }
+    } else if (e.key === "ArrowLeft" && idx > 0) {
+      inputRefs.current[idx - 1]?.focus();
+    } else if (e.key === "ArrowRight" && idx < OTP_LENGTH - 1) {
+      inputRefs.current[idx + 1]?.focus();
+    }
+  }
+
+  // Paste support (pura OTP ek saath paste)
+  function pasteHandler(e) {
+    e.preventDefault();
+
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, OTP_LENGTH);
+
+    if (!pasted) return;
+
+    const newOtp = Array(OTP_LENGTH).fill("");
+    pasted.split("").forEach((d, i) => (newOtp[i] = d));
+    setOtp(newOtp);
+    setError("");
+
+    const nextIdx = Math.min(pasted.length, OTP_LENGTH - 1);
+    inputRefs.current[nextIdx]?.focus();
+  }
+
+  // Verify OTP
+  async function submitHandler(e) {
+    e.preventDefault();
+
+    const finalOtp = otp.join("");
+
+    if (finalOtp.length < OTP_LENGTH) {
+      setError(`Please enter the ${OTP_LENGTH}-digit OTP.`);
+      return;
     }
 
-    async function resendOtp() {
-        setTimer(20 * 60);
+    if (timer <= 0) {
+      setError("OTP has expired. Please request a new one.");
+      return;
+    }
 
-        try {
-            const response = await axios.post(
-                "http://localhost:3000/resendotp",
-                { email: location?.state?.email }
-            );
+    try {
+      setLoading(true);
 
-            console.log(response.data);
-        } catch (error) {
-            console.log(error.response?.data);
+      const response = await axios.post(
+        "http://localhost:3000/admin/verifyotp",
+        {
+          email: email,
+          otp: finalOtp,
         }
+      );
+
+      toast.success(response.data?.message || "OTP verified successfully!");
+
+      navigate("/resetpassword", {
+        state: { email: response.data.email },
+      });
+    } catch (error) {
+      console.log(error.response?.data);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Invalid OTP. Please enter the correct OTP."
+      );
+    } finally {
+      setLoading(false);
     }
+  }
 
-    return (
-        <>
-          {loading && <Loader/>}
-            <div className='min-h-screen w-full flex justify-center items-center bg-[#96566A]/30 px-4 py-8'>
+  // Resend OTP
+  async function resendOtp() {
+    try {
+      setLoading(true);
 
-                <div className='w-full max-w-5xl flex flex-col md:flex-row overflow-hidden rounded-3xl shadow-2xl'>
+      const response = await axios.post(
+        "http://localhost:3000/resendotp",
+        { email: email }
+      );
 
-                    {/* Left Side */}
-                    <div className='hidden md:flex flex-1 bg-[#96566A] text-[#FFF9F6] flex-col justify-center px-12 lg:px-16 py-16'>
+      toast.success(response.data?.message || "OTP resent successfully!");
 
-                        <div className='text-4xl lg:text-5xl font-bold leading-tight'>
-                            Verify your account
-                        </div>
+      setTimer(OTP_TIME);
+      setOtp(Array(OTP_LENGTH).fill(""));
+      setError("");
+      inputRefs.current[0]?.focus();
+    } catch (error) {
+      console.log(error.response?.data);
 
-                        <p className='mt-5 text-[#F0DDE1] text-sm leading-6 max-w-sm'>
-                            We have sent a verification code to your email.
-                            Enter the OTP to continue.
-                        </p>
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to resend OTP. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
-                    </div>
+  const minutes = Math.floor(timer / 60);
+  const seconds = String(timer % 60).padStart(2, "0");
 
+  return (
+    <>
+      {loading && <Loader />}
 
-                    {/* Right Side */}
-                    <form
-                        className='w-full md:flex-1 bg-[#F0DDE1] px-7 sm:px-10 lg:px-14 py-16 flex flex-col justify-center'
-                        onSubmit={submitHandler}
-                    >
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F0FAFC] px-4 py-8 sm:px-6 lg:px-8">
 
-                        <div className='flex flex-col gap-8 w-full'>
+        {/* Background Decorations */}
+        <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#22B8CF]/10 blur-3xl" />
 
-                            <div className='text-4xl font-semibold text-[#713F50] text-center'>
-                                Verify OTP
-                            </div>
+        <div className="pointer-events-none absolute -bottom-24 -right-20 h-80 w-80 rounded-full bg-[#087F95]/10 blur-3xl" />
 
-                            <p className='text-sm text-[#A17B86] text-center'>
-                                Enter the 4-digit OTP sent to your email
-                            </p>
+        {/* Main Card */}
+        <div className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-[#D9E8EF] bg-white shadow-2xl shadow-[#102A43]/10 md:min-h-screen md:flex-row">
 
+          {/* Left Welcome Panel */}
+          <div className="relative flex flex-col justify-between overflow-hidden bg-[#102A43] px-7 py-9 text-white sm:px-10 sm:py-12 md:w-[46%] md:px-12 lg:px-14">
 
-                            <div className='flex justify-center gap-3 sm:gap-4'>
+            {/* Decorative Circles */}
+            <div className="pointer-events-none absolute -right-20 -top-16 h-64 w-64 rounded-full border-8 border-[#22B8CF]/10" />
 
-                                <input
-                                    type='text'
-                                    inputMode='numeric'
-                                    maxLength={1}
-                                    className='border border-[#EBD9D9] p-2.5 bg-[#FFF9F6] text-[#713F50] rounded-xl text-center text-lg w-12 h-12 outline-none focus:border-[#B77B8C] focus:ring-2 focus:ring-[#96566A]/20'
-                                    onChange={(e)=>inputHandler(e,0)}
-                                />
+            <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-[#22B8CF]/10" />
 
-                                <input
-                                    type='text'
-                                    inputMode='numeric'
-                                    maxLength={1}
-                                    className='border border-[#EBD9D9] p-2.5 bg-[#FFF9F6] text-[#713F50] rounded-xl text-center text-lg w-12 h-12 outline-none focus:border-[#B77B8C] focus:ring-2 focus:ring-[#96566A]/20'
-                                    onChange={(e)=>inputHandler(e,1)}
-                                />
+            {/* Logo */}
+            <div className="relative z-10 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#22B8CF] text-[#102A43] shadow-lg shadow-black/10">
+                <FiShoppingBag size={25} />
+              </div>
 
-                                <input
-                                    type='text'
-                                    inputMode='numeric'
-                                    maxLength={1}
-                                    className='border border-[#EBD9D9] p-2.5 bg-[#FFF9F6] text-[#713F50] rounded-xl text-center text-lg w-12 h-12 outline-none focus:border-[#B77B8C] focus:ring-2 focus:ring-[#96566A]/20'
-                                    onChange={(e)=>inputHandler(e,2)}
-                                />
+              <div>
+                <h2 className="text-xl font-bold tracking-wide">MyStore</h2>
 
-                                <input
-                                    type='text'
-                                    inputMode='numeric'
-                                    maxLength={1}
-                                    className='border border-[#EBD9D9] p-2.5 bg-[#FFF9F6] text-[#713F50] rounded-xl text-center text-lg w-12 h-12 outline-none focus:border-[#B77B8C] focus:ring-2 focus:ring-[#96566A]/20'
-                                    onChange={(e)=>inputHandler(e,3)}
-                                />
+                <p className="text-xs text-slate-300">Admin Panel</p>
+              </div>
+            </div>
 
-                            </div>
+            {/* Welcome Text */}
+            <div className="relative z-10 my-10 md:my-0">
+              <div className="mb-5 flex w-fit items-center gap-2 rounded-full border border-[#22B8CF]/30 bg-[#22B8CF]/10 px-4 py-2">
+                <span className="h-2 w-2 rounded-full bg-[#22B8CF]" />
 
+                <span className="text-xs font-medium text-[#8DE3EC]">
+                  OTP VERIFICATION
+                </span>
+              </div>
 
-                            <div className='text-center text-sm font-semibold text-[#96566A]'>
-                                {Math.floor(timer/60)}:{String(timer%60).padStart(2,"0")}
-                            </div>
+              <h1 className="max-w-sm text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+                Verify your
+                <br />
+                <span className="text-[#22B8CF]">Account</span>
+              </h1>
 
+              <p className="mt-5 max-w-sm text-sm leading-7 text-slate-300 sm:text-base">
+                We have sent a verification code to your email. Enter the OTP
+                to continue.
+              </p>
 
-                            <button
-                                className='font-semibold text-white w-full py-3 rounded-xl bg-[#96566A] text-sm hover:bg-[#713F50] transition'
-                            >
-                                Verify OTP
-                            </button>
-
-
-                            <div className='text-center text-sm text-[#A17B86]'>
-                                Don't receive the code?
-
-                                <button
-                                    type='button'
-                                    onClick={resendOtp}
-                                    className='ml-1 font-semibold text-[#96566A] hover:underline'
-                                >
-                                    Resend OTP
-                                </button>
-                            </div>
-
-                        </div>
-
-                    </form>
-
+              <div className="mt-8 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-[#8DE3EC]">
+                  <FiShield size={21} />
                 </div>
 
-            </div>
-        </>
-    )
-}
+                <div>
+                  <p className="text-sm font-semibold">Secure Verification</p>
 
-export default VeryfyOtp
+                  <p className="mt-1 text-xs text-slate-400">
+                    Never share your OTP with anyone
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <p className="relative z-10 hidden text-xs text-slate-400 md:block">
+              © 2026 MyStore. All rights reserved.
+            </p>
+          </div>
+
+          {/* Right Form */}
+          <div className="flex flex-1 items-center justify-center px-6 py-9 sm:px-10 sm:py-12 lg:px-14">
+            <form className="w-full max-w-md" onSubmit={submitHandler}>
+
+              {/* Form Heading */}
+              <div className="mb-8">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#087F95]/10 text-[#087F95]">
+                  <FiMail size={24} />
+                </div>
+
+                <p className="mb-2 text-sm font-semibold text-[#087F95]">
+                  CHECK YOUR INBOX
+                </p>
+
+                <h2 className="text-3xl font-bold text-[#102A43] sm:text-4xl">
+                  Verify OTP
+                </h2>
+
+                <p className="mt-3 text-sm leading-6 text-[#627D98]">
+                  Enter the {OTP_LENGTH}-digit OTP sent to{" "}
+                  <span className="font-semibold text-[#243B53]">
+                    {email || "your email"}
+                  </span>
+                </p>
+              </div>
+
+              {/* OTP Inputs */}
+              <div className="mb-3 flex justify-center gap-3 sm:gap-4">
+                {otp.map((digit, idx) => (
+                  <input
+                    key={idx}
+                    ref={(el) => (inputRefs.current[idx] = el)}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete={idx === 0 ? "one-time-code" : "off"}
+                    maxLength={1}
+                    value={digit}
+                    aria-label={`OTP digit ${idx + 1}`}
+                    onChange={(e) => inputHandler(e, idx)}
+                    onKeyDown={(e) => keyDownHandler(e, idx)}
+                    onPaste={pasteHandler}
+                    onFocus={(e) => e.target.select()}
+                    className={`h-14 w-14 rounded-xl border bg-[#F8FCFD] text-center text-xl font-bold text-[#102A43] outline-none transition focus:ring-4 focus:ring-[#22B8CF]/10 sm:h-16 sm:w-16 ${
+                      error
+                        ? "border-red-400 focus:border-red-400"
+                        : "border-[#D9E8EF] focus:border-[#087F95]"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {error && (
+                <p className="mb-2 text-center text-xs text-red-500">
+                  {error}
+                </p>
+              )}
+
+              {/* Timer */}
+              <div className="mb-7 mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-[#087F95]">
+                <FiClock size={16} />
+
+                {timer > 0 ? (
+                  <span>
+                    {minutes}:{seconds}
+                  </span>
+                ) : (
+                  <span className="text-red-500">OTP expired</span>
+                )}
+              </div>
+
+              {/* Verify Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="group flex w-full items-center justify-center gap-3 rounded-xl bg-[#087F95] py-3.5 text-sm font-bold text-white shadow-lg shadow-[#087F95]/20 transition duration-300 hover:-translate-y-0.5 hover:bg-[#066779] hover:shadow-xl hover:shadow-[#087F95]/25 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span>{loading ? "Verifying..." : "Verify OTP"}</span>
+
+                {!loading && (
+                  <FiArrowRight
+                    size={19}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                )}
+              </button>
+
+              {/* Resend */}
+              <div className="mt-6 text-center text-sm text-[#627D98]">
+                Didn't receive the code?
+                <button
+                  type="button"
+                  onClick={resendOtp}
+                  disabled={loading}
+                  className="ml-1 font-semibold text-[#087F95] transition hover:text-[#102A43] hover:underline disabled:opacity-60"
+                >
+                  Resend OTP
+                </button>
+              </div>
+
+              {/* Back */}
+              <div className="mt-5 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgotpassw")}
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[#087F95] transition hover:text-[#102A43] hover:underline"
+                >
+                  <FiArrowLeft size={16} />
+                  Change email
+                </button>
+              </div>
+
+              <p className="mt-8 text-center text-xs text-[#94A8B8] md:hidden">
+                © 2026 MyStore. All rights reserved.
+              </p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default VerifyOtp;

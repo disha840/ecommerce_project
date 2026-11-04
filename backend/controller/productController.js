@@ -1,9 +1,11 @@
-const Product =require("../models/productModel")
+
+const Product = require("../models/productModel");
 const Category = require("../models/categoryModel");
 const Subcategory = require("../models/subcategoryModel");
 const Brand = require("../models/brandModel");
-const cloudinary=require("../cloudinary")
-const mongoose=require("../database/db")
+const cloudinary = require("../cloudinary");
+const mongoose = require("../database/db");
+
 const createProduct = async (req, res) => {
   try {
     const {
@@ -15,14 +17,12 @@ const createProduct = async (req, res) => {
       unit,
     } = req.body;
 
-    // Validate required fields
     if (!name?.trim() || !category || !brand) {
       return res.status(400).json({
         message: "Name, category and brand are required",
       });
     }
 
-    // Check category and brand
     const categoryExists = await Category.findById(category);
     const brandExists = await Brand.findById(brand);
 
@@ -38,7 +38,6 @@ const createProduct = async (req, res) => {
       });
     }
 
-    // Check subcategory only if provided
     if (subcategory) {
       const subcategoryExists = await Subcategory.findById(subcategory);
 
@@ -49,7 +48,6 @@ const createProduct = async (req, res) => {
       }
     }
 
-    // Upload images
     let files = req.files?.images;
 
     if (!files) {
@@ -75,14 +73,12 @@ const createProduct = async (req, res) => {
       });
     }
 
-    // Get tags
     let tags = [];
 
     if (req.body.tags) {
       tags = JSON.parse(req.body.tags);
     }
 
-    // Generate slug
     const baseSlug = name
       .trim()
       .toLowerCase()
@@ -97,7 +93,6 @@ const createProduct = async (req, res) => {
       counter++;
     }
 
-    // Create product
     const product = await Product.create({
       name: name.trim(),
       slug,
@@ -117,6 +112,7 @@ const createProduct = async (req, res) => {
       message: "Product added successfully",
       product,
     });
+
   } catch (error) {
     console.log("Create product error:", error);
 
@@ -126,6 +122,7 @@ const createProduct = async (req, res) => {
     });
   }
 };
+
 const showProducts = async (req, res) => {
   try {
     const products = await Product.find()
@@ -139,6 +136,7 @@ const showProducts = async (req, res) => {
       message: "Products fetched successfully",
       products,
     });
+
   } catch (error) {
     console.log("Show products error:", error);
 
@@ -150,19 +148,10 @@ const showProducts = async (req, res) => {
   }
 };
 
-const updateProduct=async(req,res)=>{
- try {
+const updateProduct = async (req, res) => {
+  try {
     const { id } = req.params;
 
-    // Check valid MongoDB ID
-    // if (!mongoose.Types.ObjectId.isValid(id)) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Invalid product ID",
-    //   });
-    // }
-
-    // Find existing product
     const product = await Product.findById(id);
 
     if (!product) {
@@ -206,7 +195,7 @@ const updateProduct=async(req,res)=>{
       product.isActive = isActive === "true" || isActive === true;
     }
 
-    // Preserve images that the user has kept
+    // Get existing images
     let imagesToKeep = product.images || [];
 
     if (existingImages !== undefined) {
@@ -221,9 +210,27 @@ const updateProduct=async(req,res)=>{
           message: "Invalid existing images",
         });
       }
+
+      // Convert URL strings into objects using old product image data
+      imagesToKeep = imagesToKeep.map((image) => {
+        if (typeof image === "string") {
+          const oldImage = product.images.find(
+            (item) => item.url === image
+          );
+
+          return oldImage
+            ? {
+                url: oldImage.url,
+                public_id: oldImage.public_id,
+              }
+            : null;
+        }
+
+        return image;
+      }).filter(Boolean);
     }
 
-
+    // Upload new images
     let uploadedImages = [];
 
     if (req.files?.images) {
@@ -238,9 +245,23 @@ const updateProduct=async(req,res)=>{
         );
 
         uploadedImages.push({
-  url: result.secure_url,
-  public_id: result.public_id
-});
+          url: result.secure_url,
+          public_id: result.public_id,
+        });
+      }
+    }
+
+    // Find removed images
+    const removedImages = product.images.filter((oldImage) => {
+      return !imagesToKeep.some(
+        (image) => image.public_id === oldImage.public_id
+      );
+    });
+
+    // Delete removed images from Cloudinary
+    for (const image of removedImages) {
+      if (image.public_id) {
+        await cloudinary.uploader.destroy(image.public_id);
       }
     }
 
@@ -254,6 +275,7 @@ const updateProduct=async(req,res)=>{
       message: "Product updated successfully",
       product,
     });
+
   } catch (error) {
     console.error("Update product error:", error);
 
@@ -263,10 +285,10 @@ const updateProduct=async(req,res)=>{
       error: error.message,
     });
   }
-}
+};
 
-const viewProduct=async(req,res)=>{
-     try {
+const viewProduct = async (req, res) => {
+  try {
     const product = await Product.findById(req.params.id)
       .populate("category", "name")
       .populate("subcategory", "name")
@@ -283,13 +305,14 @@ const viewProduct=async(req,res)=>{
       success: true,
       product,
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
-}
+};
 
 const deleteProduct = async (req, res) => {
   try {
@@ -302,20 +325,12 @@ const deleteProduct = async (req, res) => {
       });
     }
 
-    // Delete images from Cloudinary
     for (const image of product.images) {
-      console.log("Public ID:", image.public_id);
-
       if (image.public_id) {
-        const result = await cloudinary.uploader.destroy(
-          image.public_id
-        );
-
-        console.log("Cloudinary result:", result);
+        await cloudinary.uploader.destroy(image.public_id);
       }
     }
 
-    // Delete product from MongoDB
     await Product.findByIdAndDelete(req.params.id);
 
     return res.status(200).json({
@@ -332,4 +347,70 @@ const deleteProduct = async (req, res) => {
     });
   }
 };
-module.exports = { createProduct ,showProducts,updateProduct,viewProduct,deleteProduct};
+
+const showProductsBySubcategory = async (req, res) => {
+  try {
+    const { subcategoryId } = req.params;
+
+    const products = await Product.find({
+      subcategory: subcategoryId,
+      isActive: true,
+    })
+      .populate("category", "name")
+      .populate("subcategory", "name")
+      .populate("brand", "name")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Subcategory products fetched successfully",
+      products,
+    });
+
+  } catch (error) {
+    console.log("Show subcategory products error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch products",
+      error: error.message,
+    });
+  }
+};
+const showFeaturedProducts = async (req, res) => {
+  try {
+    const products = await Product.find({
+      isFeatured: true,
+      isActive: true,
+    })
+      .populate("category", "name")
+      .populate("subcategory", "name")
+      .populate("brand", "name")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Featured products fetched successfully",
+      products,
+    });
+
+  } catch (error) {
+    console.log("Show featured products error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch featured products",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = {
+  createProduct,
+  showProducts,
+  updateProduct,
+  viewProduct,
+  deleteProduct,
+  showProductsBySubcategory,
+  showFeaturedProducts
+};

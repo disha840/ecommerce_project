@@ -11,7 +11,7 @@ const authMiddleware = (req, res, next) => {
         else{
             token = req.cookies.token
         }
-console.log("my token",token)
+// console.log("my token",token)
         // Token nahi mila
         if (!token) {
             return res.status(401).json({

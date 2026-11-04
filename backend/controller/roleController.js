@@ -141,6 +141,25 @@ const viewRole = async (req, res) => {
   }
 };
 
+ async function toggleStatus(req,res){
+   try {
+    const role = await Role.findById(req.params.id);
 
+    if (!role) {
+      return res.status(404).send({ message: "role not found" });
+    }
 
-module.exports={createRole,getRoles,updateRole,deleteRole,viewRole}
+    role.status = role.status === "Active" ? "Inactive" : "Active";
+
+    await role.save();
+
+    res.status(200).send({
+      message: "Status updated successfully",
+      role,
+    });
+  } catch (error) {
+    res.status(500).send({ message: "Internal server error" });
+  }
+
+}
+module.exports={createRole,getRoles,updateRole,deleteRole,viewRole,toggleStatus}

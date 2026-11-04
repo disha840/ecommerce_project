@@ -16,6 +16,7 @@ import {
   Boxes,
   Package,
   ShoppingBag,
+  ClipboardList,
   ChevronRight,
   X,
   LogOut,
@@ -78,7 +79,12 @@ const Sidebar = () => {
       name: "Product-Variant",
       icon: ShoppingBag,
       path: "/admin/productvariant",
-    },
+    },{
+      name:"orders",
+      icon: ClipboardList,
+      path:"/admin/orders"
+    }
+  
   ];
 
   const logoutHandler = async () => {
@@ -201,26 +207,7 @@ const Sidebar = () => {
             <span>Logout</span>
           </button>
 
-          {/* Footer Card */}
-          <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-3.5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#22B8CF]/15">
-                <ShieldCheck
-                  size={19}
-                  className="text-[#71D4E2]"
-                />
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold text-white">
-                  MyStore Admin
-                </p>
-                <p className="mt-1 text-[10px] text-[#8AA9BF]">
-                  Manage your store easily
-                </p>
-              </div>
-            </div>
-          </div>
+         
         </div>
       </aside>
 

@@ -1,9 +1,9 @@
 const checkPermission = (module, action) => {
   return (req, res, next) => {
 
-    //   if (req.user?.role === "super_admin") {
-    //   return next();
-    // }
+      if (req.user?.role === "super_admin") {
+      return next();
+    }
     const permission = `${module}:${action}`;
 
     const permissions = req.user.permissions;

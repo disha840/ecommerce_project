@@ -9,10 +9,12 @@ const {
   getRoles,
   updateRole,
   deleteRole,
+  toggleStatus,
   viewRole
 } = require("../controller/roleController");
 
 router.use(auth);
+
 
 router.post(
   "/createrole",
@@ -24,6 +26,11 @@ router.get(
   "/showroles",
   checkPermission("roles","read"),
   getRoles
+);
+router.put(
+  "/toggle-status/:id",
+  checkPermission("roles","update"),
+  toggleStatus
 );
 
 router.put(

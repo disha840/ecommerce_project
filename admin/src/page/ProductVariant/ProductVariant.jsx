@@ -1,5 +1,6 @@
 
 
+import { Navigate, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import {
   FiSearch,
@@ -17,12 +18,17 @@ import api from "../../api";
 import DeleteVariantModal from "../../components/ProductVariant/DeleteVariant";
 
 function ProductVariant() {
+    const navigate=useNavigate()
   const [showModal, setShowModal] = useState(false);
   const [variants, setVariants] = useState([]);
-  const [deletemodal,setShowDelete]=useState(false);
-  const [deleteId,setDeleteId]=useState(null)
+  const [deletemodal, setShowDelete] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  // Selected variant for editing
+  const [selectedVariant, setSelectedVariant] = useState(null);
 
   const getProductVariants = async () => {
+  
     try {
       const response = await api.get("/productvariant/getproductvariants");
       console.log(response);
@@ -36,17 +42,44 @@ function ProductVariant() {
     getProductVariants();
   }, []);
 
+  // Add Variant
+  function handleAdd() {
+    setSelectedVariant(null);
+    setShowModal(true);
+  }
+
+  // Edit Variant
+  function handleEdit(variant) {
+    setSelectedVariant(variant);
+    setShowModal(true);
+  }
+
+  // Close Add/Edit Modal
+  function handleClose() {
+    setShowModal(false);
+    setSelectedVariant(null);
+    getProductVariants();
+  }
+
   return (
     <div className="min-h-screen bg-[#F0FAFC] p-6 text-[#102A43]">
+
+      {/* Add / Edit Modal */}
       {showModal && (
         <AddVariant
-          onClose={() => {
-            setShowModal(false);
-            getProductVariants();
-          }}
+          variant={selectedVariant}
+          onClose={handleClose}
         />
       )}
-      {deletemodal&& <DeleteVariantModal variantId={deleteId} onClose={()=> setShowDelete(false)}  onDeleted={getProductVariants}/>}
+
+      {/* Delete Modal */}
+      {deletemodal && (
+        <DeleteVariantModal
+          variantId={deleteId}
+          onClose={() => setShowDelete(false)}
+          onDeleted={getProductVariants}
+        />
+      )}
 
       {/* Header */}
       <div className="mb-6">
@@ -61,6 +94,7 @@ function ProductVariant() {
 
       {/* Statistics Cards */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
         {/* Total Variants */}
         <div className="rounded-xl border border-[#D9E8EF] bg-white p-5">
           <div className="flex items-center justify-between">
@@ -130,6 +164,7 @@ function ProductVariant() {
 
       {/* Search and Add Variant */}
       <div className="mb-5 flex flex-col gap-3 rounded-xl border border-[#D9E8EF] bg-white p-4 sm:flex-row sm:items-center">
+
         <div className="relative w-full sm:flex-1">
           <FiSearch
             className="absolute left-3 top-1/2 -translate-y-1/2 text-[#627D98]"
@@ -145,7 +180,7 @@ function ProductVariant() {
 
         <button
           type="button"
-          onClick={() => setShowModal(true)}
+          onClick={handleAdd}
           className="flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#087F95] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#066779]"
         >
           <FiPlus size={18} />
@@ -155,6 +190,7 @@ function ProductVariant() {
 
       {/* Variants Table */}
       <div className="overflow-hidden rounded-xl border border-[#D9E8EF] bg-white">
+
         <div className="border-b border-[#D9E8EF] px-5 py-4">
           <h2 className="font-semibold text-[#102A43]">
             All Product Variants
@@ -167,6 +203,7 @@ function ProductVariant() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
+
             <thead className="bg-[#EAF7FA] text-[#102A43]">
               <tr>
                 <th className="whitespace-nowrap px-5 py-4 font-semibold">
@@ -267,39 +304,45 @@ function ProductVariant() {
                     {/* Action Icons */}
                     <td className="whitespace-nowrap px-5 py-4">
                       <div className="flex items-center gap-2">
+
                         <button
                           type="button"
-                          title="View Variant"
+                          title="View Variant" onClick={() => navigate(`/admin/viewvariant/${variant._id}`)}
                           className="rounded-lg border border-[#D9E8EF] p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
                         >
                           <FiEye size={17} />
                         </button>
 
+                        {/* Edit Button */}
                         <button
                           type="button"
                           title="Edit Variant"
+                          onClick={() => handleEdit(variant)}
                           className="rounded-lg border border-[#D9E8EF] p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
                         >
                           <FiEdit2 size={17} />
                         </button>
 
+                        {/* Delete Button */}
                         <button
                           type="button"
                           title="Delete Variant"
-                          className="rounded-lg border border-[#D9E8EF] p-2 text-[#627D98] transition hover:bg-[#EAF7FA] hover:text-[#102A43]" onClick={()=>{
-                            setShowDelete(true)
-                            setDeleteId(variant._id)
-
+                          className="rounded-lg border border-[#D9E8EF] p-2 text-[#627D98] transition hover:bg-[#EAF7FA] hover:text-[#102A43]"
+                          onClick={() => {
+                            setShowDelete(true);
+                            setDeleteId(variant._id);
                           }}
                         >
                           <FiTrash2 size={17} />
                         </button>
+
                       </div>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
+
           </table>
         </div>
       </div>

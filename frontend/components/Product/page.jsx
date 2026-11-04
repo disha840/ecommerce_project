@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -14,21 +15,21 @@ export default function Product() {
     const fetchProducts = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3000/products/showproducts"
+          "http://localhost:3000/products/featured"
         );
 
         const data = await response.json();
 
-        console.log("Products response:", data.products);
+        console.log("Featured Products:", data.products);
 
         if (response.ok && Array.isArray(data.products)) {
           setProducts(data.products);
         } else {
           setProducts([]);
-          console.log(data.message || "Products fetch nahi hue");
+          console.log(data.message || "Featured products fetch nahi hue");
         }
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error fetching featured products:", error);
         setProducts([]);
       }
     };
@@ -50,7 +51,7 @@ export default function Product() {
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
-            Popular Products
+            Featured Products
           </h2>
 
           <p className="mt-2 text-sm text-gray-500">
@@ -116,18 +117,9 @@ export default function Product() {
                   {product.name}
                 </h3>
 
-                
-
                 <div className="mt-4 flex items-center justify-between gap-2">
 
                   
-
-                  <button
-                    onClick={(event) => event.stopPropagation()}
-                    className="rounded-lg border border-emerald-600 px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-600 hover:text-white"
-                  >
-                    + Add
-                  </button>
 
                 </div>
               </div>

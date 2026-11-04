@@ -1,186 +1,367 @@
-import React, { useState } from 'react'
-import axios from 'axios';
-import { useLocation, useNavigate } from 'react-router-dom';
-import Loader from '../components/Loader';
-import { toast } from 'react-toastify';
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import {
+  FiLock,
+  FiEye,
+  FiEyeOff,
+  FiArrowRight,
+  FiArrowLeft,
+  FiShield,
+  FiShoppingBag,
+  FiKey,
+} from "react-icons/fi";
+
+import Loader from "../components/Loader";
+
 const ResetPass = () => {
-  const [loading,setLoading]=useState(false);
-    const [formData, setFormData] = useState({
-        password: "",
-        confirmPassword: ""
+  const location = useLocation();
+  const navigate = useNavigate();
+  const email = location?.state?.email;
+
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError] = useState({});
+  const [formData, setFormData] = useState({
+    password: "",
+    confirmPassword: "",
+  });
+
+  // Email nahi mila to wapas Forgot Password page par bhejo
+  useEffect(() => {
+    if (!email) {
+      navigate("/forgotpassw", { replace: true });
+    }
+  }, [email, navigate]);
+
+  // Input Handler
+  function inputHandler(e) {
+    const { name, value } = e.target;
+
+    setFormData({
+      ...formData,
+      [name]: value,
     });
 
-    const [error, setError] = useState({});
+    setError({
+      ...error,
+      [name]: "",
+    });
+  }
 
-    const location = useLocation();
-    const navigate = useNavigate();
+  // Form Validation
+  function errorHandler() {
+    const errors = {};
 
-    function inputHandler(e) {
-        const { name, value } = e.target;
-
-        setFormData({
-            ...formData,
-            [name]: value
-        });
+    if (!formData.password) {
+      errors.password = "Please enter your new password.";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must contain at least 6 characters.";
+    } else if (
+      !/[A-Z]/.test(formData.password) ||
+      !/[a-z]/.test(formData.password) ||
+      !/[0-9]/.test(formData.password)
+    ) {
+      errors.password =
+        "Password must contain uppercase, lowercase and a number.";
     }
 
-    function errorHandler() {
-        const obj = {};
-
-        if (!formData.password) {
-            obj.password = "please enter your password";
-        }
-        else if (formData.password.length < 6) {
-            obj.password = "password must be greater than 6";
-        }
-        else if (
-            (!/[A-Z]/.test(formData.password)) ||
-            (!/[a-z]/.test(formData.password)) ||
-            (!/[0-9]/.test(formData.password))
-        ) {
-            obj.password = "password must contain atleast one uppercase one lowercase and one number";
-        }
-
-        else if (!formData.confirmPassword) {
-            obj.confirmPassword = "confirm your password";
-        }
-        else if (formData.password != formData.confirmPassword) {
-            obj.confirmPassword = "Passwords do not match";
-        }
-
-        return obj;
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = "Please confirm your password.";
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match.";
     }
 
-    async function submitHandler(e) {
-        e.preventDefault();
+    return errors;
+  }
 
-        const errors = errorHandler();
+  // Reset Password Handler
+  async function submitHandler(e) {
+    e.preventDefault();
 
-        if (Object.keys(errors).length == 0) {
+    const errors = errorHandler();
+    setError(errors);
 
-            try {
-                setLoading(true)
-                const response = await axios.post(
-                    "http://localhost:3000/admin/changepassword",
-                    {
-                        email: location?.state?.email,
-                        password: formData.password
-                    }
-                );
-                setLoading(false)
-                toast.success("Password reset successfully.");
-
-                setFormData({
-                    password: "",
-                    confirmPassword: ""
-                });
-
-                navigate("/login", {
-                    state: { email: response.data.email }
-                });
-
-            }
-            catch (err) {
-                setLoading(false)
-                toast.error("Failed to reset password. Please try again.");
-                console.log(err);
-            }
-        }
-
-        setError(errors);
+    if (Object.keys(errors).length > 0) {
+      return;
     }
 
-    return (
-        <>
-          {loading && <Loader/>}
-            <div className='h-screen w-screen flex justify-center items-center bg-[#96566A]/30 px-4'>
+    try {
+      setLoading(true);
 
-                <div className='w-full max-w-5xl flex flex-col md:flex-row overflow-hidden rounded-3xl shadow-2xl'>
+      const response = await axios.post(
+        "http://localhost:3000/admin/changepassword",
+        {
+          email: email,
+          password: formData.password,
+        }
+      );
 
-                    {/* Left Side */}
-                    <div className='hidden md:flex flex-1 bg-[#96566A] text-[#FFF9F6] flex-col justify-center px-12 lg:px-16'>
+      toast.success(
+        response.data?.message || "Password reset successfully!"
+      );
 
-                        <div className='text-4xl lg:text-5xl font-bold leading-tight'>
-                            Create a new password
-                        </div>
+      setFormData({
+        password: "",
+        confirmPassword: "",
+      });
 
-                        <p className='mt-5 text-[#F0DDE1] text-sm leading-6 max-w-sm'>
-                            Choose a strong password for your account and
-                            make sure you remember it.
-                        </p>
+      navigate("/login", {
+        replace: true,
+        state: { email: response.data.email },
+      });
+    } catch (err) {
+      console.log(err.response?.data);
 
-                    </div>
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to reset password. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
+  return (
+    <>
+      {loading && <Loader />}
 
-                    {/* Right Side */}
-                    <form
-                        className='w-full md:flex-1 bg-[#F0DDE1] px-7 sm:px-10 lg:px-14 py-16 flex flex-col justify-center'
-                        onSubmit={submitHandler}
-                    >
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F0FAFC] px-4 py-8 sm:px-6 lg:px-8">
 
-                        <div className='flex flex-col gap-6 w-full'>
+        {/* Background Decorations */}
+        <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#22B8CF]/10 blur-3xl" />
 
-                            <div className='text-4xl font-semibold text-[#713F50] text-center'>
-                                Reset Password
-                            </div>
+        <div className="pointer-events-none absolute -bottom-24 -right-20 h-80 w-80 rounded-full bg-[#087F95]/10 blur-3xl" />
 
-                            <p className='text-sm text-[#A17B86] text-center'>
-                                Enter your new password below
-                            </p>
+        {/* Main Card */}
+        <div className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-[#D9E8EF] bg-white shadow-2xl shadow-[#102A43]/10 md:min-h-screen md:flex-row">
 
+          {/* Left Welcome Panel */}
+          <div className="relative flex flex-col justify-between overflow-hidden bg-[#102A43] px-7 py-9 text-white sm:px-10 sm:py-12 md:w-[46%] md:px-12 lg:px-14">
 
-                            {/* Password */}
-                            <label>
-                                <input
-                                    type='password'
-                                    value={formData.password}
-                                    placeholder='Password'
-                                    className='border border-[#EBD9D9] w-full px-4 py-3 bg-[#FFF9F6] text-[#713F50] placeholder:text-[#AD9299] rounded-xl text-sm outline-none focus:border-[#B77B8C] focus:ring-2 focus:ring-[#96566A]/20'
-                                    name="password"
-                                    onChange={inputHandler}
-                                />
+            {/* Decorative Circles */}
+            <div className="pointer-events-none absolute -right-20 -top-16 h-64 w-64 rounded-full border-8 border-[#22B8CF]/10" />
 
-                                {error.password &&
-                                    <p className='text-[#B65D70] text-xs mt-1'>
-                                        {error.password}
-                                    </p>
-                                }
-                            </label>
+            <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-[#22B8CF]/10" />
 
+            {/* Logo */}
+            <div className="relative z-10 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#22B8CF] text-[#102A43] shadow-lg shadow-black/10">
+                <FiShoppingBag size={25} />
+              </div>
 
-                            {/* Confirm Password */}
-                            <label>
-                                <input
-                                    type='password'
-                                    value={formData.confirmPassword}
-                                    placeholder='Confirm Password'
-                                    className='border border-[#EBD9D9] w-full px-4 py-3 bg-[#FFF9F6] text-[#713F50] placeholder:text-[#AD9299] rounded-xl text-sm outline-none focus:border-[#B77B8C] focus:ring-2 focus:ring-[#96566A]/20'
-                                    name="confirmPassword"
-                                    onChange={inputHandler}
-                                />
+              <div>
+                <h2 className="text-xl font-bold tracking-wide">MyStore</h2>
 
-                                {error.confirmPassword &&
-                                    <p className='text-[#B65D70] text-xs mt-1'>
-                                        {error.confirmPassword}
-                                    </p>
-                                }
-                            </label>
+                <p className="text-xs text-slate-300">Admin Panel</p>
+              </div>
+            </div>
 
+            {/* Welcome Text */}
+            <div className="relative z-10 my-10 md:my-0">
+              <div className="mb-5 flex w-fit items-center gap-2 rounded-full border border-[#22B8CF]/30 bg-[#22B8CF]/10 px-4 py-2">
+                <span className="h-2 w-2 rounded-full bg-[#22B8CF]" />
 
-                            {/* Button */}
-                            <button className='font-semibold text-white w-full py-3 rounded-xl bg-[#96566A] text-sm hover:bg-[#713F50] transition'>
-                                Reset Password
-                            </button>
+                <span className="text-xs font-medium text-[#8DE3EC]">
+                  RESET PASSWORD
+                </span>
+              </div>
 
-                        </div>
+              <h1 className="max-w-sm text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+                Create a new
+                <br />
+                <span className="text-[#22B8CF]">Password</span>
+              </h1>
 
-                    </form>
+              <p className="mt-5 max-w-sm text-sm leading-7 text-slate-300 sm:text-base">
+                Choose a strong password for your account and make sure you
+                remember it.
+              </p>
 
+              <div className="mt-8 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-[#8DE3EC]">
+                  <FiShield size={21} />
                 </div>
 
-            </div>
-        </>
-    )
-}
+                <div>
+                  <p className="text-sm font-semibold">Keep it Strong</p>
 
-export default ResetPass
+                  <p className="mt-1 text-xs text-slate-400">
+                    Use uppercase, lowercase and numbers
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <p className="relative z-10 hidden text-xs text-slate-400 md:block">
+              © 2026 MyStore. All rights reserved.
+            </p>
+          </div>
+
+          {/* Right Form */}
+          <div className="flex flex-1 items-center justify-center px-6 py-9 sm:px-10 sm:py-12 lg:px-14">
+            <form className="w-full max-w-md" onSubmit={submitHandler}>
+
+              {/* Form Heading */}
+              <div className="mb-8">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#087F95]/10 text-[#087F95]">
+                  <FiKey size={24} />
+                </div>
+
+                <p className="mb-2 text-sm font-semibold text-[#087F95]">
+                  ALMOST DONE
+                </p>
+
+                <h2 className="text-3xl font-bold text-[#102A43] sm:text-4xl">
+                  Reset Password
+                </h2>
+
+                <p className="mt-3 text-sm leading-6 text-[#627D98]">
+                  Enter your new password below.
+                </p>
+              </div>
+
+              {/* New Password */}
+              <div className="mb-5">
+                <label
+                  htmlFor="password"
+                  className="mb-2 block text-sm font-semibold text-[#243B53]"
+                >
+                  New Password
+                </label>
+
+                <div
+                  className={`flex items-center gap-3 rounded-xl border bg-[#F8FCFD] px-4 transition focus-within:ring-4 focus-within:ring-[#22B8CF]/10 ${
+                    error.password
+                      ? "border-red-400 focus-within:border-red-400"
+                      : "border-[#D9E8EF] focus-within:border-[#087F95]"
+                  }`}
+                >
+                  <FiLock size={19} className="shrink-0 text-[#087F95]" />
+
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    placeholder="Enter new password"
+                    autoComplete="new-password"
+                    className="w-full bg-transparent py-3.5 text-sm text-[#102A43] outline-none placeholder:text-[#94A8B8]"
+                    onChange={inputHandler}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="shrink-0 text-[#627D98] transition hover:text-[#087F95]"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <FiEyeOff size={19} />
+                    ) : (
+                      <FiEye size={19} />
+                    )}
+                  </button>
+                </div>
+
+                {error.password && (
+                  <p className="mt-2 text-xs leading-5 text-red-500">
+                    {error.password}
+                  </p>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div className="mb-7">
+                <label
+                  htmlFor="confirmPassword"
+                  className="mb-2 block text-sm font-semibold text-[#243B53]"
+                >
+                  Confirm Password
+                </label>
+
+                <div
+                  className={`flex items-center gap-3 rounded-xl border bg-[#F8FCFD] px-4 transition focus-within:ring-4 focus-within:ring-[#22B8CF]/10 ${
+                    error.confirmPassword
+                      ? "border-red-400 focus-within:border-red-400"
+                      : "border-[#D9E8EF] focus-within:border-[#087F95]"
+                  }`}
+                >
+                  <FiLock size={19} className="shrink-0 text-[#087F95]" />
+
+                  <input
+                    id="confirmPassword"
+                    type={showConfirm ? "text" : "password"}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    placeholder="Confirm new password"
+                    autoComplete="new-password"
+                    className="w-full bg-transparent py-3.5 text-sm text-[#102A43] outline-none placeholder:text-[#94A8B8]"
+                    onChange={inputHandler}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="shrink-0 text-[#627D98] transition hover:text-[#087F95]"
+                    aria-label={
+                      showConfirm ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showConfirm ? (
+                      <FiEyeOff size={19} />
+                    ) : (
+                      <FiEye size={19} />
+                    )}
+                  </button>
+                </div>
+
+                {error.confirmPassword && (
+                  <p className="mt-2 text-xs leading-5 text-red-500">
+                    {error.confirmPassword}
+                  </p>
+                )}
+              </div>
+
+              {/* Reset Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="group flex w-full items-center justify-center gap-3 rounded-xl bg-[#087F95] py-3.5 text-sm font-bold text-white shadow-lg shadow-[#087F95]/20 transition duration-300 hover:-translate-y-0.5 hover:bg-[#066779] hover:shadow-xl hover:shadow-[#087F95]/25 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span>{loading ? "Resetting..." : "Reset Password"}</span>
+
+                {!loading && (
+                  <FiArrowRight
+                    size={19}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                )}
+              </button>
+
+              {/* Back to Login */}
+              <div className="mt-6 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => navigate("/")}
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[#087F95] transition hover:text-[#102A43] hover:underline"
+                >
+                  <FiArrowLeft size={16} />
+                  Back to Login
+                </button>
+              </div>
+
+              <p className="mt-8 text-center text-xs text-[#94A8B8] md:hidden">
+                © 2026 MyStore. All rights reserved.
+              </p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default ResetPass;

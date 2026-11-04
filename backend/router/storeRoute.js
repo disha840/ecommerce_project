@@ -8,7 +8,8 @@ const {
   getStoreManagers,
   createStore,
   getStores,
-  deleteStore
+  deleteStore,
+  
 } = require("../controller/storeController");
 
 router.use(auth);
@@ -17,6 +18,7 @@ router.get(
   "/managers",
   getStoreManagers
 );
+
 
 router.post(
   "/createStore",

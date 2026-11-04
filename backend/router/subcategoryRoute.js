@@ -7,7 +7,8 @@ const {
   ShowSubCategory,
   updateSubcategory,
   viewSubCategory,
-  deleteSubCategory
+  deleteSubCategory,
+  ShowSubCategoryByCategory
 } = require("../controller/subCatController");
 
 const router = express.Router();
@@ -38,6 +39,10 @@ router.get(
 router.delete(
   "/deletesubcategory/:id",
   deleteSubCategory
+);
+router.get(
+  "/showsubcategories/:categoryId",
+  ShowSubCategoryByCategory
 );
 
 module.exports = router;

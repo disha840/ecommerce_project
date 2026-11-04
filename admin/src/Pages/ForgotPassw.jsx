@@ -1,133 +1,257 @@
-import React, { useState } from 'react'
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
-import Loader from '../components/Loader';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import {
+  FiMail,
+  FiArrowRight,
+  FiArrowLeft,
+  FiShield,
+  FiShoppingBag,
+  FiKey,
+} from "react-icons/fi";
+
+import Loader from "../components/Loader";
 
 const ForgotPassw = () => {
-     const [loading,setLoading]=useState(false);
-    const navigate=useNavigate()
-    const [email,setEmail]=useState("");
- const [error,setError]=useState({})
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState({});
 
-    function errorHandler(){
-    const obj={};
-    
-    if(!email){
-      obj.email="please enter your email"
-    }
-    else if((!email.includes("@"))||(!email.includes("."))){
-      obj.email="enter a valid email"
-    }
-  
-    return obj;
+  const navigate = useNavigate();
+
+  // Input Handler
+  function inputHandler(event) {
+    setEmail(event.target.value);
+    setError({ ...error, email: "" });
   }
 
-    async function submitHandler(e){
-        e.preventDefault();
-        const errors=errorHandler();
-if(Object.keys(errors).length==0){
-        try{
-             setLoading(true)
-            const response=await axios.post(
-            "http://localhost:3000/admin/generateotp",
-            {email:email}
-        );
-         setLoading(false)
-         toast.success("otp sent sucessfully")
+  // Form Validation
+  function errorHandler() {
+    const errors = {};
 
-        navigate("/verifyotp",{state:{email:response.data.email}})
-        }
-        catch(error){
-             setLoading(false)
-             
-             toast.error("Failed to send OTP. Please try again.");
-            console.log(error)
-        }
-    }
-     setError({...errors})
+    if (!email.trim()) {
+      errors.email = "Please enter your email.";
+    } else if (!email.includes("@") || !email.includes(".")) {
+      errors.email = "Please enter a valid email.";
     }
 
-    function backLogin(){
-        navigate("/login")
+    return errors;
+  }
+
+  // Send OTP Handler
+  async function submitHandler(event) {
+    event.preventDefault();
+
+    const errors = errorHandler();
+    setError(errors);
+
+    if (Object.keys(errors).length > 0) {
+      return;
     }
-     
-    return (
-        <>
-         {loading && <Loader/>}
 
-            <div className='min-h-screen w-full flex justify-center items-center bg-[#96566A]/30 px-4 py-8'>
+    try {
+      setLoading(true);
 
-                <div className='w-full max-w-5xl flex flex-col md:flex-row overflow-hidden rounded-3xl shadow-2xl'>
+      const response = await axios.post(
+        "http://localhost:3000/admin/generateotp",
+        { email: email.trim() }
+      );
 
-                    {/* Left Side */}
-                    <div className='hidden md:flex flex-1 bg-[#96566A] text-[#FFF9F6] flex-col justify-center px-12 lg:px-16 py-16'>
+      toast.success(response.data?.message || "OTP sent successfully!");
 
-                        <div className='text-4xl lg:text-5xl font-bold leading-tight'>
-                            Forgot your password?
-                        </div>
+      navigate("/verifyotp", {
+        state: { email: response.data.email },
+      });
+    } catch (error) {
+      console.log(error.response?.data);
 
-                        <p className='mt-5 text-[#F0DDE1] text-sm leading-6 max-w-sm'>
-                            Don't worry! Enter your registered email and we will
-                            send you an OTP to reset your password.
-                        </p>
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to send OTP. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
-                    </div>
+  return (
+    <>
+      {loading && <Loader />}
 
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F0FAFC] px-4 py-8 sm:px-6 lg:px-8">
 
-                    {/* Right Side */}
-                    <form
-                        className='w-full md:flex-1 bg-[#F0DDE1] px-7 sm:px-10 lg:px-14 py-16 flex flex-col justify-center'
-                        onSubmit={submitHandler}
-                    >
+        {/* Background Decorations */}
+        <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#22B8CF]/10 blur-3xl" />
 
-                        <div className='flex flex-col gap-8 w-full'>
+        <div className="pointer-events-none absolute -bottom-24 -right-20 h-80 w-80 rounded-full bg-[#087F95]/10 blur-3xl" />
 
-                            <div className='text-4xl font-semibold text-[#713F50] text-center'>
-                                Forgot Password
-                            </div>
+        {/* Main Card */}
+        <div className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-[#D9E8EF] bg-white shadow-2xl shadow-[#102A43]/10 md:min-h-screen md:flex-row">
 
-                            <p className='text-sm text-[#A17B86] text-center'>
-                                Enter your email to receive an OTP
-                            </p>
-                            <label>
+          {/* Left Welcome Panel */}
+          <div className="relative flex flex-col justify-between overflow-hidden bg-[#102A43] px-7 py-9 text-white sm:px-10 sm:py-12 md:w-[46%] md:px-12 lg:px-14">
 
-                            <input
-                                type="email"
-                                placeholder='Email'
-                                className='border border-[#EBD9D9] w-full px-4 py-3 bg-[#FFF9F6] text-[#713F50] placeholder:text-[#AD9299] rounded-xl text-sm outline-none focus:border-[#B77B8C] focus:ring-2 focus:ring-[#96566A]/20'
-                                onChange={(e)=>setEmail(e.target.value)}
-                            />
-                            {error.email &&
-                  <p className='text-[#B65D70] text-xs mt-1'>
-                    {error.email}
-                  </p>
-                }
-                            </label>
+            {/* Decorative Circles */}
+            <div className="pointer-events-none absolute -right-20 -top-16 h-64 w-64 rounded-full border-8 border-[#22B8CF]/10" />
 
-                            <button
-                                className='font-semibold text-white w-full py-3 rounded-xl bg-[#96566A] text-sm hover:bg-[#713F50] transition'
-                            >
-                                Send OTP
-                            </button>
+            <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-[#22B8CF]/10" />
 
-                            <button
-                                type='button'
-                                onClick={backLogin}
-                                className='text-sm font-semibold text-[#96566A] hover:underline'
-                            >
-                                Back to Login
-                            </button>
+            {/* Logo */}
+            <div className="relative z-10 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#22B8CF] text-[#102A43] shadow-lg shadow-black/10">
+                <FiShoppingBag size={25} />
+              </div>
 
-                        </div>
+              <div>
+                <h2 className="text-xl font-bold tracking-wide">MyStore</h2>
 
-                    </form>
+                <p className="text-xs text-slate-300">Admin Panel</p>
+              </div>
+            </div>
 
+            {/* Welcome Text */}
+            <div className="relative z-10 my-10 md:my-0">
+              <div className="mb-5 flex w-fit items-center gap-2 rounded-full border border-[#22B8CF]/30 bg-[#22B8CF]/10 px-4 py-2">
+                <span className="h-2 w-2 rounded-full bg-[#22B8CF]" />
+
+                <span className="text-xs font-medium text-[#8DE3EC]">
+                  PASSWORD RECOVERY
+                </span>
+              </div>
+
+              <h1 className="max-w-sm text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+                Forgot your
+                <br />
+                <span className="text-[#22B8CF]">Password?</span>
+              </h1>
+
+              <p className="mt-5 max-w-sm text-sm leading-7 text-slate-300 sm:text-base">
+                Don't worry! Enter your registered email and we will send you
+                an OTP to reset your password.
+              </p>
+
+              <div className="mt-8 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-[#8DE3EC]">
+                  <FiShield size={21} />
                 </div>
 
-            </div>
-        </>
-    )
-}
+                <div>
+                  <p className="text-sm font-semibold">Secure Verification</p>
 
-export default ForgotPassw
+                  <p className="mt-1 text-xs text-slate-400">
+                    OTP is sent only to your registered email
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <p className="relative z-10 hidden text-xs text-slate-400 md:block">
+              © 2026 MyStore. All rights reserved.
+            </p>
+          </div>
+
+          {/* Right Form */}
+          <div className="flex flex-1 items-center justify-center px-6 py-9 sm:px-10 sm:py-12 lg:px-14">
+            <form className="w-full max-w-md" onSubmit={submitHandler}>
+
+              {/* Form Heading */}
+              <div className="mb-8">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#087F95]/10 text-[#087F95]">
+                  <FiKey size={24} />
+                </div>
+
+                <p className="mb-2 text-sm font-semibold text-[#087F95]">
+                  NO WORRIES, WE'VE GOT YOU
+                </p>
+
+                <h2 className="text-3xl font-bold text-[#102A43] sm:text-4xl">
+                  Forgot Password
+                </h2>
+
+                <p className="mt-3 text-sm leading-6 text-[#627D98]">
+                  Enter your email below to receive a one-time password.
+                </p>
+              </div>
+
+              {/* Email Input */}
+              <div className="mb-7">
+                <label
+                  htmlFor="email"
+                  className="mb-2 block text-sm font-semibold text-[#243B53]"
+                >
+                  Email Address
+                </label>
+
+                <div
+                  className={`flex items-center gap-3 rounded-xl border bg-[#F8FCFD] px-4 transition focus-within:ring-4 focus-within:ring-[#22B8CF]/10 ${
+                    error.email
+                      ? "border-red-400 focus-within:border-red-400"
+                      : "border-[#D9E8EF] focus-within:border-[#087F95]"
+                  }`}
+                >
+                  <FiMail size={19} className="shrink-0 text-[#087F95]" />
+
+                  <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={email}
+                    placeholder="Enter your email"
+                    autoComplete="email"
+                    className="w-full bg-transparent py-3.5 text-sm text-[#102A43] outline-none placeholder:text-[#94A8B8]"
+                    onChange={inputHandler}
+                  />
+                </div>
+
+                {error.email && (
+                  <p className="mt-2 text-xs text-red-500">{error.email}</p>
+                )}
+              </div>
+
+              {/* Send OTP Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="group flex w-full items-center justify-center gap-3 rounded-xl bg-[#087F95] py-3.5 text-sm font-bold text-white shadow-lg shadow-[#087F95]/20 transition duration-300 hover:-translate-y-0.5 hover:bg-[#066779] hover:shadow-xl hover:shadow-[#087F95]/25 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span>{loading ? "Sending OTP..." : "Send OTP"}</span>
+
+                {!loading && (
+                  <FiArrowRight
+                    size={19}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                )}
+              </button>
+
+              {/* Back to Login */}
+              <div className="mt-6 flex justify-center">
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[#087F95] transition hover:text-[#102A43] hover:underline"
+                >
+                  <FiArrowLeft size={16} />
+                  Back to Login
+                </Link>
+              </div>
+
+              {/* Bottom Note */}
+              <div className="mt-7 flex items-start justify-center gap-2 text-center text-xs leading-5 text-[#627D98]">
+                <FiShield size={15} className="mt-0.5 shrink-0 text-[#087F95]" />
+
+                <p>The OTP is valid for a limited time. Do not share it with anyone.</p>
+              </div>
+
+              <p className="mt-8 text-center text-xs text-[#94A8B8] md:hidden">
+                © 2026 MyStore. All rights reserved.
+              </p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default ForgotPassw;

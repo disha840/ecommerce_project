@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from "react";
 import api from "../../api";
 import { toast } from "react-toastify";
@@ -82,30 +83,26 @@ const AddCategory = ({ onClose, getdata, editData }) => {
         toast.success("Category created successfully");
       }
 
-      // CLOSE MODAL
       onClose();
 
-      // REFRESH CATEGORY LIST
       if (getdata) {
         await getdata();
       }
+
     } catch (error) {
       console.log(error.response?.data || error.message);
 
       toast.error(
         error.response?.data?.message || "Failed to save category"
       );
+
     } finally {
       setLoading(false);
     }
   }
 
-  // IMAGE PREVIEW
-  const imageUrl = editData?.image
-    ? editData.image.startsWith("http")
-      ? editData.image
-      : `http://localhost:5000${editData.image}`
-    : null;
+  // IMAGE URL FROM CLOUDINARY
+  const imageUrl = editData?.image?.url || null;
 
   return (
     <div
@@ -118,6 +115,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
         className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
+
         {/* HEADER */}
         <div className="flex shrink-0 items-center justify-between border-b border-[#D9E8EF] bg-[#F8FCFD] px-5 py-4 sm:px-7">
           <div>
@@ -147,6 +145,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
           className="flex-1 space-y-5 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6"
           onSubmit={submitHandler}
         >
+
           {/* CATEGORY NAME */}
           <div>
             <label className="mb-2 block text-sm font-medium text-[#102A43]">
@@ -186,6 +185,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
               Category Image
             </label>
 
+            {/* SELECTED IMAGE PREVIEW */}
             {image ? (
               <div className="mb-3">
                 <img
@@ -205,14 +205,15 @@ const AddCategory = ({ onClose, getdata, editData }) => {
             ) : null}
 
             <div className="rounded-xl border-2 border-dashed border-[#BCEAF0] bg-[#F8FCFD] p-6 text-center sm:p-8">
+
               <div className="mb-3 text-3xl font-bold text-[#087F95]">
                 ↑
               </div>
 
-              <p className=" text-sm font-medium text-[#102A43]">
+              <p className="text-sm font-medium text-[#102A43]">
                 {image
                   ? image.name
-                  : editData?.image
+                  : imageUrl
                     ? "Choose a new image to replace the current one"
                     : "Upload category image"}
               </p>
@@ -228,6 +229,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
                 className="mx-auto mt-4 block max-w-full text-sm text-[#627D98] file:mr-3 file:rounded-lg file:border-0 file:bg-[#D7F2F6] file:px-4 file:py-2 file:font-medium file:text-[#087F95] hover:file:bg-[#BCEAF0]"
                 onChange={inputHandler}
               />
+
             </div>
           </div>
 
@@ -250,6 +252,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
 
           {/* FOOTER */}
           <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-[#D9E8EF] pt-5 sm:flex-row sm:justify-end">
+
             <button
               type="button"
               onClick={onClose}
@@ -270,6 +273,7 @@ const AddCategory = ({ onClose, getdata, editData }) => {
                   ? "Update Category"
                   : "+ Add Category"}
             </button>
+
           </div>
         </form>
       </div>

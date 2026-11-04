@@ -166,7 +166,7 @@ const Product = () => {
             <thead className="bg-[#EAF7FA]">
               <tr>
                 {[
-                  "S.No",
+                  
                   "Product",
                   "Category",
                   "Subcategory",
@@ -174,7 +174,7 @@ const Product = () => {
                   "Unit",
                   "Featured",
                   "Status",
-                  "Rating",
+                  
                   "Action",
                 ].map((heading) => (
                   <th
@@ -235,9 +235,7 @@ const Product = () => {
                     key={product._id || index}
                     className="border-t border-[#D9E8EF] hover:bg-[#F8FCFD]"
                   >
-                    <td className="whitespace-nowrap px-5 py-4">
-                      {index + 1}
-                    </td>
+                    
 
                     <td className="whitespace-nowrap px-5 py-4 font-medium">
                       {product.name || "-"}
@@ -283,10 +281,7 @@ const Product = () => {
                       </span>
                     </td>
 
-                    <td className="whitespace-nowrap px-5 py-4">
-                      <span className="text-[#087F95]">★</span>{" "}
-                      {product.rating ?? 0}
-                    </td>
+                    
 
                     {/* Action Buttons */}
                     <td className="px-5 py-4">
