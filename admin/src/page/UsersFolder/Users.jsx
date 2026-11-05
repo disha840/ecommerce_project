@@ -217,7 +217,7 @@ const User = () => {
         </div>
       </div>
 
-      {/* Users Table */}
+    
       <div className="overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-[#D9E8EF] px-5 py-5 sm:px-6">
           <div>
