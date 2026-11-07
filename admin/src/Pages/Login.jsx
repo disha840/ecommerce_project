@@ -45,7 +45,6 @@ const Login = () => {
     });
   }
 
-  // Form Validation
   function errorHandler() {
     const errors = {};
 
