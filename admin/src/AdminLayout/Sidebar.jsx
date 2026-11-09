@@ -68,7 +68,7 @@ const Sidebar = () => {
     {
       name: "Inventory",
       icon: Boxes,
-      path: null,
+      path: "/admin/inventory",
     },
     {
       name: "Product",

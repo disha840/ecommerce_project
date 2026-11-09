@@ -24,6 +24,7 @@ import Role from './page/Role/Role'
 import Brand from './page/Brand/Brand'
 
 
+
 import Subcategory from './page/Subcategory/Subcategory'
 import ViewSubcategory from './page/Subcategory/ViewSubCat'
 import Product from './page/Products/Produtcts'
@@ -35,7 +36,7 @@ import Store from './page/Store/Store'
 import ProtectedRoute from './components/ProtectedRoute'
 import ViewVariant from './page/ProductVariant/ViewVariant'
 import Orders from './page/orders/order'
-
+import Inventory from './page/Inventory/inventory'
 
 
 const App = () => {
@@ -79,6 +80,7 @@ const App = () => {
      <Route path="/admin/viewvariant/:id" element={<ViewVariant/>}/>
      <Route path='/admin/orders' element={<Orders/>}/>
      <Route path='/admin/store' element={<Store/>}/>
+     <Route path='/admin/inventory' element={<Inventory/>}/>
      
 
 

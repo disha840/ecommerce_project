@@ -18,36 +18,32 @@ router.use(auth);
 
 router.post(
   "/createrole",
-  checkPermission("roles","create"),
   createRole
 );
 
 router.get(
   "/showroles",
-  checkPermission("roles","read"),
+
   getRoles
 );
 router.put(
   "/toggle-status/:id",
-  checkPermission("roles","update"),
+
   toggleStatus
 );
 
 router.put(
   "/updaterole/:id",
-  checkPermission("roles","update"),
   updateRole
 );
 
 router.delete(
   "/deleterole/:id",
-  checkPermission("roles","delete"),
   deleteRole
 );
 
 router.get(
   "/viewrole/:id",
-  checkPermission("roles","read"),
   viewRole
 );
 
