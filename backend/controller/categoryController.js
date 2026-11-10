@@ -3,7 +3,6 @@
 const cloudinary = require("../cloudinary");
 const Category = require("../models/categoryModel");
 
-// CREATE CATEGORY
 async function createCategory(req, res) {
   try {
     const { name, description, status } = req.body;
