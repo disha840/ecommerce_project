@@ -1,3 +1,4 @@
+
 import FormModal from "../../components/Store/formModal";
 import api from "../../api";
 
@@ -16,13 +17,16 @@ import DeleteStoreModal from "../../components/Store/DeleteStore";
 
 const Store = () => {
   const [stores, setStores] = useState([]);
-  const [showdelete,setShowDelete]=useState(false)
-  const [deleteId,setDeleteId]=useState(null)
+  const [showdelete, setShowDelete] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  const [showmodel, setShowmodal] = useState(false);
+  const [selectedStore, setSelectedStore] = useState(null);
 
   const fetchStores = async () => {
     try {
       const res = await api.get("/store/getstores");
-      setStores(res.data.stores);
+      setStores(res.data.stores || []);
     } catch (error) {
       console.log(error);
     }
@@ -32,14 +36,47 @@ const Store = () => {
     fetchStores();
   }, []);
 
-  const [showmodel, setShowmodal] = useState(false);
+  // OPEN ADD STORE MODAL
+  const handleAddStore = () => {
+    setSelectedStore(null);
+    setShowmodal(true);
+  };
+
+  // OPEN UPDATE STORE MODAL
+  const handleEditStore = (store) => {
+    setSelectedStore(store);
+    setShowmodal(true);
+  };
+
+  // CLOSE STORE MODAL
+  const handleCloseModal = () => {
+    setShowmodal(false);
+    setSelectedStore(null);
+  };
 
   return (
     <div className="min-h-screen space-y-6 bg-[#F0FAFC] p-6 text-[#102A43]">
-      {showmodel && <FormModal onClose={() => setShowmodal(false)} />}
-        {showdelete && <DeleteStoreModal storeId={deleteId} onClose={()=>{setShowDelete(false)
-          setDeleteId(null)
-        }} onDeleted ={fetchStores} />}
+
+      {/* ADD / UPDATE STORE MODAL */}
+      {showmodel && (
+        <FormModal
+          store={selectedStore}
+          onClose={handleCloseModal}
+          onSaved={fetchStores}
+        />
+      )}
+
+      {/* DELETE STORE MODAL */}
+      {showdelete && (
+        <DeleteStoreModal
+          storeId={deleteId}
+          onClose={() => {
+            setShowDelete(false);
+            setDeleteId(null);
+          }}
+          onDeleted={fetchStores}
+        />
+      )}
 
       {/* PAGE HEADER */}
       <div>
@@ -51,11 +88,14 @@ const Store = () => {
 
       {/* STATISTICS CARDS */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
         <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-[#627D98]">Total Stores</p>
-              <h2 className="mt-2 text-3xl font-bold">{stores.length}</h2>
+              <h2 className="mt-2 text-3xl font-bold">
+                {stores.length}
+              </h2>
             </div>
 
             <div className="rounded-xl bg-[#D7F2F6] p-3 text-[#087F95]">
@@ -98,6 +138,7 @@ const Store = () => {
       {/* SEARCH BOX + ADD BUTTON */}
       <div className="rounded-2xl border border-[#D9E8EF] bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
           <div className="relative w-full sm:max-w-md">
             <FiSearch
               className="absolute left-3 top-1/2 -translate-y-1/2 text-[#627D98]"
@@ -113,7 +154,7 @@ const Store = () => {
 
           <button
             className="flex items-center justify-center gap-2 rounded-xl bg-[#087F95] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066779]"
-            onClick={() => setShowmodal(true)}
+            onClick={handleAddStore}
           >
             <FiPlus size={19} />
             Add Store
@@ -123,6 +164,7 @@ const Store = () => {
 
       {/* STORES TABLE */}
       <div className="overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-sm">
+
         <div className="border-b border-[#D9E8EF] p-5">
           <h2 className="font-semibold text-[#102A43]">All Stores</h2>
           <p className="mt-1 text-sm text-[#627D98]">
@@ -132,29 +174,37 @@ const Store = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left">
+
             <thead className="border-b border-[#D9E8EF] bg-[#F8FCFD]">
               <tr>
                 <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
                   S.No.
                 </th>
+
                 <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
                   Store
                 </th>
+
                 <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
                   Store Code
                 </th>
+
                 <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
                   Manager
                 </th>
+
                 <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
                   Phone
                 </th>
+
                 <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
                   Service Radius
                 </th>
+
                 <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
                   Status
                 </th>
+
                 <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-[#627D98]">
                   Actions
                 </th>
@@ -162,6 +212,7 @@ const Store = () => {
             </thead>
 
             <tbody className="divide-y divide-[#D9E8EF]">
+
               {stores.map((store, index) => (
                 <tr
                   key={store._id}
@@ -213,8 +264,9 @@ const Store = () => {
 
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
+
                       <button
-                        onClick={() => console.log("Edit store:", store._id)}
+                        onClick={() => handleEditStore(store)}
                         className="rounded-lg p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
                         title="Edit Store"
                       >
@@ -222,14 +274,16 @@ const Store = () => {
                       </button>
 
                       <button
-                        onClick={() => {setDeleteId( store._id)
-                          setShowDelete(true)
+                        onClick={() => {
+                          setDeleteId(store._id);
+                          setShowDelete(true);
                         }}
                         className="rounded-lg p-2 text-[#627D98] transition hover:bg-[#F0FAFC]"
                         title="Delete Store"
                       >
                         <FiTrash2 size={18} />
                       </button>
+
                     </div>
                   </td>
                 </tr>
@@ -245,12 +299,14 @@ const Store = () => {
                   </td>
                 </tr>
               )}
+
             </tbody>
           </table>
         </div>
 
         {/* PAGINATION */}
         {/* Existing pagination remains commented out. */}
+
       </div>
     </div>
   );

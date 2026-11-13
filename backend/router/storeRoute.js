@@ -9,10 +9,12 @@ const {
   createStore,
   getStores,
   deleteStore,
-  
+  getNearestStore,
+  updateStore
 } = require("../controller/storeController");
 
-router.use(auth);
+router.post("/nearest", getNearestStore);
+// router.use(auth);
 
 router.get(
   "/managers",
@@ -22,15 +24,16 @@ router.get(
 
 router.post(
   "/createStore",
-  checkPermission("store","create"),
+
   createStore
 );
 
 router.get(
   "/getstores",
-  checkPermission("store","read"),
   getStores
 );
 router.delete("/delete/:id", deleteStore);
+
+router.put("/updateStore/:id", updateStore);
 
 module.exports = router;

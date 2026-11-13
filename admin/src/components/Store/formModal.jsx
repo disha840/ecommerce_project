@@ -3,7 +3,7 @@ import { FiX, FiMapPin } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import api from "../../api";
 
-const FormModal = ({ onClose }) => {
+const FormModal = ({ onClose, store, onSaved }) => {
   const [managers, setManagers] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -13,9 +13,8 @@ const FormModal = ({ onClose }) => {
     manager: "",
     phone: "",
     address: "",
+    landmark: "",
     serviceRadius: "",
-    latitude: "",
-    longitude: "",
     status: "ACTIVE",
   });
 
@@ -26,6 +25,7 @@ const FormModal = ({ onClose }) => {
         const res = await api.get("/store/managers", {
           withCredentials: true,
         });
+
         setManagers(res.data.managers || []);
       } catch (error) {
         console.error(error.response?.data || error.message);
@@ -34,6 +34,33 @@ const FormModal = ({ onClose }) => {
 
     fetchManagers();
   }, []);
+
+  // FILL FORM WHEN UPDATING
+  useEffect(() => {
+    if (store) {
+      setFormData({
+        name: store.name || "",
+        code: store.code || "",
+        manager: store.manager?._id || store.manager || "",
+        phone: store.phone || "",
+        address: store.address || "",
+        landmark: store.landmark || "",
+        serviceRadius: store.serviceRadius || "",
+        status: store.status || "ACTIVE",
+      });
+    } else {
+      setFormData({
+        name: "",
+        code: "",
+        manager: "",
+        phone: "",
+        address: "",
+        landmark: "",
+        serviceRadius: "",
+        status: "ACTIVE",
+      });
+    }
+  }, [store]);
 
   // HANDLE INPUT CHANGE
   const handleChange = (e) => {
@@ -45,41 +72,9 @@ const FormModal = ({ onClose }) => {
     }));
   };
 
-  // CREATE STORE API
-  const createStoreApi = async (storeData) => {
-    const response = await api.post(
-      "/store/createStore",
-      storeData,
-      { withCredentials: true }
-    );
-
-    return response.data;
-  };
-
   // HANDLE FORM SUBMIT
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const latitude = formData.latitude.trim();
-    const longitude = formData.longitude.trim();
-
-    if (latitude === "" || longitude === "") {
-      alert("Please enter both latitude and longitude.");
-      return;
-    }
-
-    const lat = Number(latitude);
-    const lng = Number(longitude);
-
-    if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
-      alert("Latitude must be between -90 and 90.");
-      return;
-    }
-
-    if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
-      alert("Longitude must be between -180 and 180.");
-      return;
-    }
 
     try {
       setLoading(true);
@@ -90,24 +85,43 @@ const FormModal = ({ onClose }) => {
         manager: formData.manager,
         phone: formData.phone.trim(),
         address: formData.address.trim(),
+        landmark: formData.landmark.trim(),
         serviceRadius: Number(formData.serviceRadius),
         status: formData.status,
-        location: {
-          latitude: lat,
-          longitude: lng,
-        },
       };
 
-      const res = await createStoreApi(storeData);
+      let res;
 
-      alert(res.message || "Store created successfully");
+      if (store) {
+        res = await api.put(
+          `/store/updateStore/${store._id}`,
+          storeData,
+          { withCredentials: true }
+        );
+      } else {
+        res = await api.post(
+          "/store/createStore",
+          storeData,
+          { withCredentials: true }
+        );
+      }
+
+      alert(
+        res.data.message ||
+        (store ? "Store updated successfully" : "Store created successfully")
+      );
+
+      if (onSaved) {
+        await onSaved();
+      }
+
       onClose();
     } catch (error) {
       console.error(error.response?.data || error);
 
       alert(
         error.response?.data?.message ||
-          "Store creation failed"
+        (store ? "Store update failed" : "Store creation failed")
       );
     } finally {
       setLoading(false);
@@ -133,8 +147,9 @@ const FormModal = ({ onClose }) => {
 
             <div>
               <h2 className="text-xl font-bold text-[#102A43]">
-                Add Store
+                {store ? "Update Store" : "Add Store"}
               </h2>
+
               <p className="mt-1 text-sm text-[#627D98]">
                 Enter store information below.
               </p>
@@ -164,6 +179,7 @@ const FormModal = ({ onClose }) => {
               <h3 className="text-lg font-bold text-[#102A43]">
                 Store Information
               </h3>
+
               <p className="mt-1 text-sm text-[#627D98]">
                 Enter the store details below.
               </p>
@@ -174,6 +190,7 @@ const FormModal = ({ onClose }) => {
               {/* STORE NAME */}
               <div>
                 <label className={labelStyle}>Store Name *</label>
+
                 <input
                   type="text"
                   name="name"
@@ -188,6 +205,7 @@ const FormModal = ({ onClose }) => {
               {/* STORE CODE */}
               <div>
                 <label className={labelStyle}>Store Code *</label>
+
                 <input
                   type="text"
                   name="code"
@@ -202,6 +220,7 @@ const FormModal = ({ onClose }) => {
               {/* STORE MANAGER */}
               <div>
                 <label className={labelStyle}>Store Manager *</label>
+
                 <select
                   name="manager"
                   value={formData.manager}
@@ -222,6 +241,7 @@ const FormModal = ({ onClose }) => {
               {/* PHONE */}
               <div>
                 <label className={labelStyle}>Phone Number *</label>
+
                 <input
                   type="tel"
                   name="phone"
@@ -235,9 +255,8 @@ const FormModal = ({ onClose }) => {
 
               {/* SERVICE RADIUS */}
               <div>
-                <label className={labelStyle}>
-                  Service Radius (km) *
-                </label>
+                <label className={labelStyle}>Service Radius (km) *</label>
+
                 <input
                   type="number"
                   name="serviceRadius"
@@ -253,6 +272,7 @@ const FormModal = ({ onClose }) => {
               {/* STATUS */}
               <div>
                 <label className={labelStyle}>Status *</label>
+
                 <select
                   name="status"
                   value={formData.status}
@@ -266,82 +286,58 @@ const FormModal = ({ onClose }) => {
               </div>
             </div>
 
-            {/* ADDRESS */}
+            {/* STORE ADDRESS */}
             <div>
               <label className={labelStyle}>Store Address *</label>
+
               <textarea
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
                 required
-                placeholder="Enter complete store address"
+                placeholder="House No, Street, Area, City, State, PIN Code"
                 rows={3}
                 className={`${inputStyle} resize-y`}
               />
             </div>
 
-            {/* GEOLOCATION */}
+            {/* LANDMARK */}
+            <div>
+              <label className={labelStyle}>Landmark (Optional)</label>
+
+              <input
+                type="text"
+                name="landmark"
+                value={formData.landmark}
+                onChange={handleChange}
+                placeholder="Near Metro Station, Mall, Hospital etc."
+                className={inputStyle}
+              />
+            </div>
+
+            {/* LOCATION INFORMATION */}
             <div className="rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] p-4">
-              <div className="mb-4 flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-[#D7F2F6] p-2 text-[#087F95]">
                   <FiMapPin size={19} />
                 </div>
 
                 <div>
                   <h3 className="text-sm font-semibold text-[#102A43]">
-                    Store Coordinates
+                    Automatic Location Detection
                   </h3>
+
                   <p className="mt-1 text-xs text-[#627D98]">
-                    Enter both longitude and latitude.
+                    Latitude and longitude will be generated automatically from the store address.
                   </p>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-                {/* LONGITUDE */}
-                <div>
-                  <label className={labelStyle}>Longitude *</label>
-                  <input
-                    type="number"
-                    name="longitude"
-                    value={formData.longitude}
-                    onChange={handleChange}
-                    required
-                    step="any"
-                    min="-180"
-                    max="180"
-                    placeholder="e.g. 75.7873"
-                    className={inputStyle}
-                  />
-                </div>
-
-                {/* LATITUDE */}
-                <div>
-                  <label className={labelStyle}>Latitude *</label>
-                  <input
-                    type="number"
-                    name="latitude"
-                    value={formData.latitude}
-                    onChange={handleChange}
-                    required
-                    step="any"
-                    min="-90"
-                    max="90"
-                    placeholder="e.g. 26.9124"
-                    className={inputStyle}
-                  />
-                </div>
-              </div>
-
-              <p className="mt-3 text-xs text-[#627D98]">
-                Coordinates identify the exact store location.
-              </p>
             </div>
           </div>
 
           {/* FOOTER */}
           <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-[#D9E8EF] bg-[#F8FCFD] px-5 py-4 sm:flex-row sm:justify-end sm:px-7">
+
             <button
               type="button"
               onClick={onClose}
@@ -356,7 +352,9 @@ const FormModal = ({ onClose }) => {
               disabled={loading}
               className="rounded-lg bg-[#087F95] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066779] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? "Creating..." : "Create Store"}
+              {loading
+                ? store ? "Updating..." : "Creating..."
+                : store ? "Update Store" : "Create Store"}
             </button>
           </div>
         </form>

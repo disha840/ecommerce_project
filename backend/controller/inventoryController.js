@@ -1,6 +1,7 @@
 
-const Inventory = require("../models/Inventory");
-const Store = require("../models/Store");
+const Inventory = require("../models/inventoryModel");
+const Store = require("../models/storeModel");
+const mongoose = require("mongoose");
 
 // CREATE INVENTORY
 const createInventory = async (req, res) => {
@@ -14,6 +15,7 @@ const createInventory = async (req, res) => {
             reorderLevel,
             maxStockLevel
         } = req.body;
+        console.log(req.body)
 
         if (!product || !store || !variant) {
             return res.status(400).json({
@@ -70,7 +72,6 @@ const createInventory = async (req, res) => {
             });
         }
 
-        // CHECK STORE
         const existingStore = await Store.findById(store);
 
         if (!existingStore) {
@@ -131,18 +132,21 @@ const getInventories = async (req, res) => {
             .select("name code address status")
             .sort({ createdAt: -1 });
 
+        // FETCH ALL INVENTORIES
+        const inventories = await Inventory.find()
+            .populate("store", "name code")
+            .populate("product", "name category brand")
+            .populate("variant", "name sku unit unitValue mrp sellingPrice")
+            .sort({ createdAt: -1 });
+
         // INVENTORY SUMMARY
         const inventorySummary = await Inventory.aggregate([
             {
                 $group: {
                     _id: "$store",
-
-                    // UNIQUE PRODUCTS
                     totalProducts: {
                         $addToSet: "$product"
                     },
-
-                    // UNIQUE ACTIVE PRODUCTS
                     activeProducts: {
                         $addToSet: {
                             $cond: [
@@ -152,8 +156,6 @@ const getInventories = async (req, res) => {
                             ]
                         }
                     },
-
-                    // UNIQUE INACTIVE PRODUCTS
                     inactiveProducts: {
                         $addToSet: {
                             $cond: [
@@ -163,8 +165,6 @@ const getInventories = async (req, res) => {
                             ]
                         }
                     },
-
-                    // LOW STOCK ITEMS
                     lowStockItems: {
                         $sum: {
                             $cond: [
@@ -184,8 +184,6 @@ const getInventories = async (req, res) => {
                             ]
                         }
                     },
-
-                    // TOTAL INVENTORY RECORDS
                     totalRecords: {
                         $sum: 1
                     }
@@ -207,10 +205,9 @@ const getInventories = async (req, res) => {
             ])
         );
 
-        // RETURN ALL STORES
+        // STORE WITH SUMMARY
         const result = stores.map((store) => ({
             ...store.toObject(),
-
             summary: summaryMap.get(String(store._id)) || {
                 totalProducts: 0,
                 activeProducts: 0,
@@ -222,8 +219,9 @@ const getInventories = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            count: result.length,
-            stores: result
+            count: inventories.length,
+            stores: result,
+            inventories
         });
 
     } catch (error) {
@@ -234,6 +232,46 @@ const getInventories = async (req, res) => {
     }
 };
 
+
+const getAvailableStoreInventory = async (req, res) => {
+    try {
+        const { storeId } = req.params;
+
+        console.log("Store ID:", storeId);
+
+        if (!mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Store ID"
+            });
+        }
+
+        const inventories = await Inventory.find({
+            store: storeId,
+            status: "active",
+            availableQuantity: { $gt: 0 }
+        })
+        .populate("product", "name slug category brand images")
+        .populate("variant", "name sku unit unitValue mrp sellingPrice images")
+        .sort({ createdAt: -1 });
+
+        console.log("Inventories:", inventories);
+
+        return res.status(200).json({
+            success: true,
+            count: inventories.length,
+            inventories
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
 module.exports = {
-    createInventory,getInventories
+    createInventory,getInventories,getAvailableStoreInventory
 };

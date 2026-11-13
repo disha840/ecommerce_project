@@ -10,6 +10,9 @@ import { getCart } from "@/redux/Slices/cartSlice";
 import api from "@/axios/api";
 
 export default function CheckoutPage() {
+    const store = useSelector((state) => state.store.selectedStore);
+    console.log("Selected Store:", store);
+     console.log("Store ID:", store?._id);
     const dispatch=useDispatch()
     const [addresses, setAddresses] = useState([]);
     const [selectedAddress, setSelectedAddress] = useState("");
@@ -110,6 +113,8 @@ export default function CheckoutPage() {
                 {
                     addressId: selectedAddress,
                     paymentMethod: paymentMethod,
+    
+                     storeId: store?._id,
                 },
                 {
                     withCredentials: true,

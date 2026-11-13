@@ -10,6 +10,8 @@ import { useSelector } from "react-redux";
 const Page = () => {
   const { slug } = useParams();
   const dispatch = useDispatch();
+  const store = useSelector((state) => state.store.selectedStore);
+  const storeId = store?._id;
 
   const [variant, setVariant] = useState(null);
   const [images, setImages] = useState([]);
@@ -21,7 +23,7 @@ const handleAddToCart = async (variant) => {
    return dispatch(setShowLogin(true))
 }
     try {
-        const response = await api.post("/cart/add", {
+        const response = await api.post(`/cart/add/${storeId}`, {
             product: variant.product?._id || variant.product,
             variant: variant._id,
             quantity: 1

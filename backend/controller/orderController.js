@@ -1,166 +1,352 @@
+
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 
 const Order = require("../models/orderModal");
 const OrderItem = require("../models/orderItemModal");
 const Cart = require("../models/cartModal");
 const CartItem = require("../models/cartItemModal");
 const Address = require("../models/userAddressModel");
+const Payment = require("../models/Payment");
+const Delivery = require("../models/DeliveryModel");
+const StoreInventory = require("../models/inventoryModel");
 
 
-// PLACE ORDER
+
+const calculateDeliveryFee = require("./utils/deliveryFee");
+
+
+// --------------------------------------------------
+// CALCULATE ORDER TOTALS
+// --------------------------------------------------
+
+const calculateOrderTotals = (cartItems) => {
+    if (!Array.isArray(cartItems) || !cartItems.length) {
+        throw new Error("Your cart is empty");
+    }
+
+    const subtotal = Number(
+        cartItems.reduce((sum, item) => {
+            const itemTotal = Number(item.totalPrice);
+
+            if (!Number.isFinite(itemTotal) || itemTotal < 0) {
+                throw new Error("Invalid cart item price");
+            }
+
+            return sum + itemTotal;
+        }, 0).toFixed(2)
+    );
+
+    const deliveryFee = calculateDeliveryFee(subtotal);
+
+    const totalAmount = Number(
+        (subtotal + deliveryFee).toFixed(2)
+    );
+
+    if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
+        throw new Error("Invalid order amount");
+    }
+
+    return {
+        subtotal,
+        discount: 0,
+        deliveryFee,
+        tax: 0,
+        totalAmount,
+        coupon: null,
+    };
+};
+
+
+// --------------------------------------------------
+// RESERVE AVAILABLE INVENTORY
+// --------------------------------------------------
+
+const reserveAvailableInventory = async (
+    storeId,
+    cartItems,
+    session
+) => {
+    for (const item of cartItems) {
+        const productId = item.product?._id || item.product;
+        const variantId = item.variant?._id || item.variant;
+        const orderQuantity = Number(item.quantity);
+
+        if (!productId || !variantId) {
+            throw new Error(
+                "Product or variant information is missing from cart"
+            );
+        }
+
+        if (!Number.isInteger(orderQuantity) || orderQuantity <= 0) {
+            throw new Error("Invalid product quantity in cart");
+        }
+
+        const inventoryUpdate = await StoreInventory.updateOne(
+            {
+                store: storeId,
+                product: productId,
+                variant: variantId,
+                status: "active",
+                availableQuantity: {
+                    $gte: orderQuantity,
+                },
+            },
+            {
+                $inc: {
+                    availableQuantity: -orderQuantity,
+                },
+            },
+            { session }
+        );
+
+        if (inventoryUpdate.modifiedCount !== 1) {
+            throw new Error(
+                `Insufficient available stock for ${
+                    item.product?.name || "a product"
+                }`
+            );
+        }
+    }
+};
+
+
+// --------------------------------------------------
+// CREATE ORDER DELIVERY
+// --------------------------------------------------
+
+const createOrderDelivery = async (
+    order,
+    address,
+    session = null
+) => {
+    const deliveryOtp = crypto.randomInt(1000, 10000).toString();
+
+    const coordinates = address.location?.coordinates;
+
+    if (
+        !Array.isArray(coordinates) ||
+        coordinates.length !== 2 ||
+        !coordinates.every(Number.isFinite)
+    ) {
+        throw new Error("Customer delivery location is invalid");
+    }
+
+    const deliveryAddress = [
+        address.houseNumber,
+        address.street,
+        address.landmark,
+        address.city,
+        address.state,
+        address.country,
+        address.pincode,
+    ]
+        .filter(Boolean)
+        .join(", ");
+
+    const deliveryData = {
+        order: order._id,
+        deliveryPartner: null,
+        store: order.store,
+        deliveryOtp,
+        deliveryAddress,
+        customerLocation: {
+            type: "Point",
+            coordinates,
+        },
+        notes: "",
+    };
+
+    const [delivery] = await Delivery.create(
+        [deliveryData],
+        session ? { session } : {}
+    );
+
+    return delivery;
+};
+
+
+// --------------------------------------------------
+// PLACE COD ORDER
+// --------------------------------------------------
+
 const placeOrder = async (req, res) => {
     const session = await mongoose.startSession();
 
     try {
         const userId = req.user.id;
-        const { addressId, paymentMethod } = req.body;
+        const { addressId, paymentMethod, storeId } = req.body;
 
-        if (!addressId || !paymentMethod) {
+        console.log("ORDER REQUEST BODY:", req.body);
+
+        if (!addressId || !paymentMethod || !storeId) {
             return res.status(400).json({
                 success: false,
-                message: "Address and payment method are required",
+                message: "Address, payment method and store are required",
             });
         }
 
-        const selectedPaymentMethod = paymentMethod.toUpperCase();
-
-        if (!["COD", "ONLINE"].includes(selectedPaymentMethod)) {
+        if (
+            !mongoose.Types.ObjectId.isValid(addressId) ||
+            !mongoose.Types.ObjectId.isValid(storeId)
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid payment method",
+                message: "Invalid addressId or storeId",
             });
         }
 
-        let createdOrder;
+        const selectedPaymentMethod = paymentMethod.toLowerCase();
 
-        await session.withTransaction(async () => {
+        if (selectedPaymentMethod !== "cod") {
+            return res.status(400).json({
+                success: false,
+                message: "Currently only COD payment is supported",
+            });
+        }
 
-            // Find user's cart
-            const cart = await Cart.findOne({
-                user: userId,
-            }).session(session);
+        session.startTransaction();
 
-            if (!cart) {
-                throw new Error("Cart not found");
+        const address = await Address.findOne({
+            _id: addressId,
+            user: userId,
+        }).session(session);
+
+        if (!address) {
+            throw new Error("Address not found");
+        }
+
+        const cart = await Cart.findOne({
+            user: userId,
+            store: storeId,
+        }).session(session);
+
+        if (!cart) {
+            throw new Error("Cart not found for selected store");
+        }
+
+        const cartItems = await CartItem.find({
+            cart: cart._id,
+        })
+            .populate("product")
+            .populate("variant")
+            .session(session);
+
+        if (!cartItems.length) {
+            throw new Error("Your cart is empty");
+        }
+
+        let subtotal = 0;
+        const orderItemsData = [];
+
+        for (const item of cartItems) {
+            const variant = item.variant;
+
+            if (!variant) {
+                throw new Error("Product variant not found");
             }
 
-            // Find cart items
-            const cartItems = await CartItem.find({
-                cart: cart._id,
-            })
-                .populate("product")
-                .populate("variant")
-                .session(session);
+            const quantity = item.quantity;
+            const price = variant.sellingPrice;
 
-            if (cartItems.length === 0) {
-                throw new Error("Your cart is empty");
+            if (price == null || quantity <= 0) {
+                throw new Error("Invalid product price or quantity");
             }
 
-            // Verify address
-            const address = await Address.findOne({
-                _id: addressId,
-                user: userId,
-            }).session(session);
+            const itemTotal = price * quantity;
+            subtotal += itemTotal;
 
-            if (!address) {
-                throw new Error("Address not found");
-            }
-
-            // Calculate subtotal
-            let subtotal = 0;
-            const orderItemsData = [];
-
-            for (const item of cartItems) {
-
-                if (!item.product || !item.variant) {
-                    throw new Error("Product or variant not found");
-                }
-
-                const price = item.variant.sellingPrice;
-                const quantity = item.quantity;
-
-                if (price === undefined || price < 0) {
-                    throw new Error("Invalid product price");
-                }
-
-                const totalPrice = price * quantity;
-                subtotal += totalPrice;
-
-                orderItemsData.push({
-                    product: item.product._id,
-                    variant: item.variant._id,
-                    productName: item.product.name,
-                    variantName: item.variant.name,
-                    sku: item.variant.sku,
-                    quantity,
-                    price,
-                    discount: 0,
-                    tax: 0,
-                    totalPrice,
-                });
-            }
-
-            // Calculate total amount
-            const discount = cart.discount || 0;
-            const deliveryFee = cart.deliveryFee || 0;
-            const tax = cart.tax || 0;
-
-            const totalAmount =
-                subtotal - discount + deliveryFee + tax;
-
-            if (totalAmount < 0) {
-                throw new Error("Invalid order amount");
-            }
-
-            // Create order
-            const order = await Order.create(
-                [
-                    {
-                        orderNumber: `ORD-${Date.now()}`,
-                        user: userId,
-                        store: null,
-                        address: address._id,
-                        subtotal,
-                        discount,
-                        deliveryFee,
-                        tax,
-                        totalAmount,
-                        coupon: cart.coupon || null,
-                        paymentMethod: selectedPaymentMethod,
-                        paymentStatus: "Pending",
-                        orderStatus: "Placed",
-                    },
-                ],
-                { session }
-            );
-
-            createdOrder = order[0];
-
-            // Create order items
-            const finalOrderItems = orderItemsData.map((item) => ({
-                ...item,
-                order: createdOrder._id,
-            }));
-
-            await OrderItem.insertMany(finalOrderItems, {
-                session,
+            orderItemsData.push({
+                product: item.product._id,
+                variant: variant._id,
+                quantity,
+                price,
+                total: itemTotal,
             });
 
-            // Empty cart items after order placement
-            await CartItem.deleteMany({
-                cart: cart._id,
+            const inventory = await StoreInventory.findOne({
+                store: storeId,
+                product: item.product._id,
+                variant: variant._id,
             }).session(session);
 
-            // Reset cart amounts
-            cart.subtotal = 0;
-            cart.discount = 0;
-            cart.deliveryFee = 0;
-            cart.tax = 0;
-            cart.totalAmount = 0;
-            cart.coupon = null;
+            if (!inventory) {
+                throw new Error(
+                    `${item.product.name} is not available in this store`
+                );
+            }
 
-            await cart.save({ session });
-        });
+            if (inventory.stock < quantity) {
+                throw new Error(
+                    `Insufficient stock for ${item.product.name}`
+                );
+            }
+
+            inventory.stock -= quantity;
+            await inventory.save({ session });
+        }
+
+        const deliveryFee = await calculateDeliveryFee(address, subtotal);
+        const totalAmount = subtotal + deliveryFee;
+
+        const [createdOrder] = await Order.create(
+            [
+                {
+                    user: userId,
+                    store: storeId,
+                    address: addressId,
+                    subtotal,
+                    deliveryFee,
+                    totalAmount,
+                    paymentMethod: selectedPaymentMethod,
+                    paymentStatus: "PENDING",
+                    orderStatus: "PLACED",
+                },
+            ],
+            { session }
+        );
+
+        const orderItems = orderItemsData.map((item) => ({
+            ...item,
+            order: createdOrder._id,
+        }));
+
+        await OrderItem.insertMany(orderItems, { session });
+
+        await Payment.create(
+            [
+                {
+                    order: createdOrder._id,
+                    user: userId,
+                    paymentGateway: "cod",
+                    paymentMethod: "COD",
+                    amount: totalAmount,
+                    status: "PENDING",
+                },
+            ],
+            { session }
+        );
+
+        const otp = crypto.randomInt(100000, 1000000).toString();
+
+        await Delivery.create(
+            [
+                {
+                    order: createdOrder._id,
+                    user: userId,
+                    otp,
+                    status: "PENDING",
+                },
+            ],
+            { session }
+        );
+
+        await CartItem.deleteMany(
+            { cart: cart._id },
+            { session }
+        );
+
+        await session.commitTransaction();
 
         return res.status(201).json({
             success: true,
@@ -169,20 +355,27 @@ const placeOrder = async (req, res) => {
         });
 
     } catch (error) {
-        console.log("Place Order Error:", error);
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
 
-        return res.status(400).json({
+        console.log("PLACE ORDER ERROR:", error);
+
+        return res.status(500).json({
             success: false,
-            message: error.message || "Failed to place order",
+            message: error.message || "Unable to place order",
         });
 
     } finally {
-        await session.endSession();
+        session.endSession();
     }
 };
 
 
+// --------------------------------------------------
 // GET ALL ORDERS (ADMIN)
+// --------------------------------------------------
+
 const getAllOrders = async (req, res) => {
     try {
         const orders = await Order.find()
@@ -211,12 +404,14 @@ const getAllOrders = async (req, res) => {
 };
 
 
+// --------------------------------------------------
 // GET MY ORDERS (CUSTOMER)
+// --------------------------------------------------
+
 const getMyOrders = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Fetch logged-in user's orders
         const orders = await Order.find({
             user: userId,
         })
@@ -235,10 +430,8 @@ const getMyOrders = async (req, res) => {
             });
         }
 
-        // Get all order IDs
         const orderIds = orders.map((order) => order._id);
 
-        // Fetch all order items
         const orderItems = await OrderItem.find({
             order: { $in: orderIds },
         })
@@ -252,7 +445,6 @@ const getMyOrders = async (req, res) => {
             })
             .lean();
 
-        // Group order items
         const itemsMap = {};
 
         orderItems.forEach((item) => {
@@ -283,7 +475,6 @@ const getMyOrders = async (req, res) => {
             });
         });
 
-        // Attach items to orders
         const formattedOrders = orders.map((order) => ({
             ...order,
             items: itemsMap[order._id.toString()] || [],

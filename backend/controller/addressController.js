@@ -1,9 +1,112 @@
 const mongoose = require("mongoose");
 const Address=require("../models/userAddressModel")
+// const {geocodeAddress}=require("./utils/geocodeAddress")
+
+const geocodeAddress = async (address, landmark = "") => {
+
+    const addressParts = address
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+    const areaAndCity = addressParts.slice(-3).join(", ");
+    const cityAndState = addressParts.slice(-2).join(", ");
+
+    // 5 FALLBACK ATTEMPTS
+
+    const queries = [
+        address,
+        landmark ? `${address}, ${landmark}` : "",
+        landmark ? `${landmark}, ${areaAndCity}` : "",
+        areaAndCity,
+        cityAndState
+    ];
+
+    const uniqueQueries = [
+        ...new Set(
+            queries
+                .filter(Boolean)
+                .map((query) => `${query}, India`)
+        )
+    ];
+
+    for (const query of uniqueQueries) {
+
+        try {
+            console.log("Photon Searching:", query);
+
+            const url = new URL(
+                "https://photon.komoot.io/api/"
+            );
+
+            url.searchParams.set("q", query);
+            url.searchParams.set("limit", "5");
+            url.searchParams.set("lang", "en");
+            url.searchParams.set("countrycode", "IN");
+
+            const response = await fetch(url, {
+                signal: AbortSignal.timeout(10000)
+            });
+
+            if (!response.ok) {
+                continue;
+            }
+
+            const data = await response.json();
+
+            if (!data.features || data.features.length === 0) {
+                continue;
+            }
+
+            const feature = data.features.find((item) => {
+
+                const coordinates = item.geometry?.coordinates;
+
+                const longitude = coordinates?.[0];
+                const latitude = coordinates?.[1];
+
+                return (
+                    Number.isFinite(longitude) &&
+                    Number.isFinite(latitude) &&
+                    longitude >= -180 &&
+                    longitude <= 180 &&
+                    latitude >= -90 &&
+                    latitude <= 90 &&
+                    item.properties?.countrycode?.toUpperCase() === "IN"
+                );
+            });
+
+            if (feature) {
+
+                const [longitude, latitude] =
+                    feature.geometry.coordinates;
+
+                console.log("Location Found:", {
+                    query,
+                    latitude,
+                    longitude
+                });
+
+                return {
+                    latitude,
+                    longitude
+                };
+            }
+
+        } catch (error) {
+            console.log("Photon Error:", error.message);
+        }
+    }
+
+    return null;
+};
+
 const addAddress = async (req, res) => {
     try {
         const {
             type,
+            name,
+            phone,
             houseNumber,
             street,
             landmark,
@@ -11,13 +114,10 @@ const addAddress = async (req, res) => {
             state,
             country,
             pincode,
-            location,
-            longitude,
-            latitude,
             isDefault,
         } = req.body;
 
-        // Required field validation
+        // REQUIRED FIELD VALIDATION
         const requiredFields = {
             type,
             houseNumber,
@@ -42,26 +142,51 @@ const addAddress = async (req, res) => {
 
         const userId = req.user.id;
 
-        // Check existing addresses
-        const existingAddress = await Address.findOne({ user: userId });
 
-        // Prepare location
-        const coordinates = location?.coordinates || [
-            Number(longitude) || 0,
-            Number(latitude) || 0,
-        ];
+        const fullAddress = [
+                   houseNumber,
+    street,
+    city,
+    state,
+    pincode,
+    country,
+].filter(Boolean).join(", ");
 
-        // If new address is default, remove default from previous addresses
-        if (isDefault || !existingAddress) {
+
+// GENERATE LOCATION USING PHOTON
+const locationData = await geocodeAddress(fullAddress, landmark);
+
+        if (!locationData) {
+            return res.status(400).json({
+                success: false,
+                message: "Unable to find location for this address. Please check your address.",
+            });
+        }
+
+        // CHECK EXISTING ADDRESSES
+        const existingAddress = await Address.findOne({
+            user: userId,
+        });
+
+        const makeDefault =
+            isDefault === true ||
+            isDefault === "true" ||
+            !existingAddress;
+
+        // REMOVE PREVIOUS DEFAULT ADDRESS
+        if (makeDefault) {
             await Address.updateMany(
                 { user: userId },
                 { $set: { isDefault: false } }
             );
         }
 
+        // SAVE ADDRESS
         const address = await Address.create({
             user: userId,
             type,
+            name,
+            phone,
             houseNumber,
             street,
             landmark,
@@ -69,11 +194,16 @@ const addAddress = async (req, res) => {
             state,
             country,
             pincode,
+
             location: {
                 type: "Point",
-                coordinates,
+                coordinates: [
+                    locationData.longitude,
+                    locationData.latitude,
+                ],
             },
-            isDefault: isDefault || !existingAddress,
+
+            isDefault: makeDefault,
         });
 
         return res.status(201).json({
@@ -83,13 +213,16 @@ const addAddress = async (req, res) => {
         });
 
     } catch (error) {
-        // return handleResponseError(error, res);
+        console.log("Add Address Error:", error.message);
+
         return res.status(500).json({
             success: false,
             message: error.message,
         });
     }
 };
+
+
 const getAddresses = async (req, res) => {
     try {
         const userId = req.user.id;

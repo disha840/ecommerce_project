@@ -14,6 +14,8 @@ const Page = () => {
   const { slug } = useParams();
   const router = useRouter();
   const dispatch = useDispatch();
+  const store = useSelector((state) => state.store.selectedStore);
+  const storeId = store?._id;
 
   const [variants, setVariants] = useState([]);
 
@@ -54,7 +56,7 @@ const Page = () => {
     }
 
     try {
-      const response = await api.post("/cart/add", {
+      const response = await api.post(`/cart/add/${storeId}`, {
         product: variant.product?._id || variant.product,
         variant: variant._id,
         quantity: 1,

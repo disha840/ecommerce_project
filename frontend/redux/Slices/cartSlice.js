@@ -1,31 +1,99 @@
+
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../axios/api";
+
 
 // Get Cart API
 export const getCart = createAsyncThunk(
     "cart/getCart",
-    async () => {
-        const response = await api.get("/cart/get");
-        return response.data;
+    async (_, { getState, rejectWithValue }) => {
+
+        const user = getState().auth.user;
+        const store = getState().store.selectedStore;
+
+        if (!user) {
+            return rejectWithValue("Please login first");
+        }
+
+        if (!store?._id) {
+            return rejectWithValue("Please select a store");
+        }
+
+        try {
+            const response = await api.get(`/cart/get/${store._id}`);
+
+            return response.data;
+
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Unable to get cart"
+            );
+        }
     }
 );
 
 // Update Quantity API
 export const updateCartQuantity = createAsyncThunk(
     "cart/updateCartQuantity",
-    async ({ id, quantity }) => {
-        const response = await api.put(`/cart/update/${id}`, {
-            quantity: quantity
-        });
+    async ({ id, quantity }, { getState, rejectWithValue }) => {
 
-        return response.data;
+        const user = getState().auth.user;
+        const store = getState().store.selectedStore;
+
+        if (!user) {
+            return rejectWithValue("Please login first");
+        }
+
+        if (!store?._id) {
+            return rejectWithValue("Please select a store");
+        }
+
+        try {
+            const response = await api.put(`/cart/update/${id}`, {
+                quantity: quantity,
+                storeId: store._id
+            });
+
+            return response.data;
+
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Unable to update cart"
+            );
+        }
     }
 );
+
+// Remove Cart Item API
 export const removeCartItem = createAsyncThunk(
     "cart/removeCartItem",
-    async (id) => {
-        const response = await api.delete(`/cart/remove/${id}`);
-        return response.data;
+    async (id, { getState, rejectWithValue }) => {
+
+        const user = getState().auth.user;
+        const store = getState().store.selectedStore;
+
+        if (!user) {
+            return rejectWithValue("Please login first");
+        }
+
+        if (!store?._id) {
+            return rejectWithValue("Please select a store");
+        }
+
+        try {
+            const response = await api.delete(`/cart/remove/${id}`, {
+                data: {
+                    storeId: store._id
+                }
+            });
+
+            return response.data;
+
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Unable to remove cart item"
+            );
+        }
     }
 );
 
@@ -36,13 +104,14 @@ const cartSlice = createSlice({
         cart: null,
         items: [],
         loading: false,
-         updating: false
+        updating: false
     },
 
     reducers: {
         clearCart: (state) => {
-       state.items = [];
-       }
+            state.cart = null;
+            state.items = [];
+        }
     },
 
     extraReducers: (builder) => {
@@ -60,6 +129,8 @@ const cartSlice = createSlice({
 
         builder.addCase(getCart.rejected, (state) => {
             state.loading = false;
+            state.cart = null;
+            state.items = [];
         });
 
         // Update Quantity Cases
@@ -76,21 +147,23 @@ const cartSlice = createSlice({
         builder.addCase(updateCartQuantity.rejected, (state) => {
             state.updating = false;
         });
+
+        // Remove Cart Item Cases
         builder.addCase(removeCartItem.pending, (state) => {
-        state.updating = true;
+            state.updating = true;
         });
 
-      builder.addCase(removeCartItem.fulfilled, (state, action) => {
-    state.updating = false;
-    state.cart = action.payload.cart;
-    state.items = action.payload.items;
-    });
+        builder.addCase(removeCartItem.fulfilled, (state, action) => {
+            state.updating = false;
+            state.cart = action.payload.cart;
+            state.items = action.payload.items;
+        });
 
-    builder.addCase(removeCartItem.rejected, (state) => {
-    state.updating = false;
-    });
-
+        builder.addCase(removeCartItem.rejected, (state) => {
+            state.updating = false;
+        });
     }
 });
+
 export const { clearCart } = cartSlice.actions;
 export default cartSlice.reducer;

@@ -36,7 +36,7 @@ import Store from './page/Store/Store'
 import ProtectedRoute from './components/ProtectedRoute'
 import ViewVariant from './page/ProductVariant/ViewVariant'
 import Orders from './page/orders/order'
-import Inventory from './page/Inventory/inventory'
+import Inventory from '../src/page/Inventory/Inventory'
 
 
 const App = () => {

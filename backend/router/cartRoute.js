@@ -4,8 +4,8 @@ const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.post("/add", auth, addToCart);
-router.get("/get",auth,getCart)
+router.post("/add/:storeId", auth, addToCart);
+router.get("/get/:storeId",auth,getCart)
 router.put("/update/:id", auth, updateCartQuantity);
 router.delete("/remove/:id", auth, removeCartItem);
 

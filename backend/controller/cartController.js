@@ -4,13 +4,20 @@ const CartItem=require("../models/cartItemModal")
 const ProductVariant=require("../models/productVariant")
 const addToCart = async (req, res) => {
     try {
-        // Step 1: Get data from frontend
+        const { storeId } = req.params;
         const { product, variant, quantity = 1 } = req.body;
 
-        // Step 2: Get logged-in user ID from JWT
         const userId = req.user.id;
 
-        // Step 3: Validate product and variant
+        // Validate store ID
+        if (!mongoose.isValidObjectId(storeId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid store ID"
+            });
+        }
+
+        // Validate product and variant
         if (!product || !variant) {
             return res.status(400).json({
                 success: false,
@@ -28,7 +35,7 @@ const addToCart = async (req, res) => {
             });
         }
 
-        // Step 4: Validate quantity
+        // Validate quantity
         const productQuantity = Number(quantity);
 
         if (
@@ -41,7 +48,7 @@ const addToCart = async (req, res) => {
             });
         }
 
-        // Step 5: Find active product variant
+        // Find active product variant
         const productVariant = await ProductVariant.findOne({
             _id: variant,
             product: product,
@@ -55,7 +62,7 @@ const addToCart = async (req, res) => {
             });
         }
 
-        // Step 6: Get price from database
+        // Get price from database
         const price = Number(productVariant.sellingPrice);
 
         if (!Number.isFinite(price) || price < 0) {
@@ -65,15 +72,17 @@ const addToCart = async (req, res) => {
             });
         }
 
-        // Step 7: Find user's cart
+        // Find user's cart for this store
         let cart = await Cart.findOne({
-            user: userId
+            user: userId,
+            store: storeId
         });
 
-        // Step 8: Create cart if it does not exist
+        // Create cart if it does not exist
         if (!cart) {
             cart = await Cart.create({
                 user: userId,
+                store: storeId,
                 subtotal: 0,
                 discount: 0,
                 deliveryFee: 0,
@@ -82,7 +91,7 @@ const addToCart = async (req, res) => {
             });
         }
 
-        // Step 9: Check whether item already exists
+        // Check whether item already exists
         let cartItem = await CartItem.findOne({
             cart: cart._id,
             product: product,
@@ -90,20 +99,13 @@ const addToCart = async (req, res) => {
         });
 
         if (cartItem) {
-
-            // Increase existing quantity
             cartItem.quantity += productQuantity;
-
             cartItem.price = price;
-
-            cartItem.totalPrice =
-                cartItem.quantity * price;
+            cartItem.totalPrice = cartItem.quantity * price;
 
             await cartItem.save();
 
         } else {
-
-            // Create new cart item
             await CartItem.create({
                 cart: cart._id,
                 product: product,
@@ -114,7 +116,7 @@ const addToCart = async (req, res) => {
             });
         }
 
-        // Step 10: Calculate cart subtotal
+        // Calculate cart subtotal
         const cartItems = await CartItem.find({
             cart: cart._id
         });
@@ -134,7 +136,7 @@ const addToCart = async (req, res) => {
 
         await cart.save();
 
-        // Step 11: Get updated cart items
+        // Get updated cart items
         const updatedItems = await CartItem.find({
             cart: cart._id
         })
@@ -158,15 +160,22 @@ const addToCart = async (req, res) => {
 
 const getCart = async (req, res) => {
     try {
-        // Step 1: Get logged-in user ID
         const userId = req.user.id;
+        const { storeId } = req.params;
 
-        // Step 2: Find user's cart
+        if (!mongoose.isValidObjectId(storeId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid store ID"
+            });
+        }
+
+        // Find user's cart for selected store
         const cart = await Cart.findOne({
-            user: userId
+            user: userId,
+            store: storeId
         });
 
-        // Step 3: If cart does not exist
         if (!cart) {
             return res.status(200).json({
                 success: true,
@@ -176,14 +185,12 @@ const getCart = async (req, res) => {
             });
         }
 
-        // Step 4: Find all cart items
         const items = await CartItem.find({
             cart: cart._id
         })
             .populate("product")
             .populate("variant");
 
-        // Step 5: Send cart and products
         return res.status(200).json({
             success: true,
             message: "Cart fetched successfully",
@@ -198,11 +205,20 @@ const getCart = async (req, res) => {
         });
     }
 };
+
 const updateCartQuantity = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { quantity } = req.body;
+        const { quantity, storeId } = req.body;
         const cartItemId = req.params.id;
+
+        // Store ID validation
+        if (!storeId) {
+            return res.status(400).json({
+                success: false,
+                message: "Store ID is required"
+            });
+        }
 
         // Quantity validation
         if (!Number.isInteger(Number(quantity)) || Number(quantity) < 1) {
@@ -212,8 +228,11 @@ const updateCartQuantity = async (req, res) => {
             });
         }
 
-        // User ka cart find karo
-        const cart = await Cart.findOne({ user: userId });
+        // User aur store ka cart find karo
+        const cart = await Cart.findOne({
+            user: userId,
+            store: storeId
+        });
 
         if (!cart) {
             return res.status(404).json({
@@ -237,7 +256,6 @@ const updateCartQuantity = async (req, res) => {
 
         // Quantity update karo
         cartItem.quantity = Number(quantity);
-
         cartItem.totalPrice = cartItem.price * cartItem.quantity;
 
         await cartItem.save();
@@ -286,15 +304,24 @@ const updateCartQuantity = async (req, res) => {
         });
     }
 };
-
 const removeCartItem = async (req, res) => {
     try {
         const userId = req.user.id;
+        const { storeId } = req.body;
         const cartItemId = req.params.id;
 
-        // User ka cart find karo
+        // Store ID validation
+        if (!storeId) {
+            return res.status(400).json({
+                success: false,
+                message: "Store ID is required"
+            });
+        }
+
+        // User aur store ka cart find karo
         const cart = await Cart.findOne({
-            user: userId
+            user: userId,
+            store: storeId
         });
 
         if (!cart) {

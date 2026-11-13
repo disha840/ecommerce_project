@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import api from "@/axios/api";
+import { setSelectedStore } from "@/redux/Slices/StoreSlice";
 import {
     FiMapPin,
     FiChevronDown,
@@ -236,6 +239,8 @@ function PickerBody({ locationLoading, onUseCurrent, formProps }) {
 }
 
 export default function DeliveryLocation() {
+    const dispatch = useDispatch();
+
     const [location, setLocation] = useState("Select Location");
     const [locationReady, setLocationReady] = useState(false);
     const [locationLoading, setLocationLoading] = useState(true);
@@ -250,23 +255,52 @@ export default function DeliveryLocation() {
     const [suggestionError, setSuggestionError] = useState("");
     const [selectedSuggestion, setSelectedSuggestion] = useState(null);
 
-    const saveLocation = (value) => {
-        sessionStorage.setItem(
-            "quickkart_location",
-            JSON.stringify(value)
-        );
+    // Find nearest store and save it in Redux
+    const saveLocation = async (value) => {
+        try {
+            const response = await api.post("/store/nearest", {
+                latitude: value.latitude,
+                longitude: value.longitude,
+            });
 
-        setLocation(value.label);
-        setLocationReady(true);
-        setLocationModalOpen(false);
-        setLocationError("");
-        setLocationLoading(false);
-        setManualAddress("");
-        setSuggestions([]);
-        setSelectedSuggestion(null);
-        setSuggestionError("");
+            if (!response.data.success || !response.data.store) {
+                throw new Error("Nearest store not found");
+            }
 
-        window.dispatchEvent(new Event("location-updated"));
+            // Save nearest store in Redux
+            dispatch(setSelectedStore(response.data.store));
+
+            // Save customer location only after finding a store
+            sessionStorage.setItem(
+                "quickkart_location",
+                JSON.stringify(value)
+            );
+
+            setLocation(value.label);
+            setLocationReady(true);
+            setLocationModalOpen(false);
+            setLocationError("");
+            setLocationLoading(false);
+            setManualAddress("");
+            setSuggestions([]);
+            setSelectedSuggestion(null);
+            setSuggestionError("");
+
+            window.dispatchEvent(new Event("location-updated"));
+
+            return true;
+        } catch (error) {
+            setLocationError(
+                error.response?.data?.message ||
+                error.message ||
+                "Unable to find nearest store"
+            );
+
+            setLocationLoading(false);
+            setLocationModalOpen(true);
+
+            return false;
+        }
     };
 
     const getAreaName = (address = {}) =>
@@ -312,7 +346,7 @@ export default function DeliveryLocation() {
 
                     const data = await response.json();
 
-                    saveLocation({
+                    await saveLocation({
                         label: getAreaName(data.address || {}),
                         latitude,
                         longitude,
@@ -361,7 +395,7 @@ export default function DeliveryLocation() {
         setLocationError("");
     };
 
-    const submitManualAddress = (e) => {
+    const submitManualAddress = async (e) => {
         e.preventDefault();
 
         if (!selectedSuggestion) {
@@ -375,7 +409,7 @@ export default function DeliveryLocation() {
         setLocationError("");
 
         try {
-            saveLocation({
+            await saveLocation({
                 label: selectedSuggestion.label,
                 latitude: selectedSuggestion.latitude,
                 longitude: selectedSuggestion.longitude,
@@ -462,9 +496,8 @@ export default function DeliveryLocation() {
                     typeof parsed.longitude === "number" &&
                     Number.isFinite(parsed.longitude)
                 ) {
-                    setLocation(parsed.label);
-                    setLocationReady(true);
-                    setLocationLoading(false);
+                    // Re-fetch nearest store on page reload
+                    saveLocation(parsed);
                     return;
                 }
 
@@ -547,7 +580,7 @@ export default function DeliveryLocation() {
 
             {/* Mandatory Location Screen */}
             {!locationReady && (
-                <div className="fixed inset-0 z-[9999] flex flex-col overflow-y-auto bg-white md:flex-row">
+                <div className="fixed inset-0 z-9999 flex flex-col overflow-y-auto bg-white md:flex-row">
                     {/* Brand panel */}
                     <div className="flex shrink-0 flex-col justify-between bg-[#14213D] px-6 py-6 text-white md:w-[44%] md:px-12 md:py-12">
                         <div className="flex items-center gap-2 text-xl font-extrabold tracking-tight">
@@ -627,7 +660,7 @@ export default function DeliveryLocation() {
 
             {/* Change Location Modal (bottom sheet on mobile) */}
             {locationReady && locationModalOpen && (
-                <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-[#14213D]/60 sm:items-center sm:px-4 sm:py-6">
+                <div className="fixed inset-0 z-9999 flex items-end justify-center bg-[#14213D]/60 sm:items-center sm:px-4 sm:py-6">
                     <div className="max-h-full w-full overflow-y-auto rounded-t-3xl bg-white p-6 pb-8 shadow-2xl sm:max-w-md sm:rounded-3xl sm:pb-6">
                         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200 sm:hidden" />
 

@@ -208,6 +208,37 @@ catch(err){
     });
 }
 }
+async function getAllVariants(req, res) {
+    try {
+        const { id } = req.params;
+
+        const product = await Product.findById(id);
+
+        if (!product) {
+            return res.status(404).send({
+                success: false,
+                message: "Product not found"
+            });
+        }
+
+        const variants = await ProductVariant.find({
+            product: product._id
+        });
+
+        res.status(200).send({
+            success: true,
+            variants: variants
+        });
+
+    } catch (err) {
+        console.log(err);
+
+        res.status(500).send({
+            success: false,
+            message: err.message
+        });
+    }
+}
 
 const getOneVariant = async (req, res) => {
   try {
@@ -410,4 +441,4 @@ const viewVariant = async (req, res) => {
 };
 
 
-module.exports = { createProductVariant,getProductVariants,deleteProductVariant,getVariants,getOneVariant,updateProductVariant ,viewVariant};
+module.exports = { createProductVariant,getProductVariants,deleteProductVariant,getVariants,getOneVariant,updateProductVariant ,viewVariant,getAllVariants};

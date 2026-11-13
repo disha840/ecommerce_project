@@ -18,6 +18,7 @@ const orderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Store",
      default: null,
+     unique: true
     },
 
     address: {

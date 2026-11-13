@@ -15,6 +15,7 @@ const subcategoryRoute=require("./router/subcategoryRoute")
 const storeRoute=require("./router/storeRoute")
 const cartRoute=require("./router/cartRoute");
 const addressRoute=require("./router/addressRoute")
+const inventoryRoute=require("./router/inventoryRoute")
 const orderRoutes=require("./router/orderRoute")
 const app=express();
 
@@ -39,6 +40,7 @@ app.use("/cart",cartRoute)
 app.use("/store",storeRoute);
 app.use("/address",addressRoute)
 app.use("/order", orderRoutes);
+app.use("/inventory",inventoryRoute)
 
 app.listen(3000,()=>{
     console.log("server is running");

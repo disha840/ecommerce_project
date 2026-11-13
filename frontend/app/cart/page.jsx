@@ -1,11 +1,11 @@
 
 
 
-"use client";
-import { useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
 
-import { useDispatch} from "react-redux";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 
 import {
@@ -17,47 +17,47 @@ import {
 import Link from "next/link";
 
 const CartPage = () => {
-const router = useRouter();
+    const router = useRouter();
     const dispatch = useDispatch();
-    const user =useSelector((state)=> state.auth.user)
-   
     
 
+    const user = useSelector((state) => state.auth.user);
 
-    // Hydration error fix
     const [mounted, setMounted] = useState(false);
 
-    // Redux se cart data lena
     const { cart, items, loading, updating } = useSelector(
         (state) => state.cart
     );
 
-    // Page load hone par cart fetch karna
+    // Login check and cart fetch
     useEffect(() => {
-    
-         
-         dispatch(getCart());
-       
-       setMounted(true);
-    }, [dispatch]);
+        setMounted(true);
 
-    // Quantity update karna
+        if (user === null) {
+            router.replace("/");
+            return;
+        }
+
+        if (user) {
+            dispatch(getCart());
+        }
+    }, [dispatch, user, router]);
+
+    // Quantity update
     const handleQuantity = (id, quantity) => {
-
         dispatch(updateCartQuantity({
             id: id,
             quantity: quantity
         }));
-
     };
 
-    // Cart item remove karna
+    // Remove cart item
     const handleRemove = (id) => {
         dispatch(removeCartItem(id));
     };
 
-    // Server aur client ka first render same rakhna
-    if (!mounted || (user &&loading)) {
+    // Loading
+    if (!mounted || !user || loading) {
         return (
             <div className="flex min-h-screen items-center justify-center">
                 Loading cart...
@@ -245,7 +245,8 @@ const router = useRouter();
 
                                 </div>
 
-                                <button   onClick={() => router.push("/checkout")}
+                                <button
+                                    onClick={() => router.push("/checkout")}
                                     className="w-full rounded-xl bg-emerald-600 py-3 font-bold text-white transition hover:bg-emerald-700"
                                 >
                                     Proceed to Checkout
