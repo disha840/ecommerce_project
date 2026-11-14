@@ -9,4 +9,4 @@ const calculateDeliveryFee = (subtotal) => {
     return 40;
 };
 
-export default calculateDeliveryFee;
+module.exports= calculateDeliveryFee;

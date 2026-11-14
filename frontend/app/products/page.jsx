@@ -16,8 +16,8 @@ export default function Product() {
   const [inventories, setInventories] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  console.log("STORE:", store);
-console.log("STORE ID:", storeId);
+  // console.log("STORE:", store);
+// console.log("STORE ID:", storeId);
 
   useEffect(() => {
     if (!storeId) {
