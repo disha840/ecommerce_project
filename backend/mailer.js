@@ -24,7 +24,7 @@ const mail=await transporter.sendMail({
     from:process.env.EMAIL,
     to:to,
     subject:subject,
-    html:`<h1> your ${sub} is ${otp}</h1>`
+    html:`<h1> your otp is ${sub}</h1>`
 
 })
 return mail

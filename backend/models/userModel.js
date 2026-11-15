@@ -62,8 +62,19 @@ const userSchema=mongoose.Schema(
       default: null,
     },
     otp:{
-        type:String
-    }
+        type:String,
+         default: null
+    },
+
+    isOtpVerified: {
+    type: Boolean,
+    default: false
+},
+otpExpiresAt: {
+    type: Date,
+    default: null
+}
+
   },
   {
     timestamps: true,

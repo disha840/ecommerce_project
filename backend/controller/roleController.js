@@ -35,15 +35,28 @@ const createRole=async(req,res)=>{
 }
 const getRoles = async (req, res) => {
   try {
-  
-    const roles = await Role.find({name:{$ne:"super_admin"}}).sort({ createdAt: -1 });
-    console.log("my roles",roles)
+    const page = Number(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
+
+    const filter = { name: { $ne: "super_admin" } };
+
+    const totalRoles = await Role.countDocuments(filter);
+
+    const roles = await Role.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     return res.status(200).json({
       success: true,
       message: "Roles fetched successfully",
       roles,
+      currentPage: page,
+      totalPages: Math.ceil(totalRoles / limit),
+      totalRoles,
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -162,4 +175,44 @@ const viewRole = async (req, res) => {
   }
 
 }
-module.exports={createRole,getRoles,updateRole,deleteRole,viewRole,toggleStatus}
+const searchRole = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+    const page = Number(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
+
+    const filter = {
+      name: {
+        $ne: "super_admin",
+        $regex: search,
+        $options: "i",
+      },
+    };
+
+    const totalRoles = await Role.countDocuments(filter);
+
+    const roles = await Role.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    return res.status(200).json({
+      success: true,
+      message: "Roles fetched successfully",
+      roles,
+      currentPage: page,
+      totalPages: Math.ceil(totalRoles / limit),
+      totalRoles,
+    });
+
+  } catch (error) {
+    console.log("Search roles error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+module.exports={createRole,getRoles,updateRole,deleteRole,viewRole,toggleStatus,searchRole}

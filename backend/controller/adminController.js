@@ -164,8 +164,10 @@ const generateotp=async(req,res)=>{
     }
 
     const otp=Math.ceil((Math.random()*9000)+1000);
+
+   const otpExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
    
-    const u=await User.updateOne({email:email},{$set:{otp:otp}})
+    const u=await User.updateOne({email:email},{$set:{otp:otp,isOtpVerified: false,otpExpiresAt: otpExpiresAt}})
      const mail=await mailer(email,"otp verify",otp);
     if(!mail){
         return res.status(400).send({message:"otp not sent"});
@@ -192,11 +194,12 @@ const generateotp=async(req,res)=>{
     }
 
     const otp=Math.ceil((Math.random()*9000)+1000);
-    const mail=await mailer(email,"otp verify","otp",otp);
+    const otpExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
+    const mail=await mailer(email,"otp verify",otp);
     if(!mail){
         return res.status(400).send({message:"otp not sent"});
     }
-    const u=await User.updateOne({email:email},{$set:{otp:otp}})
+    const u=await User.updateOne({email:email},{$set:{otp:otp,isOtpVerified: false,otpExpiresAt: otpExpiresAt}})
     
     res.status(200).send({email:email,message:"otp sent sucessfully"})
     }
@@ -205,30 +208,81 @@ const generateotp=async(req,res)=>{
     }} 
     
     
-    const verifyotp=async(req,res)=>{
-    const {email,otp}=req.body;
-    console.log(email,otp)
-    try{
-        if(!email){
-        return res.status(400).send({message:"email is required"})
-    }
-    if((!email.includes("@"))||(!email.includes("."))){
-        return res.status(400).send({message:"invalid email"})
-    }
-    const user=await User.findOne({email});
-    if(!user){
-        return res.status(400).send({message:"user not found"});
-    }
-    if(otp!=user.otp){
-        return res.status(400).send("invalid otp")
-    }
-    res.status(200).send({email:email,message:"otp match sucessfully"})
-    }
-    catch(error){
-        res.send({message:"internal server error"})
-    }
+//     const verifyotp=async(req,res)=>{
+//     const {email,otp}=req.body;
+//     console.log(email,otp)
+//     try{
+//         if(!email){
+//         return res.status(400).send({message:"email is required"})
+//     }
+//     if((!email.includes("@"))||(!email.includes("."))){
+//         return res.status(400).send({message:"invalid email"})
+//     }
+//     const user=await User.findOne({email});
+//     if(!user){
+//         return res.status(400).send({message:"user not found"});
+//     }
+//     if(otp!=user.otp){
+//         return res.status(400).send("invalid otp")
+//     }
+//     res.status(200).send({email:email,message:"otp match sucessfully"})
+//     }
+//     catch(error){
+//         res.send({message:"internal server error"})
+//     }
    
-}
+// }
+
+const verifyotp = async (req, res) => {
+    const { email, otp } = req.body;
+
+    try {
+        if (!email) {
+            return res.status(400).send({
+                message: "email is required"
+            });
+        }
+
+        if ((!email.includes("@")) || (!email.includes("."))) {
+            return res.status(400).send({
+                message: "invalid email"
+            });
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).send({
+                message: "user not found"
+            });
+        }
+
+        if (!otp || otp.toString() !== user.otp) {
+            return res.status(400).send({
+                message: "invalid otp"
+            });
+        }
+      
+        if (!user.otpExpiresAt || Date.now() > user.otpExpiresAt.getTime()) {
+             return res.status(400).send({
+        message: "OTP has expired"
+            });
+             }
+
+        user.isOtpVerified = true;
+        await user.save();
+
+        return res.status(200).send({
+            email: email,
+            message: "otp match successfully"
+        });
+
+    } catch (error) {
+        res.status(500).send({
+            message: "internal server error"
+        });
+    }
+};
 
 const changePassword=async(req,res)=>{
     const {email,password}=req.body;
@@ -247,9 +301,17 @@ const changePassword=async(req,res)=>{
     if(!user){
        return res.status(400).send({message:"user not found"})
     }
+    if (!user.isOtpVerified) {
+    return res.status(400).send({
+        message: "please verify otp first"
+    });
+}
     const hassedPassword = await bcrypt.hash(password,8);
 
      user.password = hassedPassword;
+     user.otp = null;
+     user.isOtpVerified = false;
+     user.otpExpiresAt = null;
 
     await user.save();
     console.log(user)

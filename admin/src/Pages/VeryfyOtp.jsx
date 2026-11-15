@@ -14,7 +14,7 @@ import {
 import Loader from "../components/Loader";
 
 const OTP_LENGTH = 4;
-const OTP_TIME = 20 * 60;
+const OTP_TIME = 2 * 60;
 
 const VerifyOtp = () => {
   const location = useLocation();
@@ -40,7 +40,7 @@ const VerifyOtp = () => {
     inputRefs.current[0]?.focus();
   }, []);
 
-  // Timer
+  // 2 minutes OTP timer
   useEffect(() => {
     const t = setInterval(() => {
       setTimer((prev) => {
@@ -48,6 +48,7 @@ const VerifyOtp = () => {
           clearInterval(t);
           return 0;
         }
+
         return prev - 1;
       });
     }, 1000);
@@ -85,7 +86,7 @@ const VerifyOtp = () => {
     }
   }
 
-  // Paste support (pura OTP ek saath paste)
+  // Paste support
   function pasteHandler(e) {
     e.preventDefault();
 
@@ -98,6 +99,7 @@ const VerifyOtp = () => {
 
     const newOtp = Array(OTP_LENGTH).fill("");
     pasted.split("").forEach((d, i) => (newOtp[i] = d));
+
     setOtp(newOtp);
     setError("");
 
@@ -132,7 +134,9 @@ const VerifyOtp = () => {
         }
       );
 
-      toast.success(response.data?.message || "OTP verified successfully!");
+      toast.success(
+        response.data?.message || "OTP verified successfully!"
+      );
 
       navigate("/resetpassword", {
         state: { email: response.data.email },
@@ -151,6 +155,10 @@ const VerifyOtp = () => {
 
   // Resend OTP
   async function resendOtp() {
+    if (timer > 0) {
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -159,11 +167,15 @@ const VerifyOtp = () => {
         { email: email }
       );
 
-      toast.success(response.data?.message || "OTP resent successfully!");
+      toast.success(
+        response.data?.message || "OTP resent successfully!"
+      );
 
+      // Resend hone ke baad fresh 2-minute timer
       setTimer(OTP_TIME);
       setOtp(Array(OTP_LENGTH).fill(""));
       setError("");
+
       inputRefs.current[0]?.focus();
     } catch (error) {
       console.log(error.response?.data);
@@ -209,9 +221,13 @@ const VerifyOtp = () => {
               </div>
 
               <div>
-                <h2 className="text-xl font-bold tracking-wide">MyStore</h2>
+                <h2 className="text-xl font-bold tracking-wide">
+                  MyStore
+                </h2>
 
-                <p className="text-xs text-slate-300">Admin Panel</p>
+                <p className="text-xs text-slate-300">
+                  Admin Panel
+                </p>
               </div>
             </div>
 
@@ -242,7 +258,9 @@ const VerifyOtp = () => {
                 </div>
 
                 <div>
-                  <p className="text-sm font-semibold">Secure Verification</p>
+                  <p className="text-sm font-semibold">
+                    Secure Verification
+                  </p>
 
                   <p className="mt-1 text-xs text-slate-400">
                     Never share your OTP with anyone
@@ -258,7 +276,10 @@ const VerifyOtp = () => {
 
           {/* Right Form */}
           <div className="flex flex-1 items-center justify-center px-6 py-9 sm:px-10 sm:py-12 lg:px-14">
-            <form className="w-full max-w-md" onSubmit={submitHandler}>
+            <form
+              className="w-full max-w-md"
+              onSubmit={submitHandler}
+            >
 
               {/* Form Heading */}
               <div className="mb-8">
@@ -322,7 +343,9 @@ const VerifyOtp = () => {
                     {minutes}:{seconds}
                   </span>
                 ) : (
-                  <span className="text-red-500">OTP expired</span>
+                  <span className="text-red-500">
+                    OTP expired
+                  </span>
                 )}
               </div>
 
@@ -332,7 +355,9 @@ const VerifyOtp = () => {
                 disabled={loading}
                 className="group flex w-full items-center justify-center gap-3 rounded-xl bg-[#087F95] py-3.5 text-sm font-bold text-white shadow-lg shadow-[#087F95]/20 transition duration-300 hover:-translate-y-0.5 hover:bg-[#066779] hover:shadow-xl hover:shadow-[#087F95]/25 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <span>{loading ? "Verifying..." : "Verify OTP"}</span>
+                <span>
+                  {loading ? "Verifying..." : "Verify OTP"}
+                </span>
 
                 {!loading && (
                   <FiArrowRight
@@ -345,13 +370,16 @@ const VerifyOtp = () => {
               {/* Resend */}
               <div className="mt-6 text-center text-sm text-[#627D98]">
                 Didn't receive the code?
+
                 <button
                   type="button"
                   onClick={resendOtp}
-                  disabled={loading}
-                  className="ml-1 font-semibold text-[#087F95] transition hover:text-[#102A43] hover:underline disabled:opacity-60"
+                  disabled={loading || timer > 0}
+                  className="ml-1 font-semibold text-[#087F95] transition hover:text-[#102A43] hover:underline disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Resend OTP
+                  {timer > 0
+                    ? `Resend OTP (${minutes}:${seconds})`
+                    : "Resend OTP"}
                 </button>
               </div>
 

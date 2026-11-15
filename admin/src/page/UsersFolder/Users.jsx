@@ -1,4 +1,5 @@
 
+
 import React, { useEffect, useState } from "react";
 import api from "../../api";
 import CreateUserForm from "../../components/users/CreateUserForm";
@@ -18,72 +19,96 @@ import {
   FiPhone,
   FiShield,
   FiArrowUpRight,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 
 const User = () => {
-  const [permissions, setPermissions] = useState([]);
   const user = useSelector((state) => state.auth.user);
+
+  const [permissions, setPermissions] = useState([]);
 
   const [showModal, setShowModal] = useState(false);
   const [deleteuser, setDelete] = useState(false);
   const [deleteid, setDeleteid] = useState(null);
+
   const [allusers, setAllUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [editUser, setEditUser] = useState(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+
   const navigate = useNavigate();
 
-  async function showAllUsers() {
-    const response = await api.get("/api/allusers");
-    setAllUsers(response.data.users);
-  }
-
-  useEffect(() => {
-    showAllUsers();
-  }, []);
-
-  function handleView(id) {
-    navigate(`/admin/view/${id}`);
-  }
-
-  async function SearchUsers(searchvalue = "") {
+  async function showAllUsers(page = currentPage, searchValue = search) {
     try {
-      const response = await api.get(
-        `/api/searched?search=${searchvalue}`
-      );
-      setAllUsers(response.data.users);
+      let response;
+
+      if (searchValue.trim()) {
+        response = await api.get(
+          `/api/searched?search=${encodeURIComponent(searchValue)}&page=${page}`
+        );
+      } else {
+        response = await api.get(`/api/allusers?page=${page}`);
+      }
+
+      const data = response.data;
+
+      // Agar last page se user delete ho jaye
+      if (data.totalPages > 0 && page > data.totalPages) {
+        showAllUsers(data.totalPages, searchValue);
+        return;
+      }
+
+      setAllUsers(data.users);
+      setCurrentPage(data.currentPage);
+      setTotalPages(data.totalPages);
+      setTotalUsers(data.totalUsers);
     } catch (error) {
       console.log(error);
     }
   }
 
+  // Search aur pagination
   useEffect(() => {
     const timer = setTimeout(() => {
-      SearchUsers(search);
+      showAllUsers(currentPage, search);
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, currentPage]);
 
-  const handleStatusChange = async (id) => {
-    try {
-      await api.put(`/api/toggle-status/${id}`);
-      showAllUsers();
-    } catch (error) {
-      console.log(error.message);
-    }
-  };
+  function handleView(id) {
+    navigate(`/admin/view/${id}`);
+  }
+
+  function handleSearch(event) {
+    setSearch(event.target.value);
+    setCurrentPage(1);
+  }
+
+ const handleStatusChange = async (id) => {
+  try {
+    await api.patch(`/api/toggle-status/${id}`);
+    showAllUsers();
+  } catch (error) {
+    console.log(error.message);
+  }
+};
 
   useEffect(() => {
-    setPermissions(user.permissions);
+    setPermissions(user?.permissions || []);
   }, [user]);
 
-  if (!user?.permissions.some((permission) => permission.includes("user"))) {
+  if (!user?.permissions?.some((permission) => permission.includes("user"))) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
   return (
     <div className="w-full space-y-7">
+
       {/* Page Heading */}
       <div>
         <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-[#087F95]">
@@ -101,6 +126,7 @@ const User = () => {
 
       {/* User Statistics */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+
         {/* Total Users */}
         <div className="group rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg sm:p-6">
           <div className="flex items-start justify-between">
@@ -110,7 +136,7 @@ const User = () => {
               </p>
 
               <h2 className="mt-3 text-3xl font-bold text-[#102A43]">
-                {allusers.length}
+                {totalUsers}
               </h2>
             </div>
 
@@ -132,13 +158,11 @@ const User = () => {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-[#627D98]">
-                Active Users
+                Active Users (Current Page)
               </p>
 
               <h2 className="mt-3 text-3xl font-bold text-[#102A43]">
-                {
-                  allusers.filter((user) => user.status === "ACTIVE").length
-                }
+                {allusers.filter((user) => user.status === "ACTIVE").length}
               </h2>
             </div>
 
@@ -150,7 +174,7 @@ const User = () => {
           <div className="mt-5 flex items-center gap-2 border-t border-[#D9E8EF] pt-4">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
             <p className="text-xs text-[#627D98]">
-              Currently active accounts
+              Active accounts on this page
             </p>
           </div>
         </div>
@@ -160,13 +184,11 @@ const User = () => {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-[#627D98]">
-                Inactive Users
+                Inactive Users (Current Page)
               </p>
 
               <h2 className="mt-3 text-3xl font-bold text-[#102A43]">
-                {
-                  allusers.filter((user) => user.status !== "ACTIVE").length
-                }
+                {allusers.filter((user) => user.status !== "ACTIVE").length}
               </h2>
             </div>
 
@@ -178,7 +200,7 @@ const User = () => {
           <div className="mt-5 flex items-center gap-2 border-t border-[#D9E8EF] pt-4">
             <span className="h-2 w-2 rounded-full bg-amber-500" />
             <p className="text-xs text-[#627D98]">
-              Currently inactive accounts
+              Inactive accounts on this page
             </p>
           </div>
         </div>
@@ -187,6 +209,7 @@ const User = () => {
       {/* Search Section and Create User Button */}
       <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
           <div className="relative w-full sm:max-w-sm">
             <FiSearch
               size={19}
@@ -197,7 +220,7 @@ const User = () => {
               type="text"
               placeholder="Search by name or email..."
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={handleSearch}
               className="w-full rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] py-3 pl-11 pr-4 text-sm text-[#102A43] outline-none transition placeholder:text-[#94A8B8] focus:border-[#087F95] focus:ring-4 focus:ring-[#22B8CF]/10"
             />
           </div>
@@ -217,8 +240,9 @@ const User = () => {
         </div>
       </div>
 
-    
+      {/* Registered Users */}
       <div className="overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-sm">
+
         <div className="flex items-center justify-between border-b border-[#D9E8EF] px-5 py-5 sm:px-6">
           <div>
             <h2 className="text-lg font-bold text-[#102A43]">
@@ -231,12 +255,13 @@ const User = () => {
           </div>
 
           <div className="rounded-xl bg-[#D7F2F6] px-3 py-2 text-sm font-semibold text-[#087F95]">
-            {allusers.length} Users
+            {totalUsers} Users
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-max text-left text-sm">
+
             <thead className="bg-[#F0FAFC]">
               <tr className="text-xs uppercase tracking-wider text-[#627D98]">
                 <th className="px-6 py-4 font-semibold">User</th>
@@ -257,11 +282,12 @@ const User = () => {
                     key={user._id}
                     className="border-t border-[#D9E8EF] transition hover:bg-[#F8FCFD]"
                   >
+
                     {/* User Name */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#102A43] text-sm font-bold text-[#8DE3EC]">
-                          {user.firstName[0]}
+                          {user.firstName?.[0] || "U"}
                         </div>
 
                         <div>
@@ -279,10 +305,7 @@ const User = () => {
                     {/* Email */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-[#627D98]">
-                        <FiMail
-                          size={15}
-                          className="shrink-0 text-[#087F95]"
-                        />
+                        <FiMail size={15} className="shrink-0 text-[#087F95]" />
                         {user.email}
                       </div>
                     </td>
@@ -290,10 +313,7 @@ const User = () => {
                     {/* Phone */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-[#627D98]">
-                        <FiPhone
-                          size={15}
-                          className="shrink-0 text-[#087F95]"
-                        />
+                        <FiPhone size={15} className="shrink-0 text-[#087F95]" />
                         {user.phone}
                       </div>
                     </td>
@@ -302,7 +322,7 @@ const User = () => {
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center gap-2 rounded-lg bg-[#D7F2F6] px-3 py-2 text-xs font-semibold text-[#087F95]">
                         <FiShield size={14} />
-                        {user.role.name}
+                        {user.role?.name || "No Role"}
                       </span>
                     </td>
 
@@ -326,6 +346,7 @@ const User = () => {
                     {/* Actions */}
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
+
                         {permissions.includes("users:read") && (
                           <button
                             title="View User"
@@ -386,10 +407,52 @@ const User = () => {
           </table>
         </div>
 
-        <div className="border-t border-[#D9E8EF] bg-[#F8FCFD] px-5 py-4 sm:px-6">
+        {/* Pagination */}
+        <div className="flex flex-col gap-4 border-t border-[#D9E8EF] bg-[#F8FCFD] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+
           <p className="text-xs text-[#627D98]">
-            Showing {allusers.length} users
+            Showing {allusers.length > 0 ? (currentPage - 1) * 5 + 1 : 0}
+            {" - "}
+            {(currentPage - 1) * 5 + allusers.length}
+            {" of "}
+            {totalUsers} users
           </p>
+
+          <div className="flex items-center justify-center gap-2">
+
+            <button
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+              disabled={currentPage === 1}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#D9E8EF] bg-white text-[#087F95] transition hover:bg-[#D7F2F6] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <FiChevronLeft size={18} />
+            </button>
+
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+              (page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`h-9 min-w-9 rounded-lg px-3 text-sm font-semibold transition ${
+                    currentPage === page
+                      ? "bg-[#087F95] text-white"
+                      : "border border-[#D9E8EF] bg-white text-[#087F95] hover:bg-[#D7F2F6]"
+                  }`}
+                >
+                  {page}
+                </button>
+              )
+            )}
+
+            <button
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+              disabled={currentPage === totalPages || totalPages === 0}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#D9E8EF] bg-white text-[#087F95] transition hover:bg-[#D7F2F6] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <FiChevronRight size={18} />
+            </button>
+
+          </div>
         </div>
       </div>
 
@@ -398,7 +461,10 @@ const User = () => {
         <CreateUserForm
           onClose={() => setShowModal(false)}
           editData={editUser}
-          onCreated={showAllUsers}
+          onCreated={() => {
+            setShowModal(false);
+            showAllUsers();
+          }}
         />
       )}
 
@@ -407,7 +473,10 @@ const User = () => {
         <DeleteUserModal
           userId={deleteid}
           onClose={() => setDelete(false)}
-          onDeleted={showAllUsers}
+          onDeleted={() => {
+            setDelete(false);
+            showAllUsers();
+          }}
         />
       )}
     </div>

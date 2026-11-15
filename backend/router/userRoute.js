@@ -32,7 +32,7 @@ router.post(
   createUser
 );
 
-router.put(
+router.patch(
   "/toggle-status/:id",
   toggleStatus
 );

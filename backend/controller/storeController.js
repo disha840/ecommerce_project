@@ -209,15 +209,27 @@ module.exports = {
 
 const getStores = async (req, res) => {
   try {
+    const page = Number(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
+
+    const totalStores = await Store.countDocuments();
+
     const stores = await Store.find()
       .populate("manager", "firstName lastName")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     res.status(200).json({
       success: true,
       message: "Stores fetched successfully",
       stores,
+      currentPage: page,
+      totalPages: Math.ceil(totalStores / limit),
+      totalStores,
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -486,9 +498,87 @@ const updateStore = async (req, res) => {
     }
 };
 
+const searchStore = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+    const page = Number(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
+
+    const filter = {
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { code: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } },
+      ],
+    };
+
+    const totalStores = await Store.countDocuments(filter);
+
+    const stores = await Store.find(filter)
+      .populate("manager", "firstName lastName")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      stores,
+      currentPage: page,
+      totalPages: Math.ceil(totalStores / limit),
+      totalStores,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+const toggleStoreStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid store ID",
+      });
+    }
+
+    const store = await Store.findById(id);
+
+    if (!store) {
+      return res.status(404).json({
+        success: false,
+        message: "Store not found",
+      });
+    }
+
+    store.status =
+      store.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+
+    await store.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Store status updated successfully",
+      store,
+    });
+
+  } catch (error) {
+    console.log("Toggle Store Status Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 module.exports = { updateStore };
 
 
 
 
-module.exports={createStore,getStoreManagers,getStores,deleteStore,getNearestStore,updateStore}
+module.exports={createStore,getStoreManagers,getStores,deleteStore,getNearestStore,updateStore,searchStore,toggleStoreStatus}

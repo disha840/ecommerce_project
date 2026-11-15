@@ -10,7 +10,8 @@ const {
   updateRole,
   deleteRole,
   toggleStatus,
-  viewRole
+  viewRole,
+  searchRole
 } = require("../controller/roleController");
 
 router.use(auth);
@@ -26,11 +27,12 @@ router.get(
 
   getRoles
 );
-router.put(
+router.patch(
   "/toggle-status/:id",
 
   toggleStatus
 );
+router.get("/searched", searchRole);
 
 router.put(
   "/updaterole/:id",

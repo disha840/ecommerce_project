@@ -108,7 +108,7 @@ const ResetPass = () => {
         confirmPassword: "",
       });
 
-      navigate("/login", {
+      navigate("/", {
         replace: true,
         state: { email: response.data.email },
       });

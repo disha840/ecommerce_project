@@ -10,7 +10,9 @@ const {
   getStores,
   deleteStore,
   getNearestStore,
-  updateStore
+  updateStore,
+  searchStore,
+  toggleStoreStatus
 } = require("../controller/storeController");
 
 router.post("/nearest", getNearestStore);
@@ -21,6 +23,7 @@ router.get(
   getStoreManagers
 );
 
+router.get("/searched", searchStore);
 
 router.post(
   "/createStore",
@@ -33,6 +36,7 @@ router.get(
   getStores
 );
 router.delete("/delete/:id", deleteStore);
+router.patch("/toggle-status/:id", toggleStoreStatus);
 
 router.put("/updateStore/:id", updateStore);
 

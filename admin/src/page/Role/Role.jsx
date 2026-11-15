@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect } from "react";
 
 import {
@@ -11,6 +12,8 @@ import {
   FiCheckCircle,
   FiXCircle,
   FiShield,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 
 import { toast } from "react-toastify";
@@ -28,13 +31,33 @@ const Role = () => {
   const [showdelete, setShowDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
+  // PAGINATION
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRoles, setTotalRoles] = useState(0);
+
   const navigate = useNavigate();
 
-  // GET ALL ROLES
-  const fetchRoles = async () => {
+  // GET ALL ROLES AND SEARCH ROLES
+  const fetchRoles = async (page = currentPage, searchValue = search) => {
     try {
-      const response = await api.get("/role/showroles");
+      setLoading(true);
+
+      let response;
+
+      if (searchValue.trim()) {
+        response = await api.get(
+          `/role/searched?search=${encodeURIComponent(searchValue)}&page=${page}`
+        );
+      } else {
+        response = await api.get(`/role/showroles?page=${page}`);
+      }
+
       setRoles(response.data.roles || []);
+      setCurrentPage(response.data.currentPage || page);
+      setTotalPages(response.data.totalPages || 1);
+      setTotalRoles(response.data.totalRoles || 0);
+
     } catch (error) {
       console.log("Get roles error:", error.response?.data || error);
       toast.error("Failed to fetch roles");
@@ -43,9 +66,14 @@ const Role = () => {
     }
   };
 
+  // FETCH ROLES WHEN PAGE OR SEARCH CHANGES
   useEffect(() => {
-    fetchRoles();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchRoles(currentPage, search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [currentPage, search]);
 
   // OPEN ADD MODAL
   const handleAddRole = () => {
@@ -58,11 +86,6 @@ const Role = () => {
     setSelectedRole(role);
     setShowModal(true);
   };
-
-  // SEARCH ROLES
-  const filteredRoles = roles.filter((role) =>
-    (role.name || "").toLowerCase().includes(search.toLowerCase())
-  );
 
   // ACTIVE ROLES COUNT
   const activeRoles = roles.filter(
@@ -82,14 +105,13 @@ const Role = () => {
   // CHANGE ROLE STATUS
   const handleStatusChange = async (id) => {
     try {
-      const response = await api.put(`/role/toggle-status/${id}`);
+      const response = await api.patch(`/role/toggle-status/${id}`);
 
       toast.success(
         response.data.message || "Status updated successfully"
       );
 
-      // Fetch updated roles without showing loading screen
-      fetchRoles();
+      fetchRoles(currentPage, search);
 
     } catch (error) {
       console.log(
@@ -103,6 +125,9 @@ const Role = () => {
     }
   };
 
+  // PAGINATION START INDEX
+  const startIndex = (currentPage - 1) * 5;
+
   return (
     <div className="m-6 space-y-6">
 
@@ -114,7 +139,9 @@ const Role = () => {
             setDeleteId(null);
             setShowDelete(false);
           }}
-          onDeleted={fetchRoles}
+          onDeleted={() => {
+            fetchRoles(currentPage, search);
+          }}
         />
       )}
 
@@ -145,7 +172,7 @@ const Role = () => {
               </p>
 
               <h3 className="mt-1 text-2xl font-bold text-[#102A43]">
-                {roles.length}
+                {totalRoles}
               </h3>
             </div>
 
@@ -208,7 +235,10 @@ const Role = () => {
               type="text"
               placeholder="Search role..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full rounded-xl border border-[#D9E8EF] bg-[#F0FAFC] py-3 pl-10 pr-4 text-sm text-[#102A43] outline-none transition placeholder:text-[#94A8B8] focus:border-[#087F95] focus:bg-white focus:ring-2 focus:ring-[#22B8CF]/20"
             />
           </div>
@@ -277,7 +307,7 @@ const Role = () => {
                   </td>
                 </tr>
 
-              ) : filteredRoles.length === 0 ? (
+              ) : roles.length === 0 ? (
                 <tr>
                   <td
                     colSpan="5"
@@ -288,7 +318,7 @@ const Role = () => {
                 </tr>
 
               ) : (
-                filteredRoles.map((role) => (
+                roles.map((role) => (
                   <tr
                     key={role._id}
                     className="transition hover:bg-[#F0FAFC]"
@@ -410,6 +440,57 @@ const Role = () => {
             </tbody>
           </table>
         </div>
+
+        {/* PAGINATION */}
+        {!loading && totalRoles > 0 && (
+          <div className="flex flex-col gap-4 border-t border-[#D9E8EF] bg-[#F8FCFD] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+
+            <p className="text-xs text-[#627D98]">
+              Showing {startIndex + 1}
+              {" - "}
+              {Math.min(startIndex + roles.length, totalRoles)}
+              {" of "}
+              {totalRoles} roles
+            </p>
+
+            <div className="flex items-center justify-center gap-2">
+
+              <button
+                type="button"
+                onClick={() => setCurrentPage((prev) => prev - 1)}
+                disabled={currentPage === 1}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#D9E8EF] bg-white text-[#087F95] transition hover:bg-[#D7F2F6] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <FiChevronLeft size={18} />
+              </button>
+
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => setCurrentPage(page)}
+                  className={`h-9 min-w-9 rounded-lg px-3 text-sm font-semibold transition ${
+                    currentPage === page
+                      ? "bg-[#087F95] text-white"
+                      : "border border-[#D9E8EF] bg-white text-[#087F95] hover:bg-[#D7F2F6]"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#D9E8EF] bg-white text-[#087F95] transition hover:bg-[#D7F2F6] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <FiChevronRight size={18} />
+              </button>
+
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ADD AND EDIT ROLE MODAL */}
@@ -417,8 +498,13 @@ const Role = () => {
         <FormModal
           setShowModal={setShowModal}
           role={selectedRole}
-          onUpdated={fetchRoles}
-          onCreated={fetchRoles}
+          onUpdated={() => {
+            fetchRoles(currentPage, search);
+          }}
+          onCreated={() => {
+            fetchRoles(1, search);
+            setCurrentPage(1);
+          }}
         />
       )}
 

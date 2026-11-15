@@ -87,16 +87,38 @@ const hashedPassword=await bcrypt.hash(passw,8);
   }
 }
 
-const getAllUser=async(req,res)=>{
-  try{
-      const super_admin = await Role.findOne({name:"super_admin"})
-      const users=await User.find({role:{$ne:super_admin._id}}).sort({createdAt:-1}).populate("role","name");
-      res.status(200).send({users:users,message:"fetch all users sucessfully"})
+const getAllUser = async (req, res) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
+
+    const super_admin = await Role.findOne({ name: "super_admin" });
+
+    const filter = super_admin
+      ? { role: { $ne: super_admin._id } }
+      : {};
+
+    const totalUsers = await User.countDocuments(filter);
+
+    const users = await User.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("role", "name");
+
+    res.status(200).send({
+      users,
+      currentPage: page,
+      totalPages: Math.ceil(totalUsers / limit),
+      totalUsers,
+      message: "Fetch all users successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Internal server error" });
   }
-  catch(error){
-     res.status(500).send({message:"internal server error"})
-  }
-}
+};
 
 const viewUser=async(req,res)=>{
   try{
@@ -187,26 +209,43 @@ const deleteUser=async(req,res)=>{
   }
 }
 
-const searchUser=async(req,res)=>{
-  try{
-   const search = req.query.search || "";
+const searchUser = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+    const page = Number(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
 
-const super_admin = await Role.findOne({ name: "super_admin" });
+    const super_admin = await Role.findOne({ name: "super_admin" });
 
-const users = await User.find({
-  ...(super_admin && { role: { $ne: super_admin._id } }),
-  $or: [
-    { firstName: { $regex: search, $options: "i" } },
-    { lastName: { $regex: search, $options: "i" } },
-    { email: { $regex: search, $options: "i" } }
-  ]
-}).sort({ createdAt: -1 });
+    const filter = {
+      ...(super_admin && { role: { $ne: super_admin._id } }),
+      $or: [
+        { firstName: { $regex: search, $options: "i" } },
+        { lastName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ],
+    };
 
-res.status(200).send({ users });
-  }catch(error){
-    res.status(500).send({message:"internal server error"})
+    const totalUsers = await User.countDocuments(filter);
+
+    const users = await User.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("role", "name");
+
+    res.status(200).send({
+      users,
+      currentPage: page,
+      totalPages: Math.ceil(totalUsers / limit),
+      totalUsers,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Internal server error" });
   }
-}
+};
 
 const getRole=async(req,res)=>{
   const getAllRole=await Role.find({name:{$ne:"super_admin"}});
@@ -217,6 +256,7 @@ const getRole=async(req,res)=>{
  async function toggleStatus(req,res){
    try {
     const user = await User.findById(req.params.id);
+     console.log("TOGGLE STATUS ROUTE HIT")
 
     if (!user) {
       return res.status(404).send({ message: "User not found" });

@@ -1,4 +1,5 @@
 
+
 import FormModal from "../../components/Store/formModal";
 import api from "../../api";
 
@@ -12,6 +13,8 @@ import {
   FiXCircle,
   FiMapPin,
   FiUsers,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 import DeleteStoreModal from "../../components/Store/DeleteStore";
 
@@ -23,18 +26,47 @@ const Store = () => {
   const [showmodel, setShowmodal] = useState(false);
   const [selectedStore, setSelectedStore] = useState(null);
 
-  const fetchStores = async () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalStores, setTotalStores] = useState(0);
+
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+
+  // FETCH STORES
+  const fetchStores = async (page = 1, searchValue = search) => {
     try {
-      const res = await api.get("/store/getstores");
+      setLoading(true);
+
+      let res;
+
+      if (searchValue.trim()) {
+        res = await api.get(
+          `/store/searched?search=${encodeURIComponent(searchValue)}&page=${page}`
+        );
+      } else {
+        res = await api.get(`/store/getstores?page=${page}`);
+      }
+
       setStores(res.data.stores || []);
+      setCurrentPage(res.data.currentPage || page);
+      setTotalPages(res.data.totalPages || 1);
+      setTotalStores(res.data.totalStores || 0);
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
+  // SEARCH AND PAGINATION
   useEffect(() => {
-    fetchStores();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchStores(currentPage, search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [currentPage, search]);
 
   // OPEN ADD STORE MODAL
   const handleAddStore = () => {
@@ -54,6 +86,45 @@ const Store = () => {
     setSelectedStore(null);
   };
 
+  // TOGGLE STORE STATUS
+  const handleToggleStatus = async (id) => {
+    try {
+      const res = await api.patch(`/store/toggle-status/${id}`);
+      fetchStores()
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // AFTER CREATE OR UPDATE
+  const handleStoreSaved = async () => {
+    setShowmodal(false);
+    setSelectedStore(null);
+
+    if (currentPage === 1) {
+      await fetchStores(1, search);
+    } else {
+      setCurrentPage(1);
+    }
+  };
+
+  // AFTER DELETE
+  const handleStoreDeleted = async () => {
+    setShowDelete(false);
+    setDeleteId(null);
+
+    const remainingStores = totalStores - 1;
+    const lastPage = Math.max(1, Math.ceil(remainingStores / 5));
+
+    if (currentPage > lastPage) {
+      setCurrentPage(lastPage);
+    } else {
+      await fetchStores(currentPage, search);
+    }
+  };
+
+  const startIndex = (currentPage - 1) * 5;
+
   return (
     <div className="min-h-screen space-y-6 bg-[#F0FAFC] p-6 text-[#102A43]">
 
@@ -62,7 +133,7 @@ const Store = () => {
         <FormModal
           store={selectedStore}
           onClose={handleCloseModal}
-          onSaved={fetchStores}
+          onSaved={handleStoreSaved}
         />
       )}
 
@@ -74,7 +145,7 @@ const Store = () => {
             setShowDelete(false);
             setDeleteId(null);
           }}
-          onDeleted={fetchStores}
+          onDeleted={handleStoreDeleted}
         />
       )}
 
@@ -93,11 +164,8 @@ const Store = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-[#627D98]">Total Stores</p>
-              <h2 className="mt-2 text-3xl font-bold">
-                {stores.length}
-              </h2>
+              <h2 className="mt-2 text-3xl font-bold">{totalStores}</h2>
             </div>
-
             <div className="rounded-xl bg-[#D7F2F6] p-3 text-[#087F95]">
               <FiMapPin size={24} />
             </div>
@@ -112,7 +180,6 @@ const Store = () => {
                 {stores.filter((store) => store.status === "ACTIVE").length}
               </h2>
             </div>
-
             <div className="rounded-xl bg-[#D7F2F6] p-3 text-[#087F95]">
               <FiCheckCircle size={24} />
             </div>
@@ -127,7 +194,6 @@ const Store = () => {
                 {stores.filter((store) => store.status !== "ACTIVE").length}
               </h2>
             </div>
-
             <div className="rounded-xl bg-[#F0FAFC] p-3 text-[#627D98]">
               <FiXCircle size={24} />
             </div>
@@ -147,7 +213,12 @@ const Store = () => {
 
             <input
               type="text"
-              placeholder="Search stores, code, manager, phone..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder="Search stores, code, phone..."
               className="w-full rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] py-2.5 pl-10 pr-4 text-sm text-[#102A43] outline-none placeholder:text-[#829AB1] transition focus:border-[#087F95] focus:ring-2 focus:ring-[#22B8CF]/20"
             />
           </div>
@@ -177,127 +248,110 @@ const Store = () => {
 
             <thead className="border-b border-[#D9E8EF] bg-[#F8FCFD]">
               <tr>
-                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
-                  S.No.
-                </th>
-
-                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
-                  Store
-                </th>
-
-                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
-                  Store Code
-                </th>
-
-                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
-                  Manager
-                </th>
-
-                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
-                  Phone
-                </th>
-
-                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
-                  Service Radius
-                </th>
-
-                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">
-                  Status
-                </th>
-
-                <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-[#627D98]">
-                  Actions
-                </th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">S.No.</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">Store</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">Store Code</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">Manager</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">Phone</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">Service Radius</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-[#627D98]">Status</th>
+                <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-[#627D98]">Actions</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-[#D9E8EF]">
 
-              {stores.map((store, index) => (
-                <tr
-                  key={store._id}
-                  className="transition hover:bg-[#F8FCFD]"
-                >
-                  <td className="px-6 py-4 text-sm text-[#627D98]">
-                    {index + 1}
-                  </td>
-
-                  <td className="px-6 py-4 font-semibold text-[#102A43]">
-                    {store.name}
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <span className="rounded-lg bg-[#D7F2F6] px-3 py-1.5 text-sm font-medium text-[#087F95]">
-                      {store.code}
-                    </span>
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-[#102A43]">
-                      <FiUsers className="text-[#087F95]" />
-
-                      {store.manager
-                        ? `${store.manager.firstName || ""} ${store.manager.lastName || ""}`.trim()
-                        : "Not assigned"}
-                    </div>
-                  </td>
-
-                  <td className="px-6 py-4 text-sm text-[#102A43]">
-                    {store.phone}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm text-[#102A43]">
-                    {store.serviceRadius} km
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <span
-                      className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                        store.status === "ACTIVE"
-                          ? "bg-[#D7F2F6] text-[#087F95]"
-                          : "bg-[#F0FAFC] text-[#627D98]"
-                      }`}
-                    >
-                      {store.status}
-                    </span>
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-center gap-2">
-
-                      <button
-                        onClick={() => handleEditStore(store)}
-                        className="rounded-lg p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
-                        title="Edit Store"
-                      >
-                        <FiEdit2 size={18} />
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setDeleteId(store._id);
-                          setShowDelete(true);
-                        }}
-                        className="rounded-lg p-2 text-[#627D98] transition hover:bg-[#F0FAFC]"
-                        title="Delete Store"
-                      >
-                        <FiTrash2 size={18} />
-                      </button>
-
-                    </div>
-                  </td>
-                </tr>
-              ))}
-
-              {stores.length === 0 && (
+              {loading ? (
                 <tr>
-                  <td
-                    colSpan={8}
-                    className="py-8 text-center text-[#627D98]"
-                  >
-                    No stores found
+                  <td colSpan={8} className="py-8 text-center text-[#627D98]">
+                    Loading stores...
                   </td>
                 </tr>
+              ) : (
+                <>
+                  {stores.map((store, index) => (
+                    <tr key={store._id} className="transition hover:bg-[#F8FCFD]">
+
+                      <td className="px-6 py-4 text-sm text-[#627D98]">
+                        {startIndex + index + 1}
+                      </td>
+
+                      <td className="px-6 py-4 font-semibold text-[#102A43]">
+                        {store.name}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <span className="rounded-lg bg-[#D7F2F6] px-3 py-1.5 text-sm font-medium text-[#087F95]">
+                          {store.code}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-sm text-[#102A43]">
+                          <FiUsers className="text-[#087F95]" />
+                          {store.manager
+                            ? `${store.manager.firstName || ""} ${store.manager.lastName || ""}`.trim()
+                            : "Not assigned"}
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4 text-sm text-[#102A43]">
+                        {store.phone}
+                      </td>
+
+                      <td className="px-6 py-4 text-sm text-[#102A43]">
+                        {store.serviceRadius} km
+                      </td>
+
+                      {/* STATUS TOGGLE */}
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleToggleStatus(store._id)}
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer ${
+                            store.status === "ACTIVE"
+                              ? "bg-[#D7F2F6] text-[#087F95]"
+                              : "bg-[#F0FAFC] text-[#627D98]"
+                          }`}
+                        >
+                          {store.status}
+                        </button>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center gap-2">
+
+                          <button
+                            onClick={() => handleEditStore(store)}
+                            className="rounded-lg p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
+                            title="Edit Store"
+                          >
+                            <FiEdit2 size={18} />
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setDeleteId(store._id);
+                              setShowDelete(true);
+                            }}
+                            className="rounded-lg p-2 text-[#627D98] transition hover:bg-[#F0FAFC]"
+                            title="Delete Store"
+                          >
+                            <FiTrash2 size={18} />
+                          </button>
+
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {stores.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-[#627D98]">
+                        No stores found
+                      </td>
+                    </tr>
+                  )}
+                </>
               )}
 
             </tbody>
@@ -305,7 +359,57 @@ const Store = () => {
         </div>
 
         {/* PAGINATION */}
-        {/* Existing pagination remains commented out. */}
+        {totalStores > 0 && (
+          <div className="flex flex-col gap-4 border-t border-[#D9E8EF] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+
+            <p className="text-sm text-[#627D98]">
+              Showing{" "}
+              <span className="font-semibold text-[#102A43]">
+                {startIndex + 1} - {Math.min(startIndex + stores.length, totalStores)}
+              </span>{" "}
+              of{" "}
+              <span className="font-semibold text-[#102A43]">
+                {totalStores}
+              </span>{" "}
+              stores
+            </p>
+
+            <div className="flex items-center justify-center gap-2">
+
+              <button
+                onClick={() => setCurrentPage((prev) => prev - 1)}
+                disabled={currentPage === 1 || loading}
+                className="rounded-lg border border-[#D9E8EF] p-2 text-[#087F95] transition hover:bg-[#D7F2F6] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <FiChevronLeft size={18} />
+              </button>
+
+              {Array.from({ length: totalPages }, (_, index) => (
+                <button
+                  key={index + 1}
+                  onClick={() => setCurrentPage(index + 1)}
+                  disabled={loading}
+                  className={`h-9 min-w-9 rounded-lg px-3 text-sm font-semibold transition ${
+                    currentPage === index + 1
+                      ? "bg-[#087F95] text-white"
+                      : "border border-[#D9E8EF] text-[#627D98] hover:bg-[#D7F2F6]"
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+                disabled={currentPage === totalPages || loading}
+                className="rounded-lg border border-[#D9E8EF] p-2 text-[#087F95] transition hover:bg-[#D7F2F6] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <FiChevronRight size={18} />
+              </button>
+
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
