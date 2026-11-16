@@ -37,7 +37,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import ViewVariant from './page/ProductVariant/ViewVariant'
 import Orders from './page/orders/order'
 import Inventory from '../src/page/Inventory/Inventory'
-
+import Deliverypartner from "../src/page/DeliveryPartner/Deliverypartner"
 
 const App = () => {
   
@@ -81,6 +81,8 @@ const App = () => {
      <Route path='/admin/orders' element={<Orders/>}/>
      <Route path='/admin/store' element={<Store/>}/>
      <Route path='/admin/inventory' element={<Inventory/>}/>
+     <Route path='/admin/deliverypartner' element={<Deliverypartner/>}/>
+
      
 
 

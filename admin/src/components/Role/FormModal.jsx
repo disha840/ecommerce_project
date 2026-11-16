@@ -18,7 +18,9 @@ const FormModal = ({
     "store",
     "product-variant",
     "brand",
-    "inventory"
+    "inventory",
+    "orders",
+    "delivery-partner"
   ];
 
   const actions = [

@@ -73,16 +73,14 @@ const signup = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-
     const { email, password } = req.body;
-    console.log(">>>>>>>",email)
-    // return
 
     if (!email) {
       return res.status(400).send({
         message: "email is required"
       });
     }
+
     if (!password) {
       return res.status(400).send({
         message: "password is required"
@@ -90,13 +88,13 @@ const login = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
-// console.log(user)
-// return
+
     if (!user) {
       return res.status(404).send({
         message: "user not found"
       });
     }
+
     const passwordMatch = await bcrypt.compare(
       password,
       user.password
@@ -107,15 +105,17 @@ const login = async (req, res) => {
         message: "invalid password"
       });
     }
-  
-    const userRole=await User.findById(user._id).populate("role","name permissions");
-  
+
+    const userRole = await User.findById(user._id)
+      .populate("role", "name permissions")
+      .populate("store", "name");
 
     const token = jwt.sign(
       {
         id: user._id,
-        role:userRole.role.name,
-        permissions:userRole.role.permissions
+        role: userRole.role.name,
+        permissions: userRole.role.permissions,
+        store: userRole.store?._id || null
       },
       process.env.JWT_SECRET,
       {
@@ -131,16 +131,17 @@ const login = async (req, res) => {
     });
 
     return res.status(200).send({
-      message: "login successful",status:true,
-      user:{
+      message: "login successful",
+      status: true,
+      user: {
         id: user._id,
-        role:userRole.role.name,
-        permissions:userRole.role.permissions
+        role: userRole.role.name,
+        permissions: userRole.role.permissions,
+        store: userRole.store?._id || null
       }
     });
 
   } catch (error) {
-
     console.log(error);
 
     return res.status(500).send({

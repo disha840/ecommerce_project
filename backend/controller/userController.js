@@ -4,7 +4,8 @@ const mailer=require("../mailer")
 const jwt = require("jsonwebtoken")
 const bcrypt=require("bcrypt")
 const Role=require("../models/roleModel")
-const createUser=async (req, res) => {
+
+const createUser = async (req, res) => {
   try {
     const {
       firstName,
@@ -12,9 +13,9 @@ const createUser=async (req, res) => {
       email,
       phone,
       role,
+      store,
       status,
     } = req.body;
-
 
     if (!firstName) {
       return res.status(400).send({
@@ -34,14 +35,12 @@ const createUser=async (req, res) => {
       });
     }
 
-
     if (!role) {
       return res.status(400).send({
         message: "role is required"
       });
     }
 
-    
     const user = await User.findOne({ email });
 
     if (user) {
@@ -49,13 +48,12 @@ const createUser=async (req, res) => {
         message: "user already exists"
       });
     }
-  
 
- const passw=crypto.randomBytes(6).toString("hex")
+    const passw = crypto.randomBytes(6).toString("hex");
 
-const subject="your password for the mail"; 
+    const subject = "your password for the mail";
 
-const hashedPassword=await bcrypt.hash(passw,8);
+    const hashedPassword = await bcrypt.hash(passw, 8);
 
     const newUser = await User.create({
       firstName,
@@ -64,28 +62,38 @@ const hashedPassword=await bcrypt.hash(passw,8);
       phone,
       password: hashedPassword,
       role,
+      store: store || null,
       status
     });
-  
-    const mail=await mailer(email,subject,`your password for the ${email}` ,passw); 
 
-     if(!mail){ return res.status(400).send({message:"failed to send mail and password"}) } 
+    const mail = await mailer(
+      email,
+      subject,
+      `your password for the ${email}`,
+      passw
+    );
 
-     const users=await User.find().sort({createdAt:-1})
-    return res.status(201).send({users:users,
+    if (!mail) {
+      return res.status(400).send({
+        message: "failed to send mail and password"
+      });
+    }
+
+    const users = await User.find().sort({ createdAt: -1 });
+
+    return res.status(201).send({
+      users: users,
       message: "user created successfully"
     });
 
   } catch (error) {
-
     console.log(error);
 
     return res.status(500).send({
       message: "internal server error"
     });
-
   }
-}
+};
 
 const getAllUser = async (req, res) => {
   try {
@@ -135,9 +143,18 @@ const viewUser=async(req,res)=>{
 }
 }
 
-const updateUser=async(req,res)=>{
-   try {
-    const { firstName, lastName, email, phone, role, status } = req.body;
+const updateUser = async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      role,
+      store,
+      status
+    } = req.body;
+
     if (!firstName) {
       return res.status(400).send({
         message: "first name is required"
@@ -156,7 +173,6 @@ const updateUser=async(req,res)=>{
       });
     }
 
-
     if (!role) {
       return res.status(400).send({
         message: "role is required"
@@ -171,6 +187,7 @@ const updateUser=async(req,res)=>{
         email,
         phone,
         role,
+        store: store || null,
         status,
       },
       { new: true, runValidators: true }
@@ -186,12 +203,13 @@ const updateUser=async(req,res)=>{
       message: "User updated successfully",
       updatedUser,
     });
+
   } catch (error) {
     res.status(500).json({
       message: error.message,
     });
   }
-}
+};
 
 const deleteUser=async(req,res)=>{
   try{

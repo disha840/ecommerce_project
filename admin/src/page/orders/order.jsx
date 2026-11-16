@@ -1,13 +1,20 @@
-
 import React, { useState, useEffect } from "react";
 import api from "../../api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const Orders = () => {
   const navigate = useNavigate();
 
+  const user = useSelector((state) => state.auth.user);
+  const permissions = user?.permissions || [];
+
   const [data, setData] = useState([]);
   const [search, setSearch] = useState("");
+
+  if (!permissions.some((permission) => permission.includes("orders"))) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
 
   async function getOrders() {
     try {
@@ -22,10 +29,11 @@ const Orders = () => {
     getOrders();
   }, []);
 
-  const filteredData = data.filter((item) =>
-    item._id?.toLowerCase().includes(search.toLowerCase()) ||
-    item.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    item.orderStatus?.toLowerCase().includes(search.toLowerCase())
+  const filteredData = data.filter(
+    (item) =>
+      item._id?.toLowerCase().includes(search.toLowerCase()) ||
+      item.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      item.orderStatus?.toLowerCase().includes(search.toLowerCase())
   );
 
   const totalOrders = data.length;
@@ -48,7 +56,6 @@ const Orders = () => {
 
   return (
     <div className="min-h-screen bg-[#F0FAFC] p-4 text-[#102A43] sm:p-6">
-
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Orders</h1>
@@ -59,12 +66,9 @@ const Orders = () => {
 
       {/* Statistics Cards */}
       <div className="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-3">
-
         <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
           <p className="text-sm text-[#627D98]">Total Orders</p>
-          <h2 className="mt-2 text-3xl font-bold">
-            {totalOrders}
-          </h2>
+          <h2 className="mt-2 text-3xl font-bold">{totalOrders}</h2>
         </div>
 
         <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
@@ -80,12 +84,10 @@ const Orders = () => {
             {completedOrders}
           </h2>
         </div>
-
       </div>
 
       {/* Search */}
       <div className="mb-5 flex flex-col items-stretch gap-4 rounded-2xl border border-[#D9E8EF] bg-white p-4 shadow-sm">
-
         <input
           type="text"
           placeholder="Search by order ID, customer name or status..."
@@ -93,12 +95,10 @@ const Orders = () => {
           onChange={(event) => setSearch(event.target.value)}
           className="w-full rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] px-4 py-3 text-sm text-[#102A43] placeholder:text-[#627D98] outline-none focus:border-[#22B8CF] focus:ring-2 focus:ring-[#22B8CF]/20"
         />
-
       </div>
 
       {/* Orders Table */}
       <div className="overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-sm">
-
         <div className="border-b border-[#D9E8EF] p-5">
           <h2 className="text-lg font-semibold">All Orders</h2>
           <p className="mt-1 text-sm text-[#627D98]">
@@ -108,7 +108,6 @@ const Orders = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-
             <thead className="bg-[#EAF7FA]">
               <tr>
                 <th className="px-5 py-4">S.No</th>
@@ -129,17 +128,14 @@ const Orders = () => {
                     key={item._id}
                     className="border-t border-[#D9E8EF] transition hover:bg-[#F0FAFC]"
                   >
-
-                    <td className="px-5 py-5">
-                      {index + 1}
-                    </td>
+                    <td className="px-5 py-5">{index + 1}</td>
 
                     <td className="px-5 py-5 font-medium">
                       {item.orderNumber}
                     </td>
 
                     <td className="px-5 py-5">
-                      {item.user?.firstName + " " + item.user?.lastName  || "N/A"}
+                      {item.user?.firstName + " " + item.user?.lastName || "N/A"}
                     </td>
 
                     <td className="px-5 py-5 font-medium">
@@ -181,24 +177,25 @@ const Orders = () => {
 
                     <td className="px-5 py-5">
                       <div className="flex justify-center gap-2">
+                        {permissions.includes("orders:read") && (
+                          <button
+                            onClick={() => handleView(item._id)}
+                            className="rounded-lg bg-[#D7F2F6] px-3 py-2 text-[#087F95] transition hover:bg-[#BDEAF0]"
+                          >
+                            View Order
+                          </button>
+                        )}
 
-                        <button
-                          onClick={() => handleView(item._id)}
-                          className="rounded-lg bg-[#D7F2F6] px-3 py-2 text-[#087F95] transition hover:bg-[#BDEAF0]"
-                        >
-                          View Order
-                        </button>
-
-                        <button
-                          onClick={() => handleAssign(item._id)}
-                          className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-[#D7F2F6]"
-                        >
-                          Assign Order
-                        </button>
-
+                        {permissions.includes("orders:update") && (
+                          <button
+                            onClick={() => handleAssign(item._id)}
+                            className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-[#D7F2F6]"
+                          >
+                            Assign Order
+                          </button>
+                        )}
                       </div>
                     </td>
-
                   </tr>
                 ))
               ) : (
@@ -214,10 +211,8 @@ const Orders = () => {
                 </tr>
               )}
             </tbody>
-
           </table>
         </div>
-
       </div>
     </div>
   );

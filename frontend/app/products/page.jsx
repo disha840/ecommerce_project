@@ -33,7 +33,7 @@ export default function Product() {
           `/inventory/store/${storeId}`
         );
         console.log("STORE ID:", storeId);
-console.log("INVENTORY RESPONSE:", response.data);
+        console.log("INVENTORY RESPONSE:", response.data);
 
         
         // console.log("FIRST INVENTORY:", response.data.inventories?.[0]);

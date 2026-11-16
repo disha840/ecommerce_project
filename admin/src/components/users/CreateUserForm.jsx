@@ -20,6 +20,7 @@ const initialFormData = {
   phone: "",
   password: "",
   role: "",
+  store: "",
   status: "ACTIVE",
 };
 
@@ -30,12 +31,25 @@ function CreateUserForm({
   showAllUsers,
 }) {
   const [role, setRole] = useState([]);
+  const [stores, setStores] = useState([]);
   const [formData, setFormData] = useState(initialFormData);
+
   const [loading, setLoading] = useState(false);
   const [roleLoading, setRoleLoading] = useState(false);
+  const [storeLoading, setStoreLoading] = useState(false);
 
   const isEdit = Boolean(editData);
 
+  const selectedRole = role.find(
+    (r) => r._id === formData.role
+  );
+
+  const requiresStore = [
+    "store_manager",
+    "inventory_manager",
+  ].includes(selectedRole?.name?.toLowerCase());
+
+  // Fetch Roles
   useEffect(() => {
     async function getRole() {
       try {
@@ -59,6 +73,32 @@ function CreateUserForm({
     getRole();
   }, []);
 
+  // Fetch Stores
+  useEffect(() => {
+    async function getStores() {
+      try {
+        setStoreLoading(true);
+
+        const response = await api.get("/store/allstores");
+        console.log(response.data.stores);
+        // return ;
+        setStores(response.data.stores || []);
+      } catch (error) {
+        console.error("Error fetching stores:", error);
+
+        toast.error(
+          error.response?.data?.message ||
+            "Failed to fetch stores"
+        );
+      } finally {
+        setStoreLoading(false);
+      }
+    }
+
+    getStores();
+  }, []);
+
+  // Set Edit Data
   useEffect(() => {
     if (editData) {
       setFormData({
@@ -71,6 +111,10 @@ function CreateUserForm({
           typeof editData.role === "object"
             ? editData.role?._id || ""
             : editData.role || "",
+        store:
+          typeof editData.store === "object"
+            ? editData.store?._id || ""
+            : editData.store || "",
         status: editData.status || "ACTIVE",
         password: "",
       });
@@ -85,6 +129,7 @@ function CreateUserForm({
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+      ...(name === "role" ? { store: "" } : {}),
     }));
   };
 
@@ -92,6 +137,11 @@ function CreateUserForm({
     e.preventDefault();
 
     if (loading) return;
+
+    if (requiresStore && !formData.store) {
+      toast.error("Please select a store");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -174,6 +224,7 @@ function CreateUserForm({
         </div>
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+
           {/* Form Content */}
           <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
             <div className="mb-5">
@@ -187,6 +238,7 @@ function CreateUserForm({
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
               {userFields.map(
                 ([name, label, placeholder, type, required, icon]) => (
                   <div key={name}>
@@ -269,6 +321,33 @@ function CreateUserForm({
                   </select>
                 </div>
               </div>
+
+              {/* Store */}
+              {requiresStore && (
+                <div>
+                  <label className={labelStyle}>Store *</label>
+
+                  <select
+                    name="store"
+                    value={formData.store}
+                    onChange={handleChange}
+                    required
+                    disabled={loading || storeLoading}
+                    className={inputStyle}
+                  >
+                    <option value="">
+                      {storeLoading ? "Loading stores..." : "Select store"}
+                    </option>
+
+                    {stores.map((store) => (
+                      <option key={store._id} value={store._id}>
+                        {store.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
             </div>
           </div>
 
@@ -285,7 +364,7 @@ function CreateUserForm({
 
             <button
               type="submit"
-              disabled={loading || roleLoading}
+              disabled={loading || roleLoading || storeLoading}
               className="flex items-center justify-center gap-2 rounded-lg bg-[#087F95] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066779] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (

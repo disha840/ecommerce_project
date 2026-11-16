@@ -12,7 +12,8 @@ const {
   getNearestStore,
   updateStore,
   searchStore,
-  toggleStoreStatus
+  toggleStoreStatus,
+  getAllStores
 } = require("../controller/storeController");
 
 router.post("/nearest", getNearestStore);
@@ -35,6 +36,7 @@ router.get(
   "/getstores",
   getStores
 );
+router.get("/allstores", getAllStores);
 router.delete("/delete/:id", deleteStore);
 router.patch("/toggle-status/:id", toggleStoreStatus);
 

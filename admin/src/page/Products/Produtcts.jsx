@@ -2,10 +2,14 @@
 import React, { useEffect, useState } from "react";
 import AddProduct from "../../components/Products/AddProduct";
 import api from "../../api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import DeleteProductModal from "../../components/Products/DeleteProduct";
+import { useSelector } from "react-redux";
 
 const Product = () => {
+  const user = useSelector((state) => state.auth.user);
+  const permissions = user?.permissions || [];
+
   const [showModal, setShowModal] = useState(false);
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
@@ -73,8 +77,14 @@ const Product = () => {
     navigate(`/admin/viewproduct/${id}`);
   }
 
+  // PAGE ACCESS
+  if (!user?.permissions?.some((permission) => permission.includes("products"))) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-[#F0FAFC] p-6 text-[#102A43]">
+
       {/* Add Product Modal */}
       {showModal && (
         <AddProduct
@@ -98,7 +108,10 @@ const Product = () => {
       {/* Edit Product Modal */}
       {editPro && (
         <AddProduct
-          onClose={() => setEditProduct(false)}
+          onClose={() => {
+            setEditProduct(false);
+            setProductInfo(null);
+          }}
           product={productInfo}
           onCreated={async () => {
             await getProducts();
@@ -143,13 +156,15 @@ const Product = () => {
           className="w-full max-w-md rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] px-4 py-3 text-sm outline-none focus:border-[#22B8CF] focus:ring-2 focus:ring-[#D7F2F6]"
         />
 
-        <button
-          type="button"
-          onClick={() => setShowModal(true)}
-          className="rounded-xl bg-[#087F95] px-5 py-3 text-sm font-medium text-white hover:bg-[#066779]"
-        >
-          + Add Product
-        </button>
+        {permissions.includes("products:create") && (
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="rounded-xl bg-[#087F95] px-5 py-3 text-sm font-medium text-white hover:bg-[#066779]"
+          >
+            + Add Product
+          </button>
+        )}
       </div>
 
       {/* Product Table */}
@@ -166,7 +181,6 @@ const Product = () => {
             <thead className="bg-[#EAF7FA]">
               <tr>
                 {[
-                  
                   "Product",
                   "Category",
                   "Subcategory",
@@ -174,7 +188,6 @@ const Product = () => {
                   "Unit",
                   "Featured",
                   "Status",
-                  
                   "Action",
                 ].map((heading) => (
                   <th
@@ -191,7 +204,7 @@ const Product = () => {
               {loading ? (
                 <tr>
                   <td
-                    colSpan="10"
+                    colSpan="8"
                     className="px-5 py-16 text-center text-[#627D98]"
                   >
                     Loading products...
@@ -199,7 +212,7 @@ const Product = () => {
                 </tr>
               ) : errorMessage ? (
                 <tr>
-                  <td colSpan="10" className="px-5 py-12 text-center">
+                  <td colSpan="8" className="px-5 py-12 text-center">
                     <p className="mb-4 text-[#087F95]">{errorMessage}</p>
 
                     <button
@@ -213,7 +226,7 @@ const Product = () => {
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="px-5 py-16 text-center">
+                  <td colSpan="8" className="px-5 py-16 text-center">
                     <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D7F2F6] text-3xl">
                       📦
                     </div>
@@ -235,8 +248,6 @@ const Product = () => {
                     key={product._id || index}
                     className="border-t border-[#D9E8EF] hover:bg-[#F8FCFD]"
                   >
-                    
-
                     <td className="whitespace-nowrap px-5 py-4 font-medium">
                       {product.name || "-"}
                     </td>
@@ -281,40 +292,46 @@ const Product = () => {
                       </span>
                     </td>
 
-                    
-
                     {/* Action Buttons */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          className="rounded-lg border border-[#D9E8EF] px-3 py-2 text-xs text-[#087F95] hover:bg-[#D7F2F6]"
-                          onClick={() => viewHandler(product._id)}
-                        >
-                          View
-                        </button>
 
-                        <button
-                          type="button"
-                          className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-xs text-[#087F95] hover:bg-[#D7F2F6]"
-                          onClick={() => {
-                            setEditProduct(true);
-                            setProductInfo(product);
-                          }}
-                        >
-                          Edit
-                        </button>
+                        {permissions.includes("products:read") && (
+                          <button
+                            type="button"
+                            className="rounded-lg border border-[#D9E8EF] px-3 py-2 text-xs text-[#087F95] hover:bg-[#D7F2F6]"
+                            onClick={() => viewHandler(product._id)}
+                          >
+                            View
+                          </button>
+                        )}
 
-                        <button
-                          type="button"
-                          className="rounded-lg bg-[#D7F2F6] px-3 py-2 text-xs text-[#087F95] hover:bg-[#BCEAF0]"
-                          onClick={() => {
-                            setShowDelete(true);
-                            setDeleteId(product._id);
-                          }}
-                        >
-                          Delete
-                        </button>
+                        {permissions.includes("products:update") && (
+                          <button
+                            type="button"
+                            className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-xs text-[#087F95] hover:bg-[#D7F2F6]"
+                            onClick={() => {
+                              setEditProduct(true);
+                              setProductInfo(product);
+                            }}
+                          >
+                            Edit
+                          </button>
+                        )}
+
+                        {permissions.includes("products:delete") && (
+                          <button
+                            type="button"
+                            className="rounded-lg bg-[#D7F2F6] px-3 py-2 text-xs text-[#087F95] hover:bg-[#BCEAF0]"
+                            onClick={() => {
+                              setShowDelete(true);
+                              setDeleteId(product._id);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        )}
+
                       </div>
                     </td>
                   </tr>

@@ -9,10 +9,15 @@ import { toast } from "react-toastify";
 import AddCategory from "../../components/Category/AddCategory";
 import DeleteCategoryModal from "../../components/Category/DelateCategory";
 import api from "../../api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const Category = () => {
   const navigate = useNavigate();
+
+  const user = useSelector((state) => state.auth.user);
+
+  const permissions = user?.permissions || [];
 
   const [createcategory, setCreateCategory] = useState(false);
   const [deleteCat, setDelete] = useState(false);
@@ -95,6 +100,11 @@ const Category = () => {
   const inactiveCategories = data.filter(
     (cat) => cat.status === "INACTIVE"
   ).length;
+
+  // PAGE ACCESS
+  if (!user?.permissions?.some((permission) => permission.includes("categories"))) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
 
   return (
     <>
@@ -199,13 +209,15 @@ const Category = () => {
             />
           </div>
 
-          <button
-            type="button"
-            onClick={() => setCreateCategory(true)}
-            className="shrink-0 rounded-xl bg-[#087F95] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#066779]"
-          >
-            + Add Category
-          </button>
+          {permissions.includes("categories:create") && (
+            <button
+              type="button"
+              onClick={() => setCreateCategory(true)}
+              className="shrink-0 rounded-xl bg-[#087F95] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#066779]"
+            >
+              + Add Category
+            </button>
+          )}
 
         </div>
 
@@ -276,17 +288,23 @@ const Category = () => {
                       </td>
 
                       <td className="whitespace-nowrap px-5 py-5">
-                        <button
-                          type="button"
-                          onClick={() => handleStatusChange(item._id)}
-                          className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                            item.status === "ACTIVE"
-                              ? "bg-[#D7F2F6] text-[#087F95] hover:bg-[#BCEAF0]"
-                              : "bg-red-100 text-red-600 hover:bg-red-200"
-                          }`}
-                        >
-                          {item.status}
-                        </button>
+                        {permissions.includes("categories:update") && (
+                          <button
+                            type="button"
+                            onClick={() => handleStatusChange(item._id)}
+                            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                              item.status === "ACTIVE"
+                                ? "bg-[#D7F2F6] text-[#087F95] hover:bg-[#BCEAF0]"
+                                : "bg-red-100 text-red-600 hover:bg-red-200"
+                            }`}
+                          >
+                            {item.status}
+                          </button>
+                        )}
+
+                        {!permissions.includes("categories:update") && (
+                          <span>{item.status}</span>
+                        )}
                       </td>
 
                       <td className="whitespace-nowrap px-5 py-5 text-[#627D98]">
@@ -305,38 +323,44 @@ const Category = () => {
                       <td className="whitespace-nowrap px-5 py-5">
                         <div className="flex justify-center gap-2">
 
-                          <button
-                            type="button"
-                            title="View"
-                            onClick={() => handleView(item._id)}
-                            className="rounded-lg bg-[#D7F2F6] px-3 py-2 text-[#087F95] transition hover:bg-[#BCEAF0]"
-                          >
-                            <FiEye size={17} />
-                          </button>
+                          {permissions.includes("categories:read") && (
+                            <button
+                              type="button"
+                              title="View"
+                              onClick={() => handleView(item._id)}
+                              className="rounded-lg bg-[#D7F2F6] px-3 py-2 text-[#087F95] transition hover:bg-[#BCEAF0]"
+                            >
+                              <FiEye size={17} />
+                            </button>
+                          )}
 
-                          <button
-                            type="button"
-                            title="Edit"
-                            onClick={() => {
-                              setEditData(item);
-                              setEdit(true);
-                            }}
-                            className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-[#D7F2F6]"
-                          >
-                            <FiEdit2 size={17} />
-                          </button>
+                          {permissions.includes("categories:update") && (
+                            <button
+                              type="button"
+                              title="Edit"
+                              onClick={() => {
+                                setEditData(item);
+                                setEdit(true);
+                              }}
+                              className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-[#D7F2F6]"
+                            >
+                              <FiEdit2 size={17} />
+                            </button>
+                          )}
 
-                          <button
-                            type="button"
-                            title="Delete"
-                            onClick={() => {
-                              setCatid(item._id);
-                              setDelete(true);
-                            }}
-                            className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-red-100 hover:text-red-600"
-                          >
-                            <FiTrash2 size={17} />
-                          </button>
+                          {permissions.includes("categories:delete") && (
+                            <button
+                              type="button"
+                              title="Delete"
+                              onClick={() => {
+                                setCatid(item._id);
+                                setDelete(true);
+                              }}
+                              className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-red-100 hover:text-red-600"
+                            >
+                              <FiTrash2 size={17} />
+                            </button>
+                          )}
 
                         </div>
                       </td>

@@ -576,9 +576,26 @@ const toggleStoreStatus = async (req, res) => {
     });
   }
 };
+const getAllStores = async (req, res) => {
+  try {
+    const stores = await Store.find({ status: "ACTIVE" })
+      .select("_id name");
+
+    res.status(200).json({
+      success: true,
+      stores
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 module.exports = { updateStore };
 
 
 
 
-module.exports={createStore,getStoreManagers,getStores,deleteStore,getNearestStore,updateStore,searchStore,toggleStoreStatus}
+module.exports={createStore,getStoreManagers,getStores,deleteStore,getNearestStore,updateStore,searchStore,toggleStoreStatus,getAllStores}

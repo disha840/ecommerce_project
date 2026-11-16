@@ -79,10 +79,16 @@ const Sidebar = () => {
       name: "Product-Variant",
       icon: ShoppingBag,
       path: "/admin/productvariant",
-    },{
+    },
+    {
       name:"orders",
       icon: ClipboardList,
       path:"/admin/orders"
+    },
+     {
+      name:"Delivery Partner",
+      icon: ClipboardList,
+      path:"/admin/deliverypartner"
     }
   
   ];

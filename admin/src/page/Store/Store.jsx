@@ -1,5 +1,4 @@
 
-
 import FormModal from "../../components/Store/formModal";
 import api from "../../api";
 
@@ -17,8 +16,14 @@ import {
   FiChevronRight,
 } from "react-icons/fi";
 import DeleteStoreModal from "../../components/Store/DeleteStore";
+import { useSelector } from "react-redux";
+import { Navigate } from "react-router-dom";
 
 const Store = () => {
+  const user = useSelector((state) => state.auth.user);
+
+  const [permissions, setPermissions] = useState([]);
+
   const [stores, setStores] = useState([]);
   const [showdelete, setShowDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -68,6 +73,16 @@ const Store = () => {
     return () => clearTimeout(timer);
   }, [currentPage, search]);
 
+  // SET USER PERMISSIONS
+  useEffect(() => {
+    setPermissions(user?.permissions || []);
+  }, [user]);
+
+  // CHECK STORE PERMISSION
+  if (!user?.permissions?.some((permission) => permission.includes("store"))) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
   // OPEN ADD STORE MODAL
   const handleAddStore = () => {
     setSelectedStore(null);
@@ -89,8 +104,8 @@ const Store = () => {
   // TOGGLE STORE STATUS
   const handleToggleStatus = async (id) => {
     try {
-      const res = await api.patch(`/store/toggle-status/${id}`);
-      fetchStores()
+      await api.patch(`/store/toggle-status/${id}`);
+      fetchStores();
     } catch (error) {
       console.log(error);
     }
@@ -223,13 +238,15 @@ const Store = () => {
             />
           </div>
 
-          <button
-            className="flex items-center justify-center gap-2 rounded-xl bg-[#087F95] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066779]"
-            onClick={handleAddStore}
-          >
-            <FiPlus size={19} />
-            Add Store
-          </button>
+          {permissions.includes("store:create") && (
+            <button
+              className="flex items-center justify-center gap-2 rounded-xl bg-[#087F95] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#066779]"
+              onClick={handleAddStore}
+            >
+              <FiPlus size={19} />
+              Add Store
+            </button>
+          )}
         </div>
       </div>
 
@@ -305,39 +322,46 @@ const Store = () => {
 
                       {/* STATUS TOGGLE */}
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => handleToggleStatus(store._id)}
-                          className={`rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer ${
-                            store.status === "ACTIVE"
-                              ? "bg-[#D7F2F6] text-[#087F95]"
-                              : "bg-[#F0FAFC] text-[#627D98]"
-                          }`}
-                        >
-                          {store.status}
-                        </button>
+                        {permissions.includes("store:update") && (
+                          <button
+                            onClick={() => handleToggleStatus(store._id)}
+                            className={`rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer ${
+                              store.status === "ACTIVE"
+                                ? "bg-[#D7F2F6] text-[#087F95]"
+                                : "bg-[#F0FAFC] text-[#627D98]"
+                            }`}
+                          >
+                            {store.status}
+                          </button>
+                        )}
                       </td>
 
+                      {/* ACTIONS */}
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
 
-                          <button
-                            onClick={() => handleEditStore(store)}
-                            className="rounded-lg p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
-                            title="Edit Store"
-                          >
-                            <FiEdit2 size={18} />
-                          </button>
+                          {permissions.includes("store:update") && (
+                            <button
+                              onClick={() => handleEditStore(store)}
+                              className="rounded-lg p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
+                              title="Edit Store"
+                            >
+                              <FiEdit2 size={18} />
+                            </button>
+                          )}
 
-                          <button
-                            onClick={() => {
-                              setDeleteId(store._id);
-                              setShowDelete(true);
-                            }}
-                            className="rounded-lg p-2 text-[#627D98] transition hover:bg-[#F0FAFC]"
-                            title="Delete Store"
-                          >
-                            <FiTrash2 size={18} />
-                          </button>
+                          {permissions.includes("store:delete") && (
+                            <button
+                              onClick={() => {
+                                setDeleteId(store._id);
+                                setShowDelete(true);
+                              }}
+                              className="rounded-lg p-2 text-[#627D98] transition hover:bg-[#F0FAFC]"
+                              title="Delete Store"
+                            >
+                              <FiTrash2 size={18} />
+                            </button>
+                          )}
 
                         </div>
                       </td>

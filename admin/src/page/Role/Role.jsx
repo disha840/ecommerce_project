@@ -41,7 +41,6 @@ const Role = () => {
   // GET ALL ROLES AND SEARCH ROLES
   const fetchRoles = async (page = currentPage, searchValue = search) => {
     try {
-      setLoading(true);
 
       let response;
 
@@ -57,13 +56,13 @@ const Role = () => {
       setCurrentPage(response.data.currentPage || page);
       setTotalPages(response.data.totalPages || 1);
       setTotalRoles(response.data.totalRoles || 0);
+      setLoading(false)
 
     } catch (error) {
       console.log("Get roles error:", error.response?.data || error);
       toast.error("Failed to fetch roles");
-    } finally {
-      setLoading(false);
-    }
+      setLoading(false)
+    } 
   };
 
   // FETCH ROLES WHEN PAGE OR SEARCH CHANGES
@@ -107,11 +106,11 @@ const Role = () => {
     try {
       const response = await api.patch(`/role/toggle-status/${id}`);
 
-      toast.success(
-        response.data.message || "Status updated successfully"
-      );
+      // toast.success(
+      //   response.data.message || "Status updated successfully"
+      // );
 
-      fetchRoles(currentPage, search);
+      fetchRoles();
 
     } catch (error) {
       console.log(

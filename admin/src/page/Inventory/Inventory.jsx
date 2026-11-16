@@ -1,10 +1,14 @@
 
-
 import { useEffect, useState } from "react";
 import CreateInventory from "../../components/Inventory/CreateInventory";
 import api from "../../api";
+import { useSelector } from "react-redux";
+import { Navigate } from "react-router-dom";
 
 const Inventory = () => {
+  const user = useSelector((state) => state.auth.user);
+  const permissions = user?.permissions || [];
+
   const [showCreateInventory, setShowCreateInventory] = useState(false);
   const [inventories, setInventories] = useState([]);
   const [search, setSearch] = useState("");
@@ -51,6 +55,11 @@ const Inventory = () => {
   const outOfStock = inventories.filter(
     (item) => item.availableQuantity <= 0
   ).length;
+
+  // PAGE ACCESS
+  if (!user?.permissions?.some((permission) => permission.includes("inventory"))) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-[#F0FAFC] p-6 text-[#102A43]">
@@ -103,13 +112,15 @@ const Inventory = () => {
           className="w-full max-w-md rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] px-4 py-3 text-sm outline-none focus:border-[#22B8CF] focus:ring-2 focus:ring-[#D7F2F6]"
         />
 
-        <button
-          type="button"
-          onClick={() => setShowCreateInventory(true)}
-          className="shrink-0 rounded-xl bg-[#087F95] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#066778]"
-        >
-          + Create Inventory
-        </button>
+        {permissions.includes("inventory:create") && (
+          <button
+            type="button"
+            onClick={() => setShowCreateInventory(true)}
+            className="shrink-0 rounded-xl bg-[#087F95] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#066778]"
+          >
+            + Create Inventory
+          </button>
+        )}
 
       </div>
 
@@ -220,12 +231,14 @@ const Inventory = () => {
 
                     {/* Action */}
                     <td className="whitespace-nowrap px-5 py-4">
-                      <button
-                        type="button"
-                        className="font-semibold text-[#087F95] hover:underline"
-                      >
-                        View
-                      </button>
+                      {permissions.includes("inventory:read") && (
+                        <button
+                          type="button"
+                          className="font-semibold text-[#087F95] hover:underline"
+                        >
+                          View
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

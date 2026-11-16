@@ -1,10 +1,17 @@
-const mongoose=require("mongoose")
-const userSchema=mongoose.Schema(
-     {
+const mongoose = require("mongoose");
+
+const userSchema = mongoose.Schema(
+  {
     role: {
-      type:mongoose.Schema.Types.ObjectId,
-      ref:"Role",
-      // required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
+    },
+
+    // Assigned Store
+    store: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      default: null,
     },
 
     firstName: {
@@ -61,26 +68,27 @@ const userSchema=mongoose.Schema(
       type: Date,
       default: null,
     },
-    otp:{
-        type:String,
-         default: null
+
+    otp: {
+      type: String,
+      default: null,
     },
 
     isOtpVerified: {
-    type: Boolean,
-    default: false
-},
-otpExpiresAt: {
-    type: Date,
-    default: null
-}
+      type: Boolean,
+      default: false,
+    },
 
+    otpExpiresAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
   }
-     
 );
-const User=mongoose.model('User',userSchema);  
 
-module.exports=User;
+const User = mongoose.model("User", userSchema);
+
+module.exports = User;

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import api from "../../api";
 import {
@@ -9,11 +8,15 @@ import {
   FiTrash2,
 } from "react-icons/fi";
 import AddSubcategory from "../../components/Subcategory/AddSubcategory";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import DeleteSubcategoryModal from "../../components/Subcategory/DeleteSubCategory";
+import { useSelector } from "react-redux";
 
 const Subcategory = () => {
   const navigate = useNavigate();
+
+  const user = useSelector((state) => state.auth.user);
+  const permissions = user?.permissions || [];
 
   const [showModal, setShowModal] = useState(false);
   const [data, setData] = useState([]);
@@ -63,6 +66,11 @@ const Subcategory = () => {
   function closeEditModal() {
     setshowEdit(false);
     setEditData(null);
+  }
+
+  // PAGE ACCESS
+  if (!user?.permissions?.some((permission) => permission.includes("subcategories"))) {
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   return (
@@ -171,14 +179,16 @@ const Subcategory = () => {
           />
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowModal(true)}
-          className="shrink-0 rounded-xl bg-[#087F95] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#066779]"
-        >
-          <FiPlus className="mr-2 inline" size={16} />
-          Add Subcategory
-        </button>
+        {permissions.includes("subcategories:create") && (
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="shrink-0 rounded-xl bg-[#087F95] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#066779]"
+          >
+            <FiPlus className="mr-2 inline" size={16} />
+            Add Subcategory
+          </button>
+        )}
 
       </div>
 
@@ -295,40 +305,46 @@ const Subcategory = () => {
                       <div className="flex justify-center gap-2">
 
                         {/* VIEW */}
-                        <button
-                          type="button"
-                          className="rounded-lg bg-[#D7F2F6] px-3 py-2 text-[#087F95] transition hover:bg-[#BCEAF0]"
-                          title="View"
-                          onClick={() => viewHandler(item._id)}
-                        >
-                          <FiEye size={17} />
-                        </button>
+                        {permissions.includes("subcategories:read") && (
+                          <button
+                            type="button"
+                            className="rounded-lg bg-[#D7F2F6] px-3 py-2 text-[#087F95] transition hover:bg-[#BCEAF0]"
+                            title="View"
+                            onClick={() => viewHandler(item._id)}
+                          >
+                            <FiEye size={17} />
+                          </button>
+                        )}
 
                         {/* EDIT */}
-                        <button
-                          type="button"
-                          className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-[#D7F2F6]"
-                          title="Edit"
-                          onClick={() => {
-                            setEditData(item);
-                            setshowEdit(true);
-                          }}
-                        >
-                          <FiEdit2 size={17} />
-                        </button>
+                        {permissions.includes("subcategories:update") && (
+                          <button
+                            type="button"
+                            className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-[#D7F2F6]"
+                            title="Edit"
+                            onClick={() => {
+                              setEditData(item);
+                              setshowEdit(true);
+                            }}
+                          >
+                            <FiEdit2 size={17} />
+                          </button>
+                        )}
 
                         {/* DELETE */}
-                        <button
-                          type="button"
-                          className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-red-100 hover:text-red-600"
-                          title="Delete"
-                          onClick={() => {
-                            setDeleteId(item._id);
-                            setDeleting(true);
-                          }}
-                        >
-                          <FiTrash2 size={17} />
-                        </button>
+                        {permissions.includes("subcategories:delete") && (
+                          <button
+                            type="button"
+                            className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-[#102A43] transition hover:bg-red-100 hover:text-red-600"
+                            title="Delete"
+                            onClick={() => {
+                              setDeleteId(item._id);
+                              setDeleting(true);
+                            }}
+                          >
+                            <FiTrash2 size={17} />
+                          </button>
+                        )}
 
                       </div>
                     </td>

@@ -1,7 +1,7 @@
 
-
 import { Navigate, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import {
   FiSearch,
   FiPlus,
@@ -18,17 +18,26 @@ import api from "../../api";
 import DeleteVariantModal from "../../components/ProductVariant/DeleteVariant";
 
 function ProductVariant() {
-    const navigate=useNavigate()
+  const navigate = useNavigate();
+
+  const user = useSelector((state) => state.auth.user);
+  const permissions = user?.permissions || [];
+
   const [showModal, setShowModal] = useState(false);
   const [variants, setVariants] = useState([]);
   const [deletemodal, setShowDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-
-  // Selected variant for editing
   const [selectedVariant, setSelectedVariant] = useState(null);
 
+  if (
+    !permissions.some((permission) =>
+      permission.includes("product-variant")
+    )
+  ) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
   const getProductVariants = async () => {
-  
     try {
       const response = await api.get("/productvariant/getproductvariants");
       console.log(response);
@@ -42,19 +51,16 @@ function ProductVariant() {
     getProductVariants();
   }, []);
 
-  // Add Variant
   function handleAdd() {
     setSelectedVariant(null);
     setShowModal(true);
   }
 
-  // Edit Variant
   function handleEdit(variant) {
     setSelectedVariant(variant);
     setShowModal(true);
   }
 
-  // Close Add/Edit Modal
   function handleClose() {
     setShowModal(false);
     setSelectedVariant(null);
@@ -63,7 +69,6 @@ function ProductVariant() {
 
   return (
     <div className="min-h-screen bg-[#F0FAFC] p-6 text-[#102A43]">
-
       {/* Add / Edit Modal */}
       {showModal && (
         <AddVariant
@@ -73,7 +78,7 @@ function ProductVariant() {
       )}
 
       {/* Delete Modal */}
-      {deletemodal && (
+      {deletemodal && permissions.includes("product-variant:delete") && (
         <DeleteVariantModal
           variantId={deleteId}
           onClose={() => setShowDelete(false)}
@@ -94,15 +99,10 @@ function ProductVariant() {
 
       {/* Statistics Cards */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-        {/* Total Variants */}
         <div className="rounded-xl border border-[#D9E8EF] bg-white p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#627D98]">
-                Total Variants
-              </p>
-
+              <p className="text-sm text-[#627D98]">Total Variants</p>
               <h2 className="mt-2 text-2xl font-bold text-[#102A43]">
                 {variants.length}
               </h2>
@@ -114,14 +114,10 @@ function ProductVariant() {
           </div>
         </div>
 
-        {/* Active Variants */}
         <div className="rounded-xl border border-[#D9E8EF] bg-white p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#627D98]">
-                Active Variants
-              </p>
-
+              <p className="text-sm text-[#627D98]">Active Variants</p>
               <h2 className="mt-2 text-2xl font-bold text-[#087F95]">
                 {
                   variants.filter(
@@ -137,14 +133,10 @@ function ProductVariant() {
           </div>
         </div>
 
-        {/* Total Selling Price */}
         <div className="rounded-xl border border-[#D9E8EF] bg-white p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#627D98]">
-                Total Selling Price
-              </p>
-
+              <p className="text-sm text-[#627D98]">Total Selling Price</p>
               <h2 className="mt-2 text-2xl font-bold text-[#102A43]">
                 ₹
                 {variants.reduce(
@@ -164,7 +156,6 @@ function ProductVariant() {
 
       {/* Search and Add Variant */}
       <div className="mb-5 flex flex-col gap-3 rounded-xl border border-[#D9E8EF] bg-white p-4 sm:flex-row sm:items-center">
-
         <div className="relative w-full sm:flex-1">
           <FiSearch
             className="absolute left-3 top-1/2 -translate-y-1/2 text-[#627D98]"
@@ -178,19 +169,20 @@ function ProductVariant() {
           />
         </div>
 
-        <button
-          type="button"
-          onClick={handleAdd}
-          className="flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#087F95] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#066779]"
-        >
-          <FiPlus size={18} />
-          Add Variant
-        </button>
+        {permissions.includes("product-variant:create") && (
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#087F95] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#066779]"
+          >
+            <FiPlus size={18} />
+            Add Variant
+          </button>
+        )}
       </div>
 
       {/* Variants Table */}
       <div className="overflow-hidden rounded-xl border border-[#D9E8EF] bg-white">
-
         <div className="border-b border-[#D9E8EF] px-5 py-4">
           <h2 className="font-semibold text-[#102A43]">
             All Product Variants
@@ -203,40 +195,16 @@ function ProductVariant() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-
             <thead className="bg-[#EAF7FA] text-[#102A43]">
               <tr>
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">
-                  Variant
-                </th>
-
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">
-                  Product
-                </th>
-
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">
-                  SKU
-                </th>
-
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">
-                  Unit
-                </th>
-
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">
-                  MRP
-                </th>
-
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">
-                  Selling Price
-                </th>
-
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">
-                  Status
-                </th>
-
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">
-                  Actions
-                </th>
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">Variant</th>
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">Product</th>
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">SKU</th>
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">Unit</th>
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">MRP</th>
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">Selling Price</th>
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">Status</th>
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">Actions</th>
               </tr>
             </thead>
 
@@ -301,48 +269,51 @@ function ProductVariant() {
                       </span>
                     </td>
 
-                    {/* Action Icons */}
                     <td className="whitespace-nowrap px-5 py-4">
                       <div className="flex items-center gap-2">
+                        {permissions.includes("product-variant:read") && (
+                          <button
+                            type="button"
+                            title="View Variant"
+                            onClick={() =>
+                              navigate(`/admin/viewvariant/${variant._id}`)
+                            }
+                            className="rounded-lg border border-[#D9E8EF] p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
+                          >
+                            <FiEye size={17} />
+                          </button>
+                        )}
 
-                        <button
-                          type="button"
-                          title="View Variant" onClick={() => navigate(`/admin/viewvariant/${variant._id}`)}
-                          className="rounded-lg border border-[#D9E8EF] p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
-                        >
-                          <FiEye size={17} />
-                        </button>
+                        {permissions.includes("product-variant:update") && (
+                          <button
+                            type="button"
+                            title="Edit Variant"
+                            onClick={() => handleEdit(variant)}
+                            className="rounded-lg border border-[#D9E8EF] p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
+                          >
+                            <FiEdit2 size={17} />
+                          </button>
+                        )}
 
-                        {/* Edit Button */}
-                        <button
-                          type="button"
-                          title="Edit Variant"
-                          onClick={() => handleEdit(variant)}
-                          className="rounded-lg border border-[#D9E8EF] p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
-                        >
-                          <FiEdit2 size={17} />
-                        </button>
-
-                        {/* Delete Button */}
-                        <button
-                          type="button"
-                          title="Delete Variant"
-                          className="rounded-lg border border-[#D9E8EF] p-2 text-[#627D98] transition hover:bg-[#EAF7FA] hover:text-[#102A43]"
-                          onClick={() => {
-                            setShowDelete(true);
-                            setDeleteId(variant._id);
-                          }}
-                        >
-                          <FiTrash2 size={17} />
-                        </button>
-
+                        {permissions.includes("product-variant:delete") && (
+                          <button
+                            type="button"
+                            title="Delete Variant"
+                            className="rounded-lg border border-[#D9E8EF] p-2 text-[#627D98] transition hover:bg-[#EAF7FA] hover:text-[#102A43]"
+                            onClick={() => {
+                              setShowDelete(true);
+                              setDeleteId(variant._id);
+                            }}
+                          >
+                            <FiTrash2 size={17} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
-
           </table>
         </div>
       </div>
