@@ -7,22 +7,35 @@ import Image from "next/image";
 import Link from "next/link";
 import api from "@/axios/api";
 import { useParams } from "next/navigation";
+import { useSelector } from "react-redux";
 
 function SubcategoriesPage() {
     const { id } = useParams();
+
+    const store = useSelector((state) => state.store.selectedStore);
 
     const [subcategories, setSubcategories] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchSubcategories = async () => {
         try {
+            if (!store?._id || !id) {
+                setSubcategories([]);
+                return;
+            }
+
             setLoading(true);
 
             const res = await api.get(
-                `/subcategory/showsubcategories/${id}`
+                `/inventory/store-subcategories/${store._id}/${id}`
             );
+            console.log("res",res)
 
-            setSubcategories(res.data.subcategory || []);
+            if (res.data.success && Array.isArray(res.data.subcategories)) {
+                setSubcategories(res.data.subcategories);
+            } else {
+                setSubcategories([]);
+            }
 
         } catch (error) {
             console.log(error);
@@ -33,10 +46,8 @@ function SubcategoriesPage() {
     };
 
     useEffect(() => {
-        if (id) {
-            fetchSubcategories();
-        }
-    }, [id]);
+        fetchSubcategories();
+    }, [id, store?._id]);
 
     return (
         <main className="min-h-screen bg-[#f8faf8]">
@@ -77,7 +88,9 @@ function SubcategoriesPage() {
                             </div>
                         ))}
                     </div>
+
                 ) : subcategories.length > 0 ? (
+
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
 
                         {subcategories.map((subcategory) => (
@@ -137,6 +150,7 @@ function SubcategoriesPage() {
                         ))}
 
                     </div>
+
                 ) : (
                     <div className="rounded-2xl border border-dashed border-gray-200 bg-white px-5 py-16 text-center">
 

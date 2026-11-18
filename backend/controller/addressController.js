@@ -3,7 +3,6 @@ const Address=require("../models/userAddressModel")
 // const {geocodeAddress}=require("./utils/geocodeAddress")
 
 const geocodeAddress = async (address, landmark = "") => {
-
     const addressParts = address
         .split(",")
         .map((part) => part.trim())
@@ -11,8 +10,6 @@ const geocodeAddress = async (address, landmark = "") => {
 
     const areaAndCity = addressParts.slice(-3).join(", ");
     const cityAndState = addressParts.slice(-2).join(", ");
-
-    // 5 FALLBACK ATTEMPTS
 
     const queries = [
         address,
@@ -31,53 +28,60 @@ const geocodeAddress = async (address, landmark = "") => {
     ];
 
     for (const query of uniqueQueries) {
-
         try {
             console.log("Photon Searching:", query);
 
-            const url = new URL(
-                "https://photon.komoot.io/api/"
-            );
+            const url = new URL("https://photon.komoot.io/api/");
 
             url.searchParams.set("q", query);
             url.searchParams.set("limit", "5");
             url.searchParams.set("lang", "en");
-            url.searchParams.set("countrycode", "IN");
 
             const response = await fetch(url, {
                 signal: AbortSignal.timeout(10000)
             });
 
             if (!response.ok) {
+                console.log("Photon Response Error:", response.status);
                 continue;
             }
 
             const data = await response.json();
+
+            console.log(
+                "PHOTON FEATURES:",
+                data.features?.map((item) => ({
+                    coordinates: item.geometry?.coordinates,
+                    properties: item.properties
+                }))
+            );
 
             if (!data.features || data.features.length === 0) {
                 continue;
             }
 
             const feature = data.features.find((item) => {
-
                 const coordinates = item.geometry?.coordinates;
 
                 const longitude = coordinates?.[0];
                 const latitude = coordinates?.[1];
 
+                const countryCode =
+                    item.properties?.countrycode?.toUpperCase();
+
                 return (
                     Number.isFinite(longitude) &&
                     Number.isFinite(latitude) &&
-                    longitude >= -180 &&
-                    longitude <= 180 &&
-                    latitude >= -90 &&
-                    latitude <= 90 &&
-                    item.properties?.countrycode?.toUpperCase() === "IN"
+                    longitude >= 68 &&
+                    longitude <= 98 &&
+                    latitude >= 6 &&
+                    latitude <= 38 &&
+                    !(longitude === 0 && latitude === 0) &&
+                    (!countryCode || countryCode === "IN")
                 );
             });
 
             if (feature) {
-
                 const [longitude, latitude] =
                     feature.geometry.coordinates;
 
@@ -92,6 +96,8 @@ const geocodeAddress = async (address, landmark = "") => {
                     longitude
                 };
             }
+
+            console.log("No valid Indian location found:", query);
 
         } catch (error) {
             console.log("Photon Error:", error.message);
@@ -162,6 +168,8 @@ const locationData = await geocodeAddress(fullAddress, landmark);
                 message: "Unable to find location for this address. Please check your address.",
             });
         }
+        console.log("FULL ADDRESS:", fullAddress);
+console.log("LOCATION DATA:", locationData);
 
         // CHECK EXISTING ADDRESSES
         const existingAddress = await Address.findOne({
@@ -180,6 +188,11 @@ const locationData = await geocodeAddress(fullAddress, landmark);
                 { $set: { isDefault: false } }
             );
         }
+        console.log("SAVING COORDINATES:", [
+    locationData.longitude,
+    locationData.latitude
+]);
+;
 
         // SAVE ADDRESS
         const address = await Address.create({
@@ -206,6 +219,8 @@ const locationData = await geocodeAddress(fullAddress, landmark);
             isDefault: makeDefault,
         });
 
+ console.log("CUSTOMER LOCATION:", address.location);
+console.log("CUSTOMER COORDINATES:", address.location.coordinates)
         return res.status(201).json({
             success: true,
             message: "Address added successfully",

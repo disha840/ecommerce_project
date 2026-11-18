@@ -107,15 +107,13 @@ const login = async (req, res) => {
     }
 
     const userRole = await User.findById(user._id)
-      .populate("role", "name permissions")
-      .populate("store", "name");
+      .populate("role", "name permissions");
 
     const token = jwt.sign(
       {
         id: user._id,
         role: userRole.role.name,
-        permissions: userRole.role.permissions,
-        store: userRole.store?._id || null
+        permissions: userRole.role.permissions
       },
       process.env.JWT_SECRET,
       {
@@ -136,8 +134,7 @@ const login = async (req, res) => {
       user: {
         id: user._id,
         role: userRole.role.name,
-        permissions: userRole.role.permissions,
-        store: userRole.store?._id || null
+        permissions: userRole.role.permissions
       }
     });
 
@@ -325,7 +322,7 @@ const changePassword=async(req,res)=>{
 
 const checkAuth=(req,res)=>{
     const token=req.cookies.token;
-    console.log("my tokan",token)
+    // console.log("my tokan",token)
 
     if (!token) {
     return res.status(200).json({
@@ -333,7 +330,7 @@ const checkAuth=(req,res)=>{
     });
 }
     const decoded=jwt.verify(token,process.env.JWT_SECRET)
-    console.log("decoded",decoded)
+    // console.log("decoded",decoded)
   
     if(!decoded){
      return  res.status(401).send({message:"access denied"})

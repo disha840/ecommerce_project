@@ -5,48 +5,57 @@ const checkPermission = require("../middleware/permissions");
 const router = express.Router();
 
 const {
-  createRole,
-  getRoles,
-  updateRole,
-  deleteRole,
-  toggleStatus,
-  viewRole,
-  searchRole
+    createRole,
+    getRoles,
+    updateRole,
+    deleteRole,
+    toggleStatus,
+    viewRole,
+    searchRole
 } = require("../controller/roleController");
 
 router.use(auth);
 
-
 router.post(
-  "/createrole",
-  createRole
+    "/createrole",
+    checkPermission("roles", "create"),
+    createRole
 );
 
 router.get(
-  "/showroles",
-
-  getRoles
+    "/showroles",
+    checkPermission("roles", "read"),
+    getRoles
 );
+
 router.patch(
-  "/toggle-status/:id",
-
-  toggleStatus
+    "/toggle-status/:id",
+    checkPermission("roles", "update"),
+    toggleStatus
 );
-router.get("/searched", searchRole);
+
+router.get(
+    "/searched",
+    checkPermission("roles", "read"),
+    searchRole
+);
 
 router.put(
-  "/updaterole/:id",
-  updateRole
+    "/updaterole/:id",
+    checkPermission("roles", "update"),
+    updateRole
 );
 
 router.delete(
-  "/deleterole/:id",
-  deleteRole
+    "/deleterole/:id",
+    checkPermission("roles", "delete"),
+    deleteRole
 );
 
 router.get(
-  "/viewrole/:id",
-  viewRole
+    "/viewrole/:id",
+    checkPermission("roles","read"),
+    viewRole
 );
 
 module.exports = router;

@@ -2,6 +2,11 @@
 const Inventory = require("../models/inventoryModel");
 const Store = require("../models/storeModel");
 const mongoose = require("mongoose");
+const Product=require("../models/productModel")
+const Category=require("../models/categoryModel")
+// const Subcategory=require("../models/subcategoryModel")
+const Subcategory=require("../models/subcategoryModel")
+
 
 // CREATE INVENTORY
 const createInventory = async (req, res) => {
@@ -252,7 +257,7 @@ const getAvailableStoreInventory = async (req, res) => {
             availableQuantity: { $gt: 0 }
         })
         .populate("product", "name slug category brand images")
-        .populate("variant", "name sku unit unitValue mrp sellingPrice images")
+        .populate("variant", "name slug sku unit unitValue mrp sellingPrice images")
         .sort({ createdAt: -1 });
 
         console.log("Inventories:", inventories);
@@ -271,7 +276,197 @@ const getAvailableStoreInventory = async (req, res) => {
     }
 };
 
+const getStoreCategories = async (req, res) => {
+    try {
+        const { storeId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Store ID"
+            });
+        }
+
+        const existingStore = await Store.findById(storeId);
+
+        if (!existingStore) {
+            return res.status(404).json({
+                success: false,
+                message: "Store not found"
+            });
+        }
+
+        // GET PRODUCTS AVAILABLE IN THIS STORE
+        const productIds = await Inventory.find({
+            store: storeId,
+            status: "active",
+            availableQuantity: { $gt: 0 }
+        }).distinct("product");
+
+        // GET CATEGORY IDS OF THOSE PRODUCTS
+        const categoryIds = await Product.find({
+            _id: { $in: productIds }
+        }).distinct("category");
+
+        // GET ACTIVE CATEGORIES
+        const categories = await Category.find({
+            _id: { $in: categoryIds },
+            status: "ACTIVE"
+        }).sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            message: "Store categories fetched successfully",
+            count: categories.length,
+            categories
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+const getStoreSubcategories = async (req, res) => {
+    try {
+        const { storeId, categoryId } = req.params;
+
+        if (
+            !mongoose.Types.ObjectId.isValid(storeId) ||
+            !mongoose.Types.ObjectId.isValid(categoryId)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Store ID or Category ID"
+            });
+        }
+
+        const existingStore = await Store.findById(storeId);
+
+        if (!existingStore) {
+            return res.status(404).json({
+                success: false,
+                message: "Store not found"
+            });
+        }
+
+        // CHECK CATEGORY
+        const existingCategory = await Category.findOne({
+            _id: categoryId,
+            status: "ACTIVE"
+        });
+
+        if (!existingCategory) {
+            return res.status(404).json({
+                success: false,
+                message: "Category not found"
+            });
+        }
+
+        // GET AVAILABLE PRODUCTS FROM STORE
+        const productIds = await Inventory.find({
+            store: storeId,
+            status: "active",
+            availableQuantity: { $gt: 0 }
+        }).distinct("product");
+
+        // GET SUBCATEGORIES OF AVAILABLE PRODUCTS
+        const subcategoryIds = await Product.find({
+            _id: { $in: productIds },
+            category: categoryId
+        }).distinct("subcategory");
+
+        // GET ACTIVE SUBCATEGORIES
+        const subcategories = await Subcategory.find({
+            _id: { $in: subcategoryIds },
+            status: "ACTIVE"
+        }).sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            message: "Store subcategories fetched successfully",
+            count: subcategories.length,
+            subcategories
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
+const getStoreSubcategoryProducts = async (req, res) => {
+    try {
+        const { storeId, subId } = req.params;
+
+        if (
+            !mongoose.Types.ObjectId.isValid(storeId) ||
+            !mongoose.Types.ObjectId.isValid(subId)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Store ID or Subcategory ID"
+            });
+        }
+
+        const existingStore = await Store.findById(storeId);
+
+        if (!existingStore) {
+            return res.status(404).json({
+                success: false,
+                message: "Store not found"
+            });
+        }
+
+        const existingSubcategory = await Subcategory.findOne({
+            _id: subId,
+            status: "ACTIVE"
+        });
+
+        if (!existingSubcategory) {
+            return res.status(404).json({
+                success: false,
+                message: "Subcategory not found"
+            });
+        }
+
+        // GET AVAILABLE PRODUCTS FROM SELECTED STORE
+        const productIds = await Inventory.find({
+            store: storeId,
+            status: "active",
+            availableQuantity: { $gt: 0 }
+        }).distinct("product");
+
+        // GET PRODUCTS OF SELECTED SUBCATEGORY
+        const products = await Product.find({
+            _id: { $in: productIds },
+            subcategory: subId
+        })
+        .populate("category", "name")
+        .populate("subcategory", "name")
+        .populate("brand", "name")
+        .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            message: "Subcategory products fetched successfully",
+            count: products.length,
+            products
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 
 module.exports = {
-    createInventory,getInventories,getAvailableStoreInventory
+    createInventory,getInventories,getAvailableStoreInventory,getStoreCategories,getStoreSubcategories,getStoreSubcategoryProducts
 };

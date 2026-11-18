@@ -1,3 +1,4 @@
+
 const express = require("express");
 const auth = require("../middleware/authMiddleware");
 const checkPermission = require("../middleware/permissions");
@@ -13,35 +14,45 @@ const {
 
 const router = express.Router();
 
-// router.use(auth);
-
 router.post(
   "/createsubcategory",
+  auth,
+  checkPermission("subcategories", "create"),
   createSubcategory
 );
 
 router.get(
   "/showsubcategories",
+  auth,
+  checkPermission("subcategories", "read"),
   ShowSubCategory
 );
 
 router.put(
   "/updatesubcategory/:id",
+  auth,
+  checkPermission("subcategories", "update"),
   updateSubcategory
 );
 
 router.get(
-  "/viewsubcategory/:id"
-,
+  "/viewsubcategory/:id",
+  auth,
+  checkPermission("subcategories", "read"),
   viewSubCategory
 );
 
 router.delete(
   "/deletesubcategory/:id",
+  auth,
+  checkPermission("subcategories", "delete"),
   deleteSubCategory
 );
+
 router.get(
   "/showsubcategories/:categoryId",
+  auth,
+  checkPermission("subcategories", "read"),
   ShowSubCategoryByCategory
 );
 

@@ -5,32 +5,38 @@ const auth = require("../middleware/authMiddleware");
 const checkPermission = require("../middleware/permissions");
 
 const {
-  createBrand,
-  showBrand,
-  deleteBrand,
-  viewBrand
+    createBrand,
+    showBrand,
+    deleteBrand,
+    viewBrand
 } = require("../controller/brandController");
 
-// router.use(auth);
-
 router.post(
-  "/createbrand",
-  createBrand
+    "/createbrand",
+    auth,
+    checkPermission("brand", "create"),
+    createBrand
 );
 
 router.get(
-  "/showbrand",
-  showBrand
+    "/showbrand",
+    auth,
+    checkPermission("brand", "read"),
+    showBrand
 );
 
 router.get(
-  "/viewbrand/:id",
-  viewBrand
+    "/viewbrand/:id",
+    auth,
+    checkPermission("brand", "read"),
+    viewBrand
 );
 
 router.delete(
-  "/deletebrand/:id",
-  deleteBrand
+    "/deletebrand/:id",
+    auth,
+    checkPermission("brand", "delete"),
+    deleteBrand
 );
 
 module.exports = router;

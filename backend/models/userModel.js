@@ -7,13 +7,6 @@ const userSchema = mongoose.Schema(
       ref: "Role",
     },
 
-    // Assigned Store
-    store: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-      default: null,
-    },
-
     firstName: {
       type: String,
       required: true,

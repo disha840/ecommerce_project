@@ -213,9 +213,15 @@ const getStores = async (req, res) => {
     const limit = 5;
     const skip = (page - 1) * limit;
 
-    const totalStores = await Store.countDocuments();
+    let filter = {};
 
-    const stores = await Store.find()
+    if (req.user.role === "store_manager") {
+      filter.manager = req.user.id;
+    }
+
+    const totalStores = await Store.countDocuments(filter);
+
+    const stores = await Store.find(filter)
       .populate("manager", "firstName lastName")
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -576,10 +582,24 @@ const toggleStoreStatus = async (req, res) => {
     });
   }
 };
+
 const getAllStores = async (req, res) => {
   try {
-    const stores = await Store.find({ status: "ACTIVE" })
-      .select("_id name");
+    console.log("Logged in user:", req.user);
+    console.log("Role:", req.user.role);
+    console.log("User ID:", req.user.id);
+
+    let filter = { status: "ACTIVE" };
+
+    if (req.user.role === "store_manager") {
+      filter.manager = req.user.id;
+    }
+
+    console.log("Store filter:", filter);
+
+    const stores = await Store.find(filter).select("_id name");
+
+    console.log("stores",stores)
 
     res.status(200).json({
       success: true,
@@ -593,6 +613,8 @@ const getAllStores = async (req, res) => {
     });
   }
 };
+
+
 module.exports = { updateStore };
 
 

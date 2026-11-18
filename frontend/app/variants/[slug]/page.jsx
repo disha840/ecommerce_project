@@ -1,89 +1,113 @@
 
 "use client";
+
 import api from "../../../axios/api";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import {getCart} from "@/redux/Slices/cartSlice"
-import {setShowLogin} from "@/redux/Slices/uiSlice"
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { getCart } from "@/redux/Slices/cartSlice";
+import { setShowLogin } from "@/redux/Slices/uiSlice";
+
 const Page = () => {
   const { slug } = useParams();
   const dispatch = useDispatch();
+
   const store = useSelector((state) => state.store.selectedStore);
   const storeId = store?._id;
 
+  const user = useSelector((state) => state.auth.user);
+
   const [variant, setVariant] = useState(null);
   const [images, setImages] = useState([]);
-  
-   const user = useSelector((state) => state.auth.user);
   const [selectedImage, setSelectedImage] = useState(0);
-const handleAddToCart = async (variant) => {
-  if (!user) {
-   return dispatch(setShowLogin(true))
-}
-    try {
-        const response = await api.post(`/cart/add/${storeId}`, {
-            product: variant.product?._id || variant.product,
-            variant: variant._id,
-            quantity: 1
-        });
-        dispatch(getCart());
+  const [loading, setLoading] = useState(true);
 
-        alert("Product added to cart successfully");
-        console.log(response.data);
-
-    } catch (error) {
-        console.log("Add to cart error:", error);
-
-        alert(
-            error.response?.data?.message || "Something went wrong"
-        );
+  const handleAddToCart = async (variant) => {
+    if (!user) {
+      return dispatch(setShowLogin(true));
     }
-};
+
+    try {
+      const response = await api.post(`/cart/add/${storeId}`, {
+        product: variant.product?._id || variant.product,
+        variant: variant._id,
+        quantity: 1,
+      });
+
+      dispatch(getCart());
+
+      alert("Product added to cart successfully");
+      console.log(response.data);
+    } catch (error) {
+      console.log("Add to cart error:", error);
+
+      alert(
+        error.response?.data?.message || "Something went wrong"
+      );
+    }
+  };
+
   const getVariant = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:3000/productvariant/getonevariant/${slug}`
+      setLoading(true);
+
+      const response = await api.get(`/inventory/store/${storeId}`);
+
+      const inventories = response.data.inventories || [];
+
+      const selectedInventory = inventories.find(
+        (item) => item.variant?.slug === slug
       );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setVariant(data.variant);
-
-        // Backend images array
-        let imageArray = data.variant.images || [];
-
-        // Single image string aaye toh array banana
-        if (typeof imageArray === "string") {
-          imageArray = [imageArray];
-        }
-
-        // Image URL nikalna
-        const imageUrls = [];
-
-        imageArray.forEach((image) => {
-          if (typeof image === "string") {
-            imageUrls.push(image);
-          } else if (image && image.url) {
-            imageUrls.push(image.url);
-          }
-        });
-
-        setImages(imageUrls);
-        setSelectedImage(0);
+      if (!selectedInventory) {
+        setVariant(null);
+        setImages([]);
+        return;
       }
+
+      const variantData = selectedInventory.variant;
+
+      setVariant({
+        ...variantData,
+        product: selectedInventory.product,
+        availableQuantity: selectedInventory.availableQuantity,
+      });
+
+      let imageArray = variantData.images || [];
+
+      if (typeof imageArray === "string") {
+        imageArray = [imageArray];
+      }
+
+      const imageUrls = imageArray
+        .map((image) =>
+          typeof image === "string" ? image : image?.url
+        )
+        .filter(Boolean);
+
+      setImages(imageUrls);
+      setSelectedImage(0);
     } catch (error) {
-      console.log(error);
+      console.log("Get variant error:", error);
+      setVariant(null);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (slug) {
+    if (slug && storeId) {
       getVariant();
     }
-  }, [slug]);
+  }, [slug, storeId]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <p className="text-gray-500">Loading product...</p>
+      </div>
+    );
+  }
 
   if (!variant) {
     return (
@@ -101,21 +125,15 @@ const handleAddToCart = async (variant) => {
     );
   }
 
-  // Discount se kitna paisa bacha
   const savings = variant.mrp - variant.sellingPrice;
-  
 
   return (
-    <div className="min-h-screen  from-emerald-50 to-gray-50 p-8">
-
+    <div className="min-h-screen from-emerald-50 to-gray-50 p-8">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-100 md:grid-cols-2">
 
         {/* Images */}
         <div>
-
-          {/* Main Image */}
           <div className="relative flex h-96 items-center justify-center rounded-2xl bg-gray-50 p-6 ring-1 ring-gray-100">
-
             {variant.discountPercentage > 0 && (
               <span className="absolute left-4 top-4 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white">
                 {variant.discountPercentage}% OFF
@@ -131,10 +149,8 @@ const handleAddToCart = async (variant) => {
             ) : (
               <p className="text-gray-400">No Image Available</p>
             )}
-
           </div>
 
-          {/* Thumbnails */}
           {images.length > 1 && (
             <div className="mt-5 flex gap-3">
               {images.map((image, index) => (
@@ -152,23 +168,17 @@ const handleAddToCart = async (variant) => {
               ))}
             </div>
           )}
-
         </div>
 
         {/* Variant Details */}
         <div>
-
-          
-
           <h1 className="mt-4 text-3xl font-bold text-gray-900">
             {variant.name}
           </h1>
 
           {/* Price Box */}
           <div className="my-6 rounded-2xl bg-emerald-50 p-5 ring-1 ring-emerald-100">
-
             <div className="flex items-center gap-3">
-
               <span className="text-4xl font-bold text-emerald-700">
                 ₹{variant.sellingPrice}
               </span>
@@ -184,7 +194,6 @@ const handleAddToCart = async (variant) => {
                   {variant.discountPercentage}% OFF
                 </span>
               )}
-
             </div>
 
             {savings > 0 && (
@@ -192,16 +201,13 @@ const handleAddToCart = async (variant) => {
                 You save ₹{savings}
               </p>
             )}
-
           </div>
 
           <h2 className="mb-4 text-xl font-bold text-gray-900">
             Product Information
           </h2>
 
-          {/* Product Information */}
           <div className="grid grid-cols-2 gap-3">
-
             <div className="rounded-xl bg-gray-50 p-4 ring-1 ring-gray-100">
               <p className="text-xs text-gray-500">SKU</p>
               <p className="font-semibold">{variant.sku}</p>
@@ -221,26 +227,23 @@ const handleAddToCart = async (variant) => {
               <p className="text-xs text-gray-500">Unit</p>
               <p className="font-semibold">{variant.unit}</p>
             </div>
-
-            
-
           </div>
 
-          <button onClick={(event)=>{
-                       event.stopPropagation();
-                       handleAddToCart(variant);
-                    }} className="mt-8 w-full rounded-xl bg-emerald-600 p-4 font-bold text-white shadow-lg hover:bg-emerald-700"> 
+          <button
+            onClick={(event) => {
+              event.stopPropagation();
+              handleAddToCart(variant);
+            }}
+            className="mt-8 w-full rounded-xl bg-emerald-600 p-4 font-bold text-white shadow-lg hover:bg-emerald-700"
+          >
             Add To Cart
           </button>
-
         </div>
-
       </div>
 
       {/* Description */}
       {variant.description && (
         <div className="mx-auto mt-8 max-w-6xl rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-100">
-
           <h2 className="mb-4 text-xl font-bold text-gray-900">
             Product Description
           </h2>
@@ -248,10 +251,8 @@ const handleAddToCart = async (variant) => {
           <p className="text-gray-600">
             {variant.description}
           </p>
-
         </div>
       )}
-
     </div>
   );
 };

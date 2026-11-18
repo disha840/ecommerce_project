@@ -1,8 +1,6 @@
 
 
-
 import React, { useState, useEffect } from "react";
-
 import {
   FiSearch,
   FiPlus,
@@ -20,9 +18,14 @@ import { toast } from "react-toastify";
 import api from "../../api";
 import FormModal from "../../components/Role/FormModal";
 import DeleteRoleModal from "../../components/Role/DeleteRole";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const Role = () => {
+  const user = useSelector((state) => state.auth.user);
+
+  const [permissions, setPermissions] = useState([]);
+
   const [roles, setRoles] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
@@ -41,7 +44,6 @@ const Role = () => {
   // GET ALL ROLES AND SEARCH ROLES
   const fetchRoles = async (page = currentPage, searchValue = search) => {
     try {
-
       let response;
 
       if (searchValue.trim()) {
@@ -56,13 +58,13 @@ const Role = () => {
       setCurrentPage(response.data.currentPage || page);
       setTotalPages(response.data.totalPages || 1);
       setTotalRoles(response.data.totalRoles || 0);
-      setLoading(false)
+      setLoading(false);
 
     } catch (error) {
       console.log("Get roles error:", error.response?.data || error);
       toast.error("Failed to fetch roles");
-      setLoading(false)
-    } 
+      setLoading(false);
+    }
   };
 
   // FETCH ROLES WHEN PAGE OR SEARCH CHANGES
@@ -73,6 +75,16 @@ const Role = () => {
 
     return () => clearTimeout(timer);
   }, [currentPage, search]);
+
+  // SET USER PERMISSIONS
+  useEffect(() => {
+    setPermissions(user?.permissions || []);
+  }, [user]);
+
+  // CHECK ROLE PERMISSION
+  if (!user?.permissions?.some((permission) => permission.includes("role"))) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
 
   // OPEN ADD MODAL
   const handleAddRole = () => {
@@ -104,11 +116,7 @@ const Role = () => {
   // CHANGE ROLE STATUS
   const handleStatusChange = async (id) => {
     try {
-      const response = await api.patch(`/role/toggle-status/${id}`);
-
-      // toast.success(
-      //   response.data.message || "Status updated successfully"
-      // );
+      await api.patch(`/role/toggle-status/${id}`);
 
       fetchRoles();
 
@@ -242,14 +250,16 @@ const Role = () => {
             />
           </div>
 
-          <button
-            type="button"
-            onClick={handleAddRole}
-            className="flex items-center justify-center gap-2 rounded-xl bg-[#087F95] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#066779]"
-          >
-            <FiPlus size={18} />
-            Add Role
-          </button>
+          {permissions.includes("roles:create") && (
+            <button
+              type="button"
+              onClick={handleAddRole}
+              className="flex items-center justify-center gap-2 rounded-xl bg-[#087F95] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#066779]"
+            >
+              <FiPlus size={18} />
+              Add Role
+            </button>
+          )}
 
         </div>
       </div>
@@ -369,23 +379,25 @@ const Role = () => {
 
                     {/* STATUS */}
                     <td className="px-6 py-4">
-                      <button
-                        type="button"
-                        onClick={() => handleStatusChange(role._id)}
-                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                          role.status === "Active"
-                            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                            : "bg-red-50 text-red-600 hover:bg-red-100"
-                        }`}
-                      >
-                        {role.status === "Active" ? (
-                          <FiCheckCircle />
-                        ) : (
-                          <FiXCircle />
-                        )}
+                      {permissions.includes("roles:update") && (
+                        <button
+                          type="button"
+                          onClick={() => handleStatusChange(role._id)}
+                          className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                            role.status === "Active"
+                              ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                              : "bg-red-50 text-red-600 hover:bg-red-100"
+                          }`}
+                        >
+                          {role.status === "Active" ? (
+                            <FiCheckCircle />
+                          ) : (
+                            <FiXCircle />
+                          )}
 
-                        {role.status || "Inactive"}
-                      </button>
+                          {role.status || "Inactive"}
+                        </button>
+                      )}
                     </td>
 
                     {/* CREATED AT */}
@@ -399,35 +411,41 @@ const Role = () => {
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
 
-                        <button
-                          type="button"
-                          title="View"
-                          onClick={() => viewHandler(role._id)}
-                          className="rounded-lg p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
-                        >
-                          <FiEye size={17} />
-                        </button>
+                        {permissions.includes("roles:read") && (
+                          <button
+                            type="button"
+                            title="View"
+                            onClick={() => viewHandler(role._id)}
+                            className="rounded-lg p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
+                          >
+                            <FiEye size={17} />
+                          </button>
+                        )}
 
-                        <button
-                          type="button"
-                          title="Edit"
-                          onClick={() => handleEditRole(role)}
-                          className="rounded-lg p-2 text-amber-600 transition hover:bg-amber-50"
-                        >
-                          <FiEdit2 size={17} />
-                        </button>
+                        {permissions.includes("roles:update") && (
+                          <button
+                            type="button"
+                            title="Edit"
+                            onClick={() => handleEditRole(role)}
+                            className="rounded-lg p-2 text-amber-600 transition hover:bg-amber-50"
+                          >
+                            <FiEdit2 size={17} />
+                          </button>
+                        )}
 
-                        <button
-                          type="button"
-                          title="Delete"
-                          onClick={() => {
-                            setDeleteId(role._id);
-                            setShowDelete(true);
-                          }}
-                          className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"
-                        >
-                          <FiTrash2 size={17} />
-                        </button>
+                        {permissions.includes("roles:delete") && (
+                          <button
+                            type="button"
+                            title="Delete"
+                            onClick={() => {
+                              setDeleteId(role._id);
+                              setShowDelete(true);
+                            }}
+                            className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"
+                          >
+                            <FiTrash2 size={17} />
+                          </button>
+                        )}
 
                       </div>
                     </td>

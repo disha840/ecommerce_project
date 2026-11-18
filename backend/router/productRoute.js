@@ -5,42 +5,62 @@ const auth = require("../middleware/authMiddleware");
 const checkPermission = require("../middleware/permissions");
 
 const {
-  createProduct,
-  showProducts,
-  updateProduct,
-  viewProduct,
-  showFeaturedProducts,
-  deleteProduct,
-  showProductsBySubcategory,
+    createProduct,
+    showProducts,
+    updateProduct,
+    viewProduct,
+    showFeaturedProducts,
+    deleteProduct,
+    showProductsBySubcategory,
 } = require("../controller/productController");
 
-// router.use(auth);
-
 router.post(
-  "/createproduct",
-  createProduct
+    "/createproduct",
+    auth,
+    checkPermission("products", "create"),
+    createProduct
 );
 
 router.get(
-  "/showproducts",
-  showProducts
+    "/showproducts",
+    auth,
+    checkPermission("products", "read"),
+    showProducts
 );
 
 router.put(
-  "/updateproduct/:id",
-  updateProduct
+    "/updateproduct/:id",
+    auth,
+    checkPermission("products", "update"),
+    updateProduct
 );
 
 router.get(
-  "/viewproduct/:id",
-  viewProduct
+    "/viewproduct/:id",
+    auth,
+    checkPermission("products", "read"),
+    viewProduct
 );
 
 router.delete(
-  "/deleteproduct/:id",
-  deleteProduct
+    "/deleteproduct/:id",
+    auth,
+    checkPermission("products", "delete"),
+    deleteProduct
 );
-router.get("/showsubcategory/:subcategoryId", showProductsBySubcategory)
-router.get("/featured", showFeaturedProducts);
+
+router.get(
+    "/showsubcategory/:subcategoryId",
+    auth,
+    checkPermission("products", "read"),
+    showProductsBySubcategory
+);
+
+router.get(
+    "/featured",
+    auth,
+    checkPermission("products", "read"),
+    showFeaturedProducts
+);
 
 module.exports = router;

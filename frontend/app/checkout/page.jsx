@@ -247,8 +247,215 @@ export default function CheckoutPage() {
 
 
 // PLACE ORDER API
-const handlePlaceOrder = async (method) => {
+// const handlePlaceOrder = async (method) => {
 
+//   if (!selectedAddress) {
+//     alert("Please select a delivery address");
+//     return;
+//   }
+
+//   if (!cartItems || cartItems.length === 0) {
+//     alert("Your cart is empty");
+//     return;
+//   }
+
+//   if (!paymentMethod) {
+//     alert("Please select a payment method");
+//     return;
+//   }
+
+//   try {
+
+//     // COD ORDER
+//     if (method === "COD") {
+
+//       console.log("COD Order");
+
+//       setPlacingOrder(true);
+
+//       const response = await api.post(
+//         "/order/place",
+//         {
+//           addressId: selectedAddress,
+//           paymentMethod: "COD",
+//           storeId: store?._id,
+//         },
+//         {
+//           withCredentials: true,
+//         }
+//       );
+
+//       if (response.data.success) {
+//         alert(response.data.message || "Order placed successfully");
+
+//         await dispatch(getCart());
+
+//         router.push("/orders");
+//       }
+
+//       console.log("Placed Order:", response.data.order);
+
+//     } else {
+
+//       // ONLINE PAYMENT
+//       console.log("Online Payment");
+
+//       setPlacingOrder(true);
+
+//       // Load Razorpay SDK
+//       const res = await loadScript(
+//         "https://checkout.razorpay.com/v1/checkout.js"
+//       );
+
+//       if (!res) {
+//         alert("Razorpay SDK failed to load. Are you online?");
+//         return;
+//       }
+
+//       // Create Razorpay Order
+//       const orderResponse = await api.post(
+//         "/order/create-order",
+//         {
+//           amount: Number(totalAmount),
+//         },
+//         {
+//           withCredentials: true,
+//         }
+//       );
+
+//       const orderData = orderResponse.data;
+
+//       console.log("Razorpay Order:", orderData);
+
+//       if (!orderData.id) {
+//         alert("Failed to create Razorpay order");
+//         return;
+//       }
+
+//       // Razorpay Checkout Options
+//       const options = {
+
+//         key: "rzp_test_TzwLOFBg192L0O",
+
+//         amount: orderData.amount,
+
+//         currency: orderData.currency,
+
+//         name: "QuickKart",
+
+//         description: "QuickKart Order Payment",
+
+//         order_id: orderData.id,
+
+//         handler: async function (response) {
+
+//           try {
+
+//             // Verify Payment
+//             const verifyResponse = await api.post(
+//               "/order/verify-payment",
+//               {
+//                 razorpay_order_id: response.razorpay_order_id,
+//                 razorpay_payment_id: response.razorpay_payment_id,
+//                 razorpay_signature: response.razorpay_signature,
+//               },
+//               {
+//                 withCredentials: true,
+//               }
+//             );
+
+//             const verifyData = verifyResponse.data;
+
+//             console.log("Verify Data:", verifyData);
+
+//             if (verifyData.status === "success") {
+
+//               // Place Online Order
+//               const placeResponse = await api.post(
+//                 "/order/place-online-order",
+//                 {
+//                   addressId: selectedAddress,
+//                   storeId: store?._id,
+
+//                   razorpay_order_id: response.razorpay_order_id,
+//                   razorpay_payment_id: response.razorpay_payment_id,
+//                   razorpay_signature: response.razorpay_signature,
+//                 },
+//                 {
+//                   withCredentials: true,
+//                 }
+//               );
+
+//               if (placeResponse.data.success) {
+
+//                 alert("Payment Successful! Order placed successfully.");
+
+//                 await dispatch(getCart());
+
+//                 router.push("/orders");
+
+//               }
+
+//             } else {
+
+//               alert(`Verification failed: ${verifyData.message}`);
+
+//             }
+
+//           } catch (error) {
+
+//             console.error("Verification error:", error);
+
+//             alert(
+//               error.response?.data?.message ||
+//               "Something went wrong during payment verification."
+//             );
+
+//           } finally {
+
+//             setPlacingOrder(false);
+
+//           }
+//         },
+
+//         modal: {
+//           ondismiss: function () {
+//             setPlacingOrder(false);
+//           },
+//         },
+
+//         prefill: {
+//           name: "",
+//           email: "",
+//           contact: "",
+//         },
+
+//         theme: {
+//           color: "#3399cc",
+//         },
+//       };
+
+//       // Open Razorpay Checkout
+//       const paymentObject = new window.Razorpay(options);
+
+//       paymentObject.open();
+
+//     }
+
+//   } catch (error) {
+
+//     console.log("PLACE ORDER ERROR:", error);
+
+//     alert(
+//       error.response?.data?.message ||
+//       "Failed to place order"
+//     );
+
+//     setPlacingOrder(false);
+//   }
+// };
+
+const handlePlaceOrder = async (method) => {
   if (!selectedAddress) {
     alert("Please select a delivery address");
     return;
@@ -259,20 +466,11 @@ const handlePlaceOrder = async (method) => {
     return;
   }
 
-  if (!paymentMethod) {
-    alert("Please select a payment method");
-    return;
-  }
-
   try {
+    setPlacingOrder(true);
 
-    // COD ORDER
+    // COD ORDER - unchanged
     if (method === "COD") {
-
-      console.log("COD Order");
-
-      setPlacingOrder(true);
-
       const response = await api.post(
         "/order/place",
         {
@@ -289,161 +487,123 @@ const handlePlaceOrder = async (method) => {
         alert(response.data.message || "Order placed successfully");
 
         await dispatch(getCart());
-
         router.push("/orders");
       }
 
-      console.log("Placed Order:", response.data.order);
-
-    } else {
-
-      // ONLINE PAYMENT
-      console.log("Online Payment");
-
-      setPlacingOrder(true);
-
-      // Load Razorpay SDK
-      const res = await loadScript(
-        "https://checkout.razorpay.com/v1/checkout.js"
-      );
-
-      if (!res) {
-        alert("Razorpay SDK failed to load. Are you online?");
-        return;
-      }
-
-      // Create Razorpay Order
-      const orderResponse = await api.post(
-        "/order/create-order",
-        {
-          amount: Number(totalAmount),
-        },
-        {
-          withCredentials: true,
-        }
-      );
-
-      const orderData = orderResponse.data;
-
-      console.log("Razorpay Order:", orderData);
-
-      if (!orderData.id) {
-        alert("Failed to create Razorpay order");
-        return;
-      }
-
-      // Razorpay Checkout Options
-      const options = {
-
-        key: "rzp_test_TzwLOFBg192L0O",
-
-        amount: orderData.amount,
-
-        currency: orderData.currency,
-
-        name: "QuickKart",
-
-        description: "QuickKart Order Payment",
-
-        order_id: orderData.id,
-
-        handler: async function (response) {
-
-          try {
-
-            // Verify Payment
-            const verifyResponse = await api.post(
-              "/order/verify-payment",
-              {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              },
-              {
-                withCredentials: true,
-              }
-            );
-
-            const verifyData = verifyResponse.data;
-
-            console.log("Verify Data:", verifyData);
-
-            if (verifyData.status === "success") {
-
-              // Place Online Order
-              const placeResponse = await api.post(
-                "/order/place-online-order",
-                {
-                  addressId: selectedAddress,
-                  storeId: store?._id,
-
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                },
-                {
-                  withCredentials: true,
-                }
-              );
-
-              if (placeResponse.data.success) {
-
-                alert("Payment Successful! Order placed successfully.");
-
-                await dispatch(getCart());
-
-                router.push("/orders");
-
-              }
-
-            } else {
-
-              alert(`Verification failed: ${verifyData.message}`);
-
-            }
-
-          } catch (error) {
-
-            console.error("Verification error:", error);
-
-            alert(
-              error.response?.data?.message ||
-              "Something went wrong during payment verification."
-            );
-
-          } finally {
-
-            setPlacingOrder(false);
-
-          }
-        },
-
-        modal: {
-          ondismiss: function () {
-            setPlacingOrder(false);
-          },
-        },
-
-        prefill: {
-          name: "",
-          email: "",
-          contact: "",
-        },
-
-        theme: {
-          color: "#3399cc",
-        },
-      };
-
-      // Open Razorpay Checkout
-      const paymentObject = new window.Razorpay(options);
-
-      paymentObject.open();
-
+      return;
     }
 
-  } catch (error) {
+    // ONLINE PAYMENT
 
+    // Load Razorpay SDK
+    const res = await loadScript(
+      "https://checkout.razorpay.com/v1/checkout.js"
+    );
+
+    if (!res) {
+      alert("Razorpay SDK failed to load. Are you online?");
+      setPlacingOrder(false);
+      return;
+    }
+
+    // 1. Create Online Order
+    const orderResponse = await api.post(
+      "/order/create-online-order",
+      {
+        addressId: selectedAddress,
+        storeId: store?._id,
+      },
+      {
+        withCredentials: true,
+      }
+    );
+
+    const orderData = orderResponse.data;
+
+    console.log("Created Online Order:", orderData);
+
+    if (!orderData.success || !orderData.razorpay?.orderId) {
+      alert(orderData.message || "Failed to create online order");
+      setPlacingOrder(false);
+      return;
+    }
+
+    // 2. Razorpay Checkout
+    const options = {
+      key: orderData.razorpay.keyId,
+      amount: orderData.razorpay.amount,
+      currency: orderData.razorpay.currency,
+
+      name: "QuickKart",
+      description: "QuickKart Order Payment",
+
+      order_id: orderData.razorpay.orderId,
+
+      handler: async function (response) {
+        try {
+          // 3. Verify Online Payment
+          const verifyResponse = await api.post(
+            "/order/verify-online-payment",
+            {
+              orderId: orderData.order._id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            },
+            {
+              withCredentials: true,
+            }
+          );
+
+          const verifyData = verifyResponse.data;
+
+          console.log("Payment Verification:", verifyData);
+
+          if (verifyData.success) {
+            alert("Payment Successful! Order placed successfully.");
+
+            await dispatch(getCart());
+
+            router.push("/orders");
+          } else {
+            alert(verifyData.message || "Payment verification failed");
+            setPlacingOrder(false);
+          }
+
+        } catch (error) {
+          console.log("Verification Error:", error);
+
+          alert(
+            error.response?.data?.message ||
+            "Payment verification failed"
+          );
+
+          setPlacingOrder(false);
+        }
+      },
+
+      modal: {
+        ondismiss: function () {
+          setPlacingOrder(false);
+        },
+      },
+
+      prefill: {
+        name: "",
+        email: "",
+        contact: "",
+      },
+
+      theme: {
+        color: "#3399cc",
+      },
+    };
+
+    const paymentObject = new window.Razorpay(options);
+
+    paymentObject.open();
+
+  } catch (error) {
     console.log("PLACE ORDER ERROR:", error);
 
     alert(
@@ -454,6 +614,7 @@ const handlePlaceOrder = async (method) => {
     setPlacingOrder(false);
   }
 };
+
 
 
   return (

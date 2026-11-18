@@ -5,50 +5,62 @@ const auth = require("../middleware/authMiddleware");
 const checkPermission = require("../middleware/permissions");
 
 const {
-  createCategory,
-  showCategory,
-  deleteCategory,
-  viewCategory,
-  searchCategory,
-  updateCategory,
-  toggleStatus
+    createCategory,
+    showCategory,
+    deleteCategory,
+    viewCategory,
+    searchCategory,
+    updateCategory,
+    toggleStatus
 } = require("../controller/categoryController");
 
-// router.use(auth);
-
 router.post(
-  "/createcategory",
-  createCategory
+    "/createcategory",
+    auth,
+    checkPermission("categories", "create"),
+    createCategory
 );
 
 router.get(
-  "/showcategories",
-  showCategory
+    "/showcategories",
+    auth,
+    checkPermission("categories", "read"),
+    showCategory
 );
 
 router.get(
-  "/viewcategory/:id",
-  viewCategory
+    "/viewcategory/:id",
+    auth,
+    checkPermission("categories", "read"),
+    viewCategory
 );
 
 router.get(
-  "/searched",
-  searchCategory
+    "/searched",
+    auth,
+    checkPermission("categories", "read"),
+    searchCategory
 );
 
 router.delete(
-  "/deletecategory/:id",
-  deleteCategory
+    "/deletecategory/:id",
+    auth,
+    checkPermission("categories", "delete"),
+    deleteCategory
 );
 
 router.put(
-  "/updatecategory/:id",
-  updateCategory
+    "/updatecategory/:id",
+    auth,
+    checkPermission("categories", "update"),
+    updateCategory
 );
 
 router.put(
-  "/toggle-status/:id",
-  toggleStatus
+    "/toggle-status/:id",
+    auth,
+    checkPermission("categories", "update"),
+    toggleStatus
 );
 
 module.exports = router;

@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
 
 export default function CategoriesPage() {
 
@@ -11,34 +12,37 @@ export default function CategoriesPage() {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // FETCH ALL CATEGORIES
+    const store = useSelector((state) => state.store.selectedStore);
+
+    // FETCH STORE WISE CATEGORIES
     const getCategories = async () => {
 
         try {
+
+            if (!store?._id) {
+                setCategories([]);
+                return;
+            }
+
             setLoading(true);
 
             const response = await fetch(
-                "http://localhost:3000/category/showcategories"
+                `http://localhost:3000/inventory/store-categories/${store._id}`
             );
 
             const data = await response.json();
+            console.log("data",data)
 
-            console.log("Categories:", data.category);
+            console.log("Store Categories:", data.categories);
 
-            if (response.ok && Array.isArray(data.category)) {
-
-                // Only ACTIVE categories
-                const activeCategories = data.category.filter(
-                    (category) => category.status === "ACTIVE"
-                );
-
-                setCategories(activeCategories);
-
+            if (response.ok && Array.isArray(data.categories)) {
+                setCategories(data.categories);
             } else {
                 setCategories([]);
             }
 
         } catch (error) {
+
             console.log("Category fetch error:", error);
             setCategories([]);
 
@@ -50,7 +54,7 @@ export default function CategoriesPage() {
 
     useEffect(() => {
         getCategories();
-    }, []);
+    }, [store?._id]);
 
     // CATEGORY CLICK
     const handleCategoryClick = (category) => {
@@ -85,6 +89,12 @@ export default function CategoriesPage() {
 
                     <div className="text-center py-16 text-gray-500">
                         Loading categories...
+                    </div>
+
+                ) : !store?._id ? (
+
+                    <div className="text-center py-16 text-gray-500">
+                        Please select a store to view categories.
                     </div>
 
                 ) : categories.length > 0 ? (

@@ -6,6 +6,7 @@ const checkPermission = (module, action) => {
         message: "Please login first"
       });
     }
+    console.log(req.user.role)
 
     if (req.user.role === "super_admin") {
       return next();

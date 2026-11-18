@@ -17,6 +17,7 @@ const cartRoute=require("./router/cartRoute");
 const addressRoute=require("./router/addressRoute")
 const inventoryRoute=require("./router/inventoryRoute")
 const orderRoutes=require("./router/orderRoute")
+const deliveryPartnerRoute=require("./router/deliveryPartner")
 const app=express();
 
 app.use(cors({
@@ -41,6 +42,7 @@ app.use("/store",storeRoute);
 app.use("/address",addressRoute)
 app.use("/order", orderRoutes);
 app.use("/inventory",inventoryRoute)
+app.use("/deliverypartner",deliveryPartnerRoute)
 
 app.listen(3000,()=>{
     console.log("server is running");

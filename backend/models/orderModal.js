@@ -87,7 +87,7 @@ const orderSchema = new mongoose.Schema(
 
     deliveryPartner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "DeliveryPartner",
       default: null,
     },
 
@@ -105,6 +105,10 @@ const orderSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    razorpayOrderId: {
+    type: String,
+    default: null
+},
 
     deliveredAt: {
       type: Date,

@@ -2,17 +2,16 @@
 const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
+    
     try {
-        // Cookie se token lena
-        let token = null
-        if(req.cookies.clientToken){
-            token = req.cookies.clientToken
+        let token = null;
+
+        if (req.cookies.clientToken) {
+            token = req.cookies.clientToken;
+        } else {
+            token = req.cookies.token;
         }
-        else{
-            token = req.cookies.token
-        }
-// console.log("my token",token)
-        // Token nahi mila
+
         if (!token) {
             return res.status(401).json({
                 success: false,
@@ -20,16 +19,18 @@ const authMiddleware = (req, res, next) => {
             });
         }
 
-        // Token verify karna
         const decoded = jwt.verify(
             token,
             process.env.JWT_SECRET
         );
 
-        // Verified user ka data request mein rakhna
-        req.user = decoded;
+    
+        req.user = {
+            id: decoded.id,
+            role: decoded.role,
+            permissions: decoded.permissions
+        };
 
-        // Agle middleware ya controller par jaana
         next();
 
     } catch (error) {

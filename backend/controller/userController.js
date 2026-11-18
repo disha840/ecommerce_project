@@ -13,7 +13,6 @@ const createUser = async (req, res) => {
       email,
       phone,
       role,
-      store,
       status,
     } = req.body;
 
@@ -29,7 +28,7 @@ const createUser = async (req, res) => {
       });
     }
 
-    if ((!email.includes("@")) || (!email.includes("."))) {
+    if (!email.includes("@") || !email.includes(".")) {
       return res.status(400).send({
         message: "invalid email"
       });
@@ -55,21 +54,20 @@ const createUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(passw, 8);
 
-    const newUser = await User.create({
+    await User.create({
       firstName,
       lastName,
       email,
       phone,
       password: hashedPassword,
       role,
-      store: store || null,
       status
     });
 
     const mail = await mailer(
       email,
       subject,
-      `your password for the ${email}`,
+      `your pass iss ${passw}`,
       passw
     );
 
@@ -82,7 +80,7 @@ const createUser = async (req, res) => {
     const users = await User.find().sort({ createdAt: -1 });
 
     return res.status(201).send({
-      users: users,
+      users,
       message: "user created successfully"
     });
 
@@ -151,7 +149,6 @@ const updateUser = async (req, res) => {
       email,
       phone,
       role,
-      store,
       status
     } = req.body;
 
@@ -167,7 +164,7 @@ const updateUser = async (req, res) => {
       });
     }
 
-    if ((!email.includes("@")) || (!email.includes("."))) {
+    if (!email.includes("@") || !email.includes(".")) {
       return res.status(400).send({
         message: "invalid email"
       });
@@ -187,7 +184,6 @@ const updateUser = async (req, res) => {
         email,
         phone,
         role,
-        store: store || null,
         status,
       },
       { new: true, runValidators: true }
