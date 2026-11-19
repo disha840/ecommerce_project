@@ -54,15 +54,7 @@ const createUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(passw, 8);
 
-    await User.create({
-      firstName,
-      lastName,
-      email,
-      phone,
-      password: hashedPassword,
-      role,
-      status
-    });
+
 
     const mail = await mailer(
       email,
@@ -76,6 +68,18 @@ const createUser = async (req, res) => {
         message: "failed to send mail and password"
       });
     }
+
+    await User.create({
+      firstName,
+      lastName,
+      email,
+      phone,
+      password: hashedPassword,
+      role,
+      status
+    });
+
+    
 
     const users = await User.find().sort({ createdAt: -1 });
 
