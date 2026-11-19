@@ -31,6 +31,9 @@ app.use(cors({
     ],
     credentials: true
 }));
+app.use("/ping", (_, res) => {
+    return res.status(200).json({ message: "Ok" })
+})
 app.use(express.json());
 app.use(cookieParser());
 
