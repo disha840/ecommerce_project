@@ -20,11 +20,17 @@ const orderRoutes=require("./router/orderRoute")
 const deliveryPartnerRoute=require("./router/deliveryPartner")
 const app=express();
 
+// app.use(cors({
+//     origin:"*",
+//     credentials: true
+// }))
 app.use(cors({
-    origin:"*",
-    
+    origin: [
+        "https://ecommerce-project-jade.vercel.app",
+        // "http://localhost:5173"
+    ],
     credentials: true
-}))
+}));
 app.use(express.json());
 app.use(cookieParser());
 
