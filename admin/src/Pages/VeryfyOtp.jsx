@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import api from "../api";
 import { toast } from "react-toastify";
 import {
   FiArrowRight,
@@ -126,8 +127,8 @@ const VerifyOtp = () => {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "http://localhost:3000/admin/verifyotp",
+      const response = await api.post(
+        "/admin/verifyotp",
         {
           email: email,
           otp: finalOtp,
@@ -162,8 +163,8 @@ const VerifyOtp = () => {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "http://localhost:3000/resendotp",
+      const response = await api.post(
+        "/admin/resendotp",
         { email: email }
       );
 

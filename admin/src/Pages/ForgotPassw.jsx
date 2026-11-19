@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import api from "../api";
+
 import {
   FiMail,
   FiArrowRight,
@@ -53,8 +55,8 @@ const ForgotPassw = () => {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "http://localhost:3000/admin/generateotp",
+      const response = await api.post(
+        "/admin/generateotp",
         { email: email.trim() }
       );
 

@@ -21,7 +21,8 @@ const deliveryPartnerRoute=require("./router/deliveryPartner")
 const app=express();
 
 app.use(cors({
-    origin:["http://localhost:5173","http://localhost:4000"],
+    origin:["https://ecommerce-project-jade.vercel.app/","http://localhost:4000"],
+    
     credentials: true
 }))
 app.use(express.json());

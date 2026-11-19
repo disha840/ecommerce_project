@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { toast } from 'react-toastify';
-import axios from 'axios';
+// import axios from 'axios';
+import api from '../api';
 
 import Loader from '../components/Loader';
 import { useNavigate } from 'react-router-dom';
@@ -104,8 +105,8 @@ const SignUp = () => {
 
         setLoading(true);
 
-        const response = await axios.post(
-          "http://localhost:3000/admin/signup",
+        const response = await api.post(
+          "/admin/signup",
           {
             firstName,
             lastName,

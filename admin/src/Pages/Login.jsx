@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, Navigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import api from "../api";
 import {
   FiMail,
   FiLock,
@@ -87,8 +88,8 @@ const Login = () => {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "http://localhost:3000/admin/login",
+      const response = await api.post(
+        "/admin/login",
         form,
         {
           withCredentials: true,

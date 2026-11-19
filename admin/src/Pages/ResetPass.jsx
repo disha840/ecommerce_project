@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import api from "../api";
 import { toast } from "react-toastify";
 import {
   FiLock,
@@ -91,8 +92,8 @@ const ResetPass = () => {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "http://localhost:3000/admin/changepassword",
+      const response = await api.post(
+        "/admin/changepassword",
         {
           email: email,
           password: formData.password,
