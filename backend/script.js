@@ -30,7 +30,7 @@ app.use(cors({
         "https://ecommerce-project-git-main-quick-kart2.vercel.app",
         "http://localhost:5173",
         "http://localhost:4000",
-        "https://ecommerce-project-wwsg.vercel.app/"
+        "https://ecommerce-project-wwsg.vercel.app"
     ],
     credentials: true
 }));
