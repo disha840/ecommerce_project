@@ -4,6 +4,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { X } from "lucide-react";
+import api from "@/axios/api"
 
 export default function Signup({ setShowLogin, setShowSignup }) {
 
@@ -53,8 +54,8 @@ export default function Signup({ setShowLogin, setShowSignup }) {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "http://localhost:3000/api/signup",
+      const response = await api.post(
+        "/api/signup",
         {
           firstName: formData.firstName,
           lastName: formData.lastName,
@@ -62,9 +63,7 @@ export default function Signup({ setShowLogin, setShowSignup }) {
           phone: formData.phone,
           password: formData.password,
         },
-        {
-          withCredentials: true,
-        }
+        
       );
 
       setMessage(response.data.message);

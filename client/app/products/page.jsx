@@ -34,9 +34,10 @@ export default function Product() {
         );
         console.log("STORE ID:", storeId);
         console.log("INVENTORY RESPONSE:", response.data);
+        
 
         
-        // console.log("FIRST INVENTORY:", response.data.inventories?.[0]);
+        console.log("FIRST INVENTORY:", response.data.inventories?.[0]);
 
         if (response.data.success) {
           setInventories(response.data.inventories || []);

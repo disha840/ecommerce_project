@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
+import api from "@/axios/api"
 
 export default function Category() {
   const [categories, setCategories] = useState([]);
@@ -15,34 +16,38 @@ export default function Category() {
 
   useEffect(() => {
     const fetchCategories = async () => {
-      try {
-        if (!store?._id) {
-          setCategories([]);
-          return;
-        }
+  try {
+    if (!store?._id) {
+      setCategories([]);
+      return;
+    }
 
-        setLoading(true);
+    setLoading(true);
 
-        const response = await fetch(
-          `http://localhost:3000/inventory/store-categories/${store._id}`
-        );
+    const response = await api.get(
+      `/inventory/store-categories/${store._id}`
+    );
 
-        const data = await response.json();
-        console.log(data)
+    const data = response.data;
 
-        if (response.ok && Array.isArray(data.categories)) {
-          setCategories(data.categories);
-        } else {
-          setCategories([]);
-        }
+    console.log("Store Categories:", data);
 
-      } catch (error) {
-        console.error("Error fetching store categories:", error);
-        setCategories([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (data.success && Array.isArray(data.categories)) {
+      setCategories(data.categories);
+    } else {
+      setCategories([]);
+    }
+
+  } catch (error) {
+    console.error(
+      "Error fetching store categories:",
+      error.response?.data || error.message
+    );
+    setCategories([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
     fetchCategories();
   }, [store?._id]);

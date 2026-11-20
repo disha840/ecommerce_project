@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
+import api from "@/axios/api"
 import { updateUser} from "../redux/Slices/AuthSlice"
 
 const EditProfileModal = ({ closeModal }) => {
@@ -47,12 +48,9 @@ const EditProfileModal = ({ closeModal }) => {
     try {
       setLoading(true);
 
-      const response = await axios.put(
-        "http://localhost:3000/api/update-profile",
-        formData,
-        {
-          withCredentials: true
-        }
+      const response = await api.put(
+        "/api/update-profile",
+        formData
       );
 
       if (response.data.success) {

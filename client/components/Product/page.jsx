@@ -2,7 +2,7 @@
 
 
 "use client";
-
+import api from "@/axios/api"
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -13,26 +13,27 @@ export default function Product() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:3000/products/featured"
-        );
+  try {
+    const response = await api.get("/products/featured");
 
-        const data = await response.json();
+    const data = response.data;
 
-        console.log("Featured Products:", data.products);
+    console.log("Featured Products:", data.products);
 
-        if (response.ok && Array.isArray(data.products)) {
-          setProducts(data.products);
-        } else {
-          setProducts([]);
-          console.log(data.message || "Featured products fetch nahi hue");
-        }
-      } catch (error) {
-        console.error("Error fetching featured products:", error);
-        setProducts([]);
-      }
-    };
+    if (data.success && Array.isArray(data.products)) {
+      setProducts(data.products);
+    } else {
+      setProducts([]);
+      console.log(data.message || "Featured products fetch nahi hue");
+    }
+  } catch (error) {
+    console.error(
+      "Error fetching featured products:",
+      error.response?.data || error.message
+    );
+    setProducts([]);
+  }
+};
 
     fetchProducts();
   }, []);

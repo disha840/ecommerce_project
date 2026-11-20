@@ -9,6 +9,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { getCart } from "@/redux/Slices/cartSlice";
 import { X } from "lucide-react";
+import api from "@/axios/api"
 
 export default function Login({ setShowLogin,setShowSignup }) {
   const router = useRouter();
@@ -27,15 +28,13 @@ export default function Login({ setShowLogin,setShowSignup }) {
       setLoading(true);
       setMessage("");
 
-      const response = await axios.post(
-        "http://localhost:3000/api/login",
+      const response = await api.post(
+        "/api/login",
         {
           email,
           password,
         },
-        {
-          withCredentials: true,
-        }
+        
       );
       
 

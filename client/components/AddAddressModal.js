@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import axios from "axios";
+import api from "@/axios/api"
 
 const AddAddressModal = ({ isOpen, onClose ,onAddressAdded}) => {
 
@@ -34,10 +35,9 @@ const AddAddressModal = ({ isOpen, onClose ,onAddressAdded}) => {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "http://localhost:3000/address/add",
-        formData,
-        { withCredentials: true }
+      const response = await api.post(
+        "/address/add",
+        formData
       );
 
       alert(response.data.message);

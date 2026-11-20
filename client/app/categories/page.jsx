@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
+import api from "@/axios/api"
 
 export default function CategoriesPage() {
 
@@ -16,41 +17,39 @@ export default function CategoriesPage() {
 
     // FETCH STORE WISE CATEGORIES
     const getCategories = async () => {
+  try {
+    if (!store?._id) {
+      setCategories([]);
+      return;
+    }
 
-        try {
+    setLoading(true);
 
-            if (!store?._id) {
-                setCategories([]);
-                return;
-            }
+    const response = await api.get(
+      `/inventory/store-categories/${store._id}`
+    );
 
-            setLoading(true);
+    const data = response.data;
 
-            const response = await fetch(
-                `http://localhost:3000/inventory/store-categories/${store._id}`
-            );
+    console.log("data", data);
+    console.log("Store Categories:", data.categories);
 
-            const data = await response.json();
-            console.log("data",data)
+    if (data.success && Array.isArray(data.categories)) {
+      setCategories(data.categories);
+    } else {
+      setCategories([]);
+    }
 
-            console.log("Store Categories:", data.categories);
-
-            if (response.ok && Array.isArray(data.categories)) {
-                setCategories(data.categories);
-            } else {
-                setCategories([]);
-            }
-
-        } catch (error) {
-
-            console.log("Category fetch error:", error);
-            setCategories([]);
-
-        } finally {
-            setLoading(false);
-        }
-
-    };
+  } catch (error) {
+    console.log(
+      "Category fetch error:",
+      error.response?.data || error.message
+    );
+    setCategories([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
     useEffect(() => {
         getCategories();
