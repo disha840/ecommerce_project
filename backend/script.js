@@ -27,16 +27,19 @@ const app=express();
 app.use(cors({
     origin: [
         "https://ecommerce-project-jade.vercel.app",
-        // "http://localhost:5173"
+        "https://ecommerce-project-git-main-quick-kart2.vercel.app",
+        "http://localhost:5173"
     ],
     credentials: true
 }));
-app.use("/ping", (_, res) => {
-    return res.status(200).json({ message: "Ok" })
-})
+
 app.use(express.json());
 app.use(cookieParser());
 
+
+app.use("/ping", (_, res) => {
+    return res.status(200).json({ message: "Ok" })
+})
 app.use(fileUpload({ useTempFiles: true }))
 
 app.use("/api",userRoute)
