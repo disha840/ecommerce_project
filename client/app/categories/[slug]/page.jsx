@@ -2,33 +2,55 @@
 
 
 
+
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import api from "@/axios/api";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 
 function SubcategoriesPage() {
     const { slug } = useParams();
-
-    console.log("myslug", slug);
+    const router = useRouter();
 
     const store = useSelector((state) => state.store.selectedStore);
 
-    console.log("mystore", store);
-
+    const [categories, setCategories] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchSubcategories = async () => {
-        console.log("hello>>>>>>>>>");
+    // Fetch all categories
+    const fetchCategories = async () => {
+        try {
+            if (!store?._id) {
+                setCategories([]);
+                return;
+            }
 
+            const res = await api.get(
+                `/inventory/store-categories/${store._id}`
+            );
+
+            if (res.data.success && Array.isArray(res.data.categories)) {
+                setCategories(res.data.categories);
+            } else {
+                setCategories([]);
+            }
+        } catch (error) {
+            console.log(error.message);
+            setCategories([]);
+        }
+    };
+
+    // Fetch selected category subcategories
+    const fetchSubcategories = async () => {
         try {
             if (!store?._id || !slug) {
                 setSubcategories([]);
+                setLoading(false);
                 return;
             }
 
@@ -38,14 +60,11 @@ function SubcategoriesPage() {
                 `/inventory/store-subcategories/${store._id}/${slug}`
             );
 
-            console.log("my data res", res.data);
-
             if (res.data.success && Array.isArray(res.data.subcategories)) {
                 setSubcategories(res.data.subcategories);
             } else {
                 setSubcategories([]);
             }
-
         } catch (error) {
             console.log(error.message);
             setSubcategories([]);
@@ -55,6 +74,10 @@ function SubcategoriesPage() {
     };
 
     useEffect(() => {
+        fetchCategories();
+    }, [store?._id]);
+
+    useEffect(() => {
         fetchSubcategories();
     }, [slug, store?._id]);
 
@@ -62,6 +85,36 @@ function SubcategoriesPage() {
         <main className="min-h-screen bg-[#f8faf8]">
             <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
 
+                {/* All Categories */}
+                <div className="mb-10">
+                    <p className="text-xs font-bold uppercase tracking-[2px] text-[#0c831f]">
+                        Explore Categories
+                    </p>
+
+                    <h2 className="mt-2 text-2xl font-extrabold text-gray-900 sm:text-3xl">
+                        Shop by Category
+                    </h2>
+
+                    <div className="mt-5 flex flex-wrap gap-3">
+                        {categories.map((category) => (
+                            <button
+                                key={category._id}
+                                onClick={() =>
+                                    router.push(`/categories/${category.slug}`)
+                                }
+                                className={`rounded-full border px-5 py-2.5 text-sm font-bold transition-all duration-200 ${
+                                    slug === category.slug
+                                        ? "border-[#0c831f] bg-[#0c831f] text-white shadow-md shadow-green-900/10"
+                                        : "border-gray-200 bg-white text-gray-700 hover:border-[#0c831f] hover:text-[#0c831f]"
+                                }`}
+                            >
+                                {category.name}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Subcategories Heading */}
                 <div className="mb-7 flex items-end justify-between gap-4">
                     <div>
                         <p className="text-xs font-bold uppercase tracking-[2px] text-[#0c831f]">
@@ -80,6 +133,7 @@ function SubcategoriesPage() {
                     )}
                 </div>
 
+                {/* Subcategories Loading */}
                 {loading ? (
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {Array.from({ length: 8 }).map((_, index) => (
