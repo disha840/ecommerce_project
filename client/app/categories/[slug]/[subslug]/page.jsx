@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
@@ -9,9 +8,8 @@ import { useSelector } from "react-redux";
 import { FiShoppingBag, FiArrowRight } from "react-icons/fi";
 import api from "@/axios/api";
 
-
 function SubcategoryProducts() {
-  const { slug } = useParams();
+  const { subslug } = useParams();
 
   const selectedStore = useSelector(
     (state) => state.store.selectedStore
@@ -32,7 +30,7 @@ function SubcategoryProducts() {
         setProducts([]);
 
         const res = await api.get(
-          `/inventory/store/${storeId}/subcategory/${slug}/products`
+          `/inventory/store/${storeId}/subcategory/${subslug}/products`
         );
 
         setProducts(res.data.products || []);
@@ -44,13 +42,13 @@ function SubcategoryProducts() {
       }
     };
 
-    if (slug && storeId) {
+    if (subslug && storeId) {
       fetchProducts();
     } else {
       setProducts([]);
       setLoading(false);
     }
-  }, [slug, storeId]);
+  }, [subslug, storeId]);
 
   if (loading) {
     return (
@@ -69,7 +67,6 @@ function SubcategoryProducts() {
     <div className="min-h-screen bg-[#F8FAFC] px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-7xl">
 
-        {/* Page Heading */}
         <div className="mb-8 flex flex-col justify-between gap-3 border-b border-gray-200 pb-5 sm:flex-row sm:items-center">
           <div>
             <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-[#087F95]">
@@ -91,7 +88,6 @@ function SubcategoryProducts() {
           </div>
         </div>
 
-        {/* No Store */}
         {!storeId ? (
           <div className="rounded-2xl border border-gray-200 bg-white px-4 py-16 text-center">
             <FiShoppingBag className="mx-auto mb-4 text-4xl text-gray-300" />
@@ -106,7 +102,6 @@ function SubcategoryProducts() {
           </div>
         ) : products.length === 0 ? (
 
-          /* Empty State */
           <div className="rounded-2xl border border-gray-200 bg-white px-4 py-16 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D7F2F6] text-[#087F95]">
               <FiShoppingBag size={30} />
@@ -123,7 +118,6 @@ function SubcategoryProducts() {
 
         ) : (
 
-          /* Product Grid */
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5">
 
             {products.map((product) => (
@@ -133,7 +127,6 @@ function SubcategoryProducts() {
                 className="group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-[#22B8CF] hover:shadow-lg"
               >
 
-                {/* Product Image */}
                 <div className="relative flex h-36 items-center justify-center bg-[#F8FAFC] p-3 sm:h-44">
 
                   {product.images?.[0]?.url ? (
@@ -153,7 +146,6 @@ function SubcategoryProducts() {
 
                 </div>
 
-                {/* Product Details */}
                 <div className="flex flex-1 flex-col p-3 sm:p-4">
 
                   <h2 className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-[#102A43] sm:text-base">
