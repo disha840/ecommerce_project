@@ -104,6 +104,7 @@ const createProduct = async (req, res) => {
       images: uploadedImages,
       tags: Array.isArray(tags) ? tags : [],
       isFeatured: req.body.isFeatured === "true",
+      isPopular: req.body.isPopular === "true",
       isActive: req.body.isActive === "true",
     });
 

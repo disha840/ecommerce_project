@@ -256,7 +256,7 @@ const getAvailableStoreInventory = async (req, res) => {
             status: "active",
             availableQuantity: { $gt: 0 }
         })
-        .populate("product", "name slug category brand images")
+        .populate("product", "name slug category brand images isFeatured isPopular")
         .populate("variant", "name slug sku unit unitValue mrp sellingPrice images")
         .sort({ createdAt: -1 });
 

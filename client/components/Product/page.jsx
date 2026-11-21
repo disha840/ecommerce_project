@@ -1,134 +1,241 @@
 
 
-
 "use client";
-import api from "@/axios/api"
+
+import api from "@/axios/api";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 export default function Product() {
-  const router = useRouter();
+    const router = useRouter();
 
-  const [products, setProducts] = useState([]);
+    const store = useSelector((state) => state.store.selectedStore);
+    const storeId = store?._id;
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-  try {
-    const response = await api.get("/products/featured");
+    const [featuredProducts, setFeaturedProducts] = useState([]);
+    const [popularProducts, setPopularProducts] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const data = response.data;
+    useEffect(() => {
+        if (!storeId) {
+            setFeaturedProducts([]);
+            setPopularProducts([]);
+            return;
+        }
 
-    console.log("Featured Products:", data.products);
+        const fetchProducts = async () => {
+            try {
+                setLoading(true);
 
-    if (data.success && Array.isArray(data.products)) {
-      setProducts(data.products);
-    } else {
-      setProducts([]);
-      console.log(data.message || "Featured products fetch nahi hue");
-    }
-  } catch (error) {
-    console.error(
-      "Error fetching featured products:",
-      error.response?.data || error.message
-    );
-    setProducts([]);
-  }
-};
+                const response = await api.get(
+                    `/inventory/store/${storeId}`
+                );
 
-    fetchProducts();
-  }, []);
+                const data = response.data;
 
-  const viewProduct = (slug) => {
-    router.push(`/products/${slug}`);
-  };
+                if (data.success && Array.isArray(data.inventories)) {
+                    const featured = [];
+                    const popular = [];
 
-  return (
-    <section className="mx-auto max-w-7xl px-6 py-12 md:px-10">
+                    data.inventories.forEach((item) => {
+                        const product = item.product;
 
-      <div className="mb-7 flex items-end justify-between">
-        <div>
-          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-emerald-700">
-            Handpicked for you
-          </p>
+                        if (!product) return;
 
-          <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
-            Featured Products
-          </h2>
+                        if (
+                            product.isFeatured === true &&
+                            !featured.some(
+                                (existing) => existing._id === product._id
+                            )
+                        ) {
+                            featured.push({
+                                ...product,
+                                variant: item.variant
+                            });
+                        }
 
-          <p className="mt-2 text-sm text-gray-500">
-            Fresh picks for your everyday needs.
-          </p>
-        </div>
+                        if (
+                            product.isPopular === true &&
+                            !popular.some(
+                                (existing) => existing._id === product._id
+                            )
+                        ) {
+                            popular.push({
+                                ...product,
+                                variant: item.variant
+                            });
+                        }
+                    });
 
-        <button className="hidden text-sm font-semibold text-emerald-700 hover:text-emerald-900 sm:block">
-          View All →
-        </button>
-      </div>
+                    setFeaturedProducts(featured);
+                    setPopularProducts(popular);
+                } else {
+                    setFeaturedProducts([]);
+                    setPopularProducts([]);
+                }
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-4">
+            } catch (error) {
+                console.error(
+                    "Error fetching products:",
+                    error.response?.data || error.message
+                );
 
-        {products.map((product) => {
-          const price = Number(product.price ?? 0);
+                setFeaturedProducts([]);
+                setPopularProducts([]);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-          const originalPrice = Number(
-            product.originalPrice ?? product.mrp ?? price
-          );
+        fetchProducts();
+    }, [storeId]);
 
-          const discount =
-            originalPrice > price
-              ? Math.round(
-                  ((originalPrice - price) / originalPrice) * 100
-                )
-              : 0;
+    const viewProduct = (slug) => {
+        router.push(`/variants/${slug}`);
+    };
 
-          return (
-            <div
-              key={product._id}
-              onClick={() => viewProduct(product.slug)}
-              className="group cursor-pointer overflow-hidden rounded-2xl border border-gray-100 bg-white transition hover:-translate-y-1 hover:shadow-lg"
-            >
+    const renderProducts = (products) => (
+        products.length === 0 ? (
+            <p className="py-8 text-center text-sm text-slate-500">
+                No products available.
+            </p>
+        ) : (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                {products.map((product) => {
+                    const variant = product.variant;
 
-              <div className="relative flex h-40 items-center justify-center bg-emerald-50 sm:h-52">
+                    const price = Number(variant?.sellingPrice || 0);
+                    const originalPrice = Number(variant?.mrp || price);
 
-                {product.images?.[0]?.url ? (
-                  <img
-                    src={product.images[0].url}
-                    alt={product.name}
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <span className="text-6xl">🛒</span>
-                )}
+                    const discount =
+                        originalPrice > price
+                            ? Math.round(
+                                ((originalPrice - price) / originalPrice) * 100
+                            )
+                            : 0;
 
-                {discount > 0 && (
-                  <span className="absolute left-3 top-3 rounded-full bg-emerald-600 px-2 py-1 text-xs font-semibold text-white">
-                    {discount}% OFF
-                  </span>
-                )}
+                    return (
+                        <div
+                            key={product._id}
+                            onClick={() => viewProduct(product.slug)}
+                            className="group cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg"
+                        >
+                            {/* Image */}
 
-              </div>
+                            <div className="relative flex h-40 items-center justify-center overflow-hidden bg-emerald-50 sm:h-48">
+                                {variant?.images?.[0]?.url ||
+                                product.images?.[0]?.url ? (
+                                    <img
+                                        src={
+                                            variant?.images?.[0]?.url ||
+                                            product.images?.[0]?.url
+                                        }
+                                        alt={product.name}
+                                        className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                                    />
+                                ) : (
+                                    <span className="text-6xl">🛒</span>
+                                )}
 
-              <div className="p-4">
+                                {discount > 0 && (
+                                    <span className="absolute left-3 top-3 rounded-full bg-emerald-600 px-2 py-1 text-xs font-semibold text-white">
+                                        {discount}% OFF
+                                    </span>
+                                )}
+                            </div>
 
-                <p className="text-xs text-gray-500">
-                  {product.category?.name || "Grocery"}
-                </p>
+                            {/* Details */}
 
-                <h3 className="mt-1 font-semibold text-gray-900">
-                  {product.name}
-                </h3>
+                            <div className="p-3 sm:p-4">
+                                <p className="text-xs text-slate-500">
+                                    {product.category?.name || "Grocery"}
+                                </p>
 
-                <div className="mt-4 flex items-center justify-between gap-2">
+                                <h3 className="mt-1 truncate font-semibold text-slate-900">
+                                    {product.name}
+                                </h3>
 
-                  
+                                {variant && (
+                                    <p className="mt-1 text-xs text-slate-500">
+                                        {variant.name}
+                                    </p>
+                                )}
 
-                </div>
-              </div>
+                                <div className="mt-3 flex items-center gap-2">
+                                    <span className="font-bold text-slate-900">
+                                        ₹{price}
+                                    </span>
+
+                                    {originalPrice > price && (
+                                        <span className="text-xs text-slate-400 line-through">
+                                            ₹{originalPrice}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
-          );
-        })}
+        )
+    );
 
-      </div>
-    </section>
-  );
+    return (
+        <section className="mx-auto max-w-7xl px-5 py-10 md:px-10">
+
+            {!storeId ? (
+                <p className="py-12 text-center text-sm text-slate-500">
+                    Please select your delivery location.
+                </p>
+            ) : loading ? (
+                <p className="py-12 text-center text-sm text-slate-500">
+                    Loading products...
+                </p>
+            ) : (
+                <>
+                    {/* Featured Products */}
+
+                    <div className="mb-12">
+                        <div className="mb-7">
+                            <p className="mb-2 text-xs font-bold uppercase tracking-[2px] text-emerald-600">
+                                Handpicked for you
+                            </p>
+
+                            <h2 className="text-2xl font-extrabold text-slate-900 md:text-3xl">
+                                Featured Products
+                            </h2>
+
+                            <p className="mt-2 text-sm text-slate-500">
+                                Fresh picks for your everyday needs.
+                            </p>
+                        </div>
+
+                        {renderProducts(featuredProducts)}
+                    </div>
+
+                    {/* Popular Products */}
+
+                    <div>
+                        <div className="mb-7">
+                            <p className="mb-2 text-xs font-bold uppercase tracking-[2px] text-emerald-600">
+                                Customer Favorites
+                            </p>
+
+                            <h2 className="text-2xl font-extrabold text-slate-900 md:text-3xl">
+                                Popular Products
+                            </h2>
+
+                            <p className="mt-2 text-sm text-slate-500">
+                                Products loved by our customers.
+                            </p>
+                        </div>
+
+                        {renderProducts(popularProducts)}
+                    </div>
+                </>
+            )}
+
+        </section>
+    );
 }
