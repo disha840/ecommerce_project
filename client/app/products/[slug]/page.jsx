@@ -1,6 +1,5 @@
 
 
-
 "use client";
 
 import api from "../../../axios/api";
@@ -27,6 +26,7 @@ const Page = () => {
     const [variants, setVariants] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Get All Products And Variants
     const fetchVariants = async () => {
         try {
             if (!storeId || !slug) return;
@@ -58,18 +58,18 @@ const Page = () => {
 
                 setProducts(allProducts);
 
-                // Find Product From Current Variant Slug
+                // Find Current Variant From URL Slug
                 const currentInventory = inventoryData.find(
-                    (inventory) =>
-                        inventory.variant?.slug === slug
+                    (inventory) => inventory.variant?.slug === slug
                 );
 
                 if (currentInventory) {
                     const currentProduct = currentInventory.product;
 
+                    // Automatically Select Current Product
                     setSelectedProduct(currentProduct);
 
-                    // Get Variants Of Selected Product
+                    // Automatically Show Its Variants
                     const availableVariants = inventoryData
                         .filter(
                             (inventory) =>
@@ -90,12 +90,14 @@ const Page = () => {
             } else {
                 setProducts([]);
                 setVariants([]);
+                setSelectedProduct(null);
             }
 
         } catch (error) {
             console.log("Error fetching variants:", error);
             setProducts([]);
             setVariants([]);
+            setSelectedProduct(null);
         } finally {
             setLoading(false);
         }
