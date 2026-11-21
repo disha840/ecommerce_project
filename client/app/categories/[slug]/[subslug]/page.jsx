@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
@@ -85,17 +86,17 @@ function SubcategoryProducts() {
   }, [subslug, storeId]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] px-4 py-8 sm:px-6 lg:px-10">
+    <div className="min-h-screen bg-[#f8faf8] px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-7xl">
 
         {/* All Subcategories */}
         <div className="mb-8 border-b border-gray-200 pb-6">
 
-          <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-[#087F95]">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[2px] text-[#0c831f]">
             Shop by category
           </p>
 
-          <h1 className="text-2xl font-bold text-[#102A43] sm:text-3xl">
+          <h1 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
             Explore Subcategories
           </h1>
 
@@ -104,10 +105,10 @@ function SubcategoryProducts() {
               <Link
                 key={subcategory._id}
                 href={`/categories/${slug}/${subcategory.slug}`}
-                className={`rounded-full border px-5 py-2.5 text-sm font-semibold transition-all ${
+                className={`rounded-full border px-5 py-2.5 text-sm font-bold transition-all duration-200 ${
                   subslug === subcategory.slug
-                    ? "border-[#087F95] bg-[#087F95] text-white shadow-md"
-                    : "border-gray-200 bg-white text-[#102A43] hover:border-[#087F95] hover:text-[#087F95]"
+                    ? "border-[#0c831f] bg-[#0c831f] text-white shadow-md shadow-green-900/10"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-[#0c831f] hover:text-[#0c831f]"
                 }`}
               >
                 {subcategory.name}
@@ -120,11 +121,11 @@ function SubcategoryProducts() {
         {/* Products Heading */}
         <div className="mb-8 flex flex-col justify-between gap-3 border-b border-gray-200 pb-5 sm:flex-row sm:items-center">
           <div>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-[#087F95]">
+            <p className="mb-2 text-xs font-bold uppercase tracking-[2px] text-[#0c831f]">
               Selected Subcategory
             </p>
 
-            <h2 className="text-2xl font-bold text-[#102A43] sm:text-3xl">
+            <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
               Products
             </h2>
 
@@ -135,7 +136,7 @@ function SubcategoryProducts() {
 
           {!loading && (
             <div className="flex items-center gap-2 text-sm text-gray-500">
-              <FiShoppingBag size={18} className="text-[#087F95]" />
+              <FiShoppingBag size={18} className="text-[#0c831f]" />
               <span>{products.length} Products</span>
             </div>
           )}
@@ -145,7 +146,7 @@ function SubcategoryProducts() {
           <div className="rounded-2xl border border-gray-200 bg-white px-4 py-16 text-center">
             <FiShoppingBag className="mx-auto mb-4 text-4xl text-gray-300" />
 
-            <h2 className="text-lg font-semibold text-[#102A43]">
+            <h2 className="text-lg font-semibold text-gray-900">
               Select a store
             </h2>
 
@@ -158,7 +159,7 @@ function SubcategoryProducts() {
 
           <div className="flex min-h-[40vh] items-center justify-center">
             <div className="text-center">
-              <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#087F95]" />
+              <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#0c831f]" />
               <p className="mt-4 text-sm font-medium text-gray-500">
                 Loading products...
               </p>
@@ -167,12 +168,12 @@ function SubcategoryProducts() {
 
         ) : products.length === 0 ? (
 
-          <div className="rounded-2xl border border-gray-200 bg-white px-4 py-16 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D7F2F6] text-[#087F95]">
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-white px-4 py-16 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50 text-[#0c831f]">
               <FiShoppingBag size={30} />
             </div>
 
-            <h2 className="mt-5 text-lg font-semibold text-[#102A43]">
+            <h2 className="mt-5 text-lg font-bold text-gray-900">
               No products found
             </h2>
 
@@ -189,10 +190,10 @@ function SubcategoryProducts() {
               <Link
                 href={`/products/${product.slug}`}
                 key={product._id}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-[#22B8CF] hover:shadow-lg"
+                className="group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-green-100 hover:shadow-xl hover:shadow-green-950/5"
               >
 
-                <div className="relative flex h-36 items-center justify-center bg-[#F8FAFC] p-3 sm:h-44">
+                <div className="relative flex h-36 items-center justify-center bg-green-50 p-3 sm:h-44">
 
                   {product.images?.[0]?.url ? (
                     <Image
@@ -213,7 +214,7 @@ function SubcategoryProducts() {
 
                 <div className="flex flex-1 flex-col p-3 sm:p-4">
 
-                  <h2 className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-[#102A43] sm:text-base">
+                  <h2 className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-gray-900 transition-colors group-hover:text-[#0c831f] sm:text-base">
                     {product.name}
                   </h2>
 
@@ -224,11 +225,11 @@ function SubcategoryProducts() {
                   )}
 
                   <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-3">
-                    <span className="text-xs font-medium text-[#087F95]">
+                    <span className="text-xs font-bold text-[#0c831f]">
                       View Product
                     </span>
 
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#D7F2F6] text-[#087F95] transition group-hover:bg-[#087F95] group-hover:text-white">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-green-50 text-[#0c831f] transition group-hover:bg-[#0c831f] group-hover:text-white">
                       <FiArrowRight size={15} />
                     </span>
                   </div>

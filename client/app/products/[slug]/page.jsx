@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import api from "../../../axios/api";
@@ -19,6 +20,10 @@ const Page = () => {
     const storeId = store?._id;
     const user = useSelector((state) => state.auth.user);
 
+    const [inventories, setInventories] = useState([]);
+    const [products, setProducts] = useState([]);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+
     const [variants, setVariants] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -31,28 +36,88 @@ const Page = () => {
             const response = await api.get(`/inventory/store/${storeId}`);
 
             if (response.data.success) {
-                const availableVariants = response.data.inventories
-                    .filter((inventory) =>
-                        inventory.product?.slug === slug &&
-                        inventory.variant
-                    )
-                    .map((inventory) => ({
-                        ...inventory.variant,
-                        product: inventory.product,
-                        availableQuantity: inventory.availableQuantity
-                    }));
+                const inventoryData = response.data.inventories || [];
 
-                setVariants(availableVariants);
+                setInventories(inventoryData);
+
+                // Get All Unique Products
+                const allProducts = [];
+
+                inventoryData.forEach((inventory) => {
+                    const product = inventory.product;
+
+                    if (
+                        product &&
+                        !allProducts.some(
+                            (item) => item._id === product._id
+                        )
+                    ) {
+                        allProducts.push(product);
+                    }
+                });
+
+                setProducts(allProducts);
+
+                // Find Product From Current Variant Slug
+                const currentInventory = inventoryData.find(
+                    (inventory) =>
+                        inventory.variant?.slug === slug
+                );
+
+                if (currentInventory) {
+                    const currentProduct = currentInventory.product;
+
+                    setSelectedProduct(currentProduct);
+
+                    // Get Variants Of Selected Product
+                    const availableVariants = inventoryData
+                        .filter(
+                            (inventory) =>
+                                inventory.product?._id === currentProduct?._id &&
+                                inventory.variant
+                        )
+                        .map((inventory) => ({
+                            ...inventory.variant,
+                            product: inventory.product,
+                            availableQuantity: inventory.availableQuantity
+                        }));
+
+                    setVariants(availableVariants);
+                } else {
+                    setSelectedProduct(null);
+                    setVariants([]);
+                }
             } else {
+                setProducts([]);
                 setVariants([]);
             }
 
         } catch (error) {
             console.log("Error fetching variants:", error);
+            setProducts([]);
             setVariants([]);
         } finally {
             setLoading(false);
         }
+    };
+
+    // Product Click
+    const handleProductClick = (product) => {
+        setSelectedProduct(product);
+
+        const availableVariants = inventories
+            .filter(
+                (inventory) =>
+                    inventory.product?._id === product._id &&
+                    inventory.variant
+            )
+            .map((inventory) => ({
+                ...inventory.variant,
+                product: inventory.product,
+                availableQuantity: inventory.availableQuantity
+            }));
+
+        setVariants(availableVariants);
     };
 
     useEffect(() => {
@@ -105,6 +170,38 @@ const Page = () => {
         <section className="min-h-screen bg-slate-50">
             <div className="mx-auto max-w-7xl px-5 py-12 md:px-10">
 
+                {/* All Products */}
+
+                <div className="mb-12">
+                    <div className="mb-6">
+                        <p className="mb-2 text-sm font-bold uppercase tracking-[3px] text-emerald-600">
+                            Explore Products
+                        </p>
+
+                        <h1 className="text-2xl font-extrabold text-slate-900 md:text-3xl">
+                            All Products
+                        </h1>
+
+                        <div className="mt-4 h-1 w-16 rounded-full bg-emerald-500"></div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                        {products.map((product) => (
+                            <button
+                                key={product._id}
+                                onClick={() => handleProductClick(product)}
+                                className={`rounded-xl border px-5 py-3 text-sm font-bold transition ${
+                                    selectedProduct?._id === product._id
+                                        ? "border-emerald-600 bg-emerald-600 text-white"
+                                        : "border-slate-200 bg-white text-slate-700 hover:border-emerald-500 hover:text-emerald-700"
+                                }`}
+                            >
+                                {product.name}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 {/* Heading */}
 
                 <div className="mb-10 text-center">
@@ -143,7 +240,7 @@ const Page = () => {
                     <>
                         <div className="mb-6 flex items-center justify-between">
                             <h2 className="text-xl font-bold text-slate-800">
-                                Available Options
+                                {selectedProduct?.name} - Available Options
                             </h2>
 
                             <span className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
