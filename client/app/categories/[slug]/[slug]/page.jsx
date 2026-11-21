@@ -9,8 +9,9 @@ import { useSelector } from "react-redux";
 import { FiShoppingBag, FiArrowRight } from "react-icons/fi";
 import api from "@/axios/api";
 
+
 function SubcategoryProducts() {
-  const { subId } = useParams();
+  const { slug } = useParams();
 
   const selectedStore = useSelector(
     (state) => state.store.selectedStore
@@ -31,7 +32,7 @@ function SubcategoryProducts() {
         setProducts([]);
 
         const res = await api.get(
-          `/inventory/store/${storeId}/subcategory/${subId}/products`
+          `/inventory/store/${storeId}/subcategory/${slug}/products`
         );
 
         setProducts(res.data.products || []);
@@ -43,13 +44,13 @@ function SubcategoryProducts() {
       }
     };
 
-    if (subId && storeId) {
+    if (slug && storeId) {
       fetchProducts();
     } else {
       setProducts([]);
       setLoading(false);
     }
-  }, [subId, storeId]);
+  }, [slug, storeId]);
 
   if (loading) {
     return (
@@ -66,7 +67,6 @@ function SubcategoryProducts() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] px-4 py-8 sm:px-6 lg:px-10">
-
       <div className="mx-auto max-w-7xl">
 
         {/* Page Heading */}

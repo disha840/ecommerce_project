@@ -1,5 +1,7 @@
 
 
+
+
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
@@ -12,17 +14,18 @@ import { useSelector } from "react-redux";
 function SubcategoriesPage() {
     const { slug } = useParams();
 
-    console.log("myslug",slug)
+    console.log("myslug", slug);
 
     const store = useSelector((state) => state.store.selectedStore);
 
-    console.log("mystore",store)
+    console.log("mystore", store);
 
     const [subcategories, setSubcategories] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchSubcategories = async () => {
-        console.log("hello>>>>>>>>>")
+        console.log("hello>>>>>>>>>");
+
         try {
             if (!store?._id || !slug) {
                 setSubcategories([]);
@@ -34,7 +37,8 @@ function SubcategoriesPage() {
             const res = await api.get(
                 `/inventory/store-subcategories/${store._id}/${slug}`
             );
-            console.log("my data res",res.data)
+
+            console.log("my data res", res.data);
 
             if (res.data.success && Array.isArray(res.data.subcategories)) {
                 setSubcategories(res.data.subcategories);
@@ -101,7 +105,7 @@ function SubcategoriesPage() {
                         {subcategories.map((subcategory) => (
                             <Link
                                 key={subcategory._id}
-                                href={`/categories/${id}/${subcategory._id}`}
+                                href={`/categories/${slug}/${subcategory.slug}`}
                                 className="group overflow-hidden rounded-2xl border border-gray-100 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-green-100 hover:shadow-xl hover:shadow-green-950/5"
                             >
                                 <div className="relative aspect-16/10 overflow-hidden bg-green-50">
@@ -158,7 +162,6 @@ function SubcategoriesPage() {
 
                 ) : (
                     <div className="rounded-2xl border border-dashed border-gray-200 bg-white px-5 py-16 text-center">
-
                         <h3 className="mt-4 text-lg font-bold text-gray-900">
                             No Subcategories found
                         </h3>

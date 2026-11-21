@@ -14,7 +14,7 @@ router.get(
 );
 
 router.get(
-    "/store/:storeId/subcategory/:subId/products",
+    "/store/:storeId/subcategory/:slug/products",
     getStoreSubcategoryProducts
 );
 

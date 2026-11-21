@@ -399,17 +399,15 @@ const getStoreSubcategories = async (req, res) => {
 };
 
 
+
 const getStoreSubcategoryProducts = async (req, res) => {
     try {
-        const { storeId, subId } = req.params;
+        const { storeId, slug } = req.params;
 
-        if (
-            !mongoose.Types.ObjectId.isValid(storeId) ||
-            !mongoose.Types.ObjectId.isValid(subId)
-        ) {
+        if (!mongoose.Types.ObjectId.isValid(storeId)) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid Store ID or Subcategory ID"
+                message: "Invalid Store ID"
             });
         }
 
@@ -423,7 +421,7 @@ const getStoreSubcategoryProducts = async (req, res) => {
         }
 
         const existingSubcategory = await Subcategory.findOne({
-            _id: subId,
+            slug: slug,
             status: "ACTIVE"
         });
 
@@ -444,12 +442,12 @@ const getStoreSubcategoryProducts = async (req, res) => {
         // GET PRODUCTS OF SELECTED SUBCATEGORY
         const products = await Product.find({
             _id: { $in: productIds },
-            subcategory: subId
+            subcategory: existingSubcategory._id
         })
-        .populate("category", "name")
-        .populate("subcategory", "name")
-        .populate("brand", "name")
-        .sort({ createdAt: -1 });
+            .populate("category", "name")
+            .populate("subcategory", "name")
+            .populate("brand", "name")
+            .sort({ createdAt: -1 });
 
         return res.status(200).json({
             success: true,
@@ -465,6 +463,7 @@ const getStoreSubcategoryProducts = async (req, res) => {
         });
     }
 };
+
 
 module.exports = {
     createInventory,getInventories,getAvailableStoreInventory,getStoreCategories,getStoreSubcategories,getStoreSubcategoryProducts
