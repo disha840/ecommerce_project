@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
@@ -9,7 +10,7 @@ import { FiShoppingBag, FiArrowRight } from "react-icons/fi";
 import api from "@/axios/api";
 
 function SubcategoryProducts() {
-  const { subslug } = useParams();
+  const { slug, subslug } = useParams();
 
   const selectedStore = useSelector(
     (state) => state.store.selectedStore
@@ -21,8 +22,41 @@ function SubcategoryProducts() {
       : selectedStore;
 
   const [products, setProducts] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetch all subcategories of selected category
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      try {
+        setSubcategories([]);
+
+        if (!storeId || !slug) {
+          return;
+        }
+
+        const res = await api.get(
+          `/inventory/store-subcategories/${storeId}/${slug}`
+        );
+
+        if (
+          res.data.success &&
+          Array.isArray(res.data.subcategories)
+        ) {
+          setSubcategories(res.data.subcategories);
+        } else {
+          setSubcategories([]);
+        }
+      } catch (error) {
+        console.log("Subcategories fetch error:", error);
+        setSubcategories([]);
+      }
+    };
+
+    fetchSubcategories();
+  }, [slug, storeId]);
+
+  // Fetch products of selected subcategory
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -50,42 +84,61 @@ function SubcategoryProducts() {
     }
   }, [subslug, storeId]);
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#087F95]" />
-          <p className="mt-4 text-sm font-medium text-gray-500">
-            Loading products...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#F8FAFC] px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-7xl">
 
+        {/* All Subcategories */}
+        <div className="mb-8 border-b border-gray-200 pb-6">
+
+          <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-[#087F95]">
+            Shop by category
+          </p>
+
+          <h1 className="text-2xl font-bold text-[#102A43] sm:text-3xl">
+            Explore Subcategories
+          </h1>
+
+          <div className="mt-5 flex flex-wrap gap-3">
+            {subcategories.map((subcategory) => (
+              <Link
+                key={subcategory._id}
+                href={`/categories/${slug}/${subcategory.slug}`}
+                className={`rounded-full border px-5 py-2.5 text-sm font-semibold transition-all ${
+                  subslug === subcategory.slug
+                    ? "border-[#087F95] bg-[#087F95] text-white shadow-md"
+                    : "border-gray-200 bg-white text-[#102A43] hover:border-[#087F95] hover:text-[#087F95]"
+                }`}
+              >
+                {subcategory.name}
+              </Link>
+            ))}
+          </div>
+
+        </div>
+
+        {/* Products Heading */}
         <div className="mb-8 flex flex-col justify-between gap-3 border-b border-gray-200 pb-5 sm:flex-row sm:items-center">
           <div>
             <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-[#087F95]">
-              Shop by category
+              Selected Subcategory
             </p>
 
-            <h1 className="text-2xl font-bold text-[#102A43] sm:text-3xl">
+            <h2 className="text-2xl font-bold text-[#102A43] sm:text-3xl">
               Products
-            </h1>
+            </h2>
 
             <p className="mt-2 text-sm text-gray-500">
               Explore products available in this subcategory.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <FiShoppingBag size={18} className="text-[#087F95]" />
-            <span>{products.length} Products</span>
-          </div>
+          {!loading && (
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <FiShoppingBag size={18} className="text-[#087F95]" />
+              <span>{products.length} Products</span>
+            </div>
+          )}
         </div>
 
         {!storeId ? (
@@ -100,6 +153,18 @@ function SubcategoryProducts() {
               Please select a store to view available products.
             </p>
           </div>
+
+        ) : loading ? (
+
+          <div className="flex min-h-[40vh] items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#087F95]" />
+              <p className="mt-4 text-sm font-medium text-gray-500">
+                Loading products...
+              </p>
+            </div>
+          </div>
+
         ) : products.length === 0 ? (
 
           <div className="rounded-2xl border border-gray-200 bg-white px-4 py-16 text-center">
