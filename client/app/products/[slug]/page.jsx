@@ -58,22 +58,20 @@ const Page = () => {
 
                 setProducts(allProducts);
 
-                // Find Current Variant From URL Slug
-                const currentInventory = inventoryData.find(
-                    (inventory) => inventory.variant?.slug === slug
-                );
+                // Find Product Using URL Slug
+                const currentProduct = inventoryData.find(
+                    (inventory) => inventory.product?.slug === slug
+                )?.product;
 
-                if (currentInventory) {
-                    const currentProduct = currentInventory.product;
-
-                    // Automatically Select Current Product
+                if (currentProduct) {
+                    // Automatically Select Product
                     setSelectedProduct(currentProduct);
 
                     // Automatically Show Its Variants
                     const availableVariants = inventoryData
                         .filter(
                             (inventory) =>
-                                inventory.product?._id === currentProduct?._id &&
+                                inventory.product?._id === currentProduct._id &&
                                 inventory.variant
                         )
                         .map((inventory) => ({
