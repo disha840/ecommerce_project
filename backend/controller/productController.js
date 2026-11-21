@@ -171,6 +171,7 @@ const updateProduct = async (req, res) => {
       brand,
       tags,
       isFeatured,
+      isPopular,
       isActive,
       existingImages,
     } = req.body;
@@ -190,6 +191,10 @@ const updateProduct = async (req, res) => {
 
     if (isFeatured !== undefined) {
       product.isFeatured = isFeatured === "true" || isFeatured === true;
+    }
+
+    if (isPopular !== undefined) {
+      product.isPopular = isPopular === "true" || isPopular === true;
     }
 
     if (isActive !== undefined) {
