@@ -331,15 +331,14 @@ const getStoreCategories = async (req, res) => {
 
 const getStoreSubcategories = async (req, res) => {
     try {
-        const { storeId, categoryId } = req.params;
+        const { storeId, categorySlug } = req.params;
 
-        if (
-            !mongoose.Types.ObjectId.isValid(storeId) ||
-            !mongoose.Types.ObjectId.isValid(categoryId)
-        ) {
+        console.log(">>>>>>>>>>>>")
+
+        if (!mongoose.Types.ObjectId.isValid(storeId)) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid Store ID or Category ID"
+                message: "Invalid Store ID"
             });
         }
 
@@ -352,10 +351,10 @@ const getStoreSubcategories = async (req, res) => {
             });
         }
 
-        // CHECK CATEGORY
+        // CHECK CATEGORY USING SLUG
         const existingCategory = await Category.findOne({
-            _id: categoryId,
-            status: "ACTIVE"
+            slug: categorySlug,
+            // status: "ACTIVE"
         });
 
         if (!existingCategory) {
@@ -375,7 +374,7 @@ const getStoreSubcategories = async (req, res) => {
         // GET SUBCATEGORIES OF AVAILABLE PRODUCTS
         const subcategoryIds = await Product.find({
             _id: { $in: productIds },
-            category: categoryId
+            category: existingCategory._id
         }).distinct("subcategory");
 
         // GET ACTIVE SUBCATEGORIES

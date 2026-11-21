@@ -9,7 +9,7 @@ router.get("/getinventories",auth,checkPermission("inventory","read"),getInvento
 router.get("/store/:storeId", getAvailableStoreInventory);
 router.get("/store-categories/:storeId", getStoreCategories);
 router.get(
-    "/store-subcategories/:storeId/:categoryId",
+    "/store-subcategories/:storeId/:categorySlug",
     getStoreSubcategories
 );
 

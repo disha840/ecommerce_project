@@ -57,7 +57,7 @@ export default function CategoriesPage() {
 
     // CATEGORY CLICK
     const handleCategoryClick = (category) => {
-        router.push(`/categories/${category._id}`);
+        router.push(`/categories/${category.slug}`);
     };
 
     return (

@@ -10,16 +10,21 @@ import { useParams } from "next/navigation";
 import { useSelector } from "react-redux";
 
 function SubcategoriesPage() {
-    const { id } = useParams();
+    const { slug } = useParams();
+
+    console.log("myslug",slug)
 
     const store = useSelector((state) => state.store.selectedStore);
+
+    console.log("mystore",store)
 
     const [subcategories, setSubcategories] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchSubcategories = async () => {
+        console.log("hello>>>>>>>>>")
         try {
-            if (!store?._id || !id) {
+            if (!store?._id || !slug) {
                 setSubcategories([]);
                 return;
             }
@@ -27,9 +32,9 @@ function SubcategoriesPage() {
             setLoading(true);
 
             const res = await api.get(
-                `/inventory/store-subcategories/${store._id}/${id}`
+                `/inventory/store-subcategories/${store._id}/${slug}`
             );
-            console.log("res",res)
+            console.log("my data res",res.data)
 
             if (res.data.success && Array.isArray(res.data.subcategories)) {
                 setSubcategories(res.data.subcategories);
@@ -38,7 +43,7 @@ function SubcategoriesPage() {
             }
 
         } catch (error) {
-            console.log(error);
+            console.log(error.message);
             setSubcategories([]);
         } finally {
             setLoading(false);
@@ -47,7 +52,7 @@ function SubcategoriesPage() {
 
     useEffect(() => {
         fetchSubcategories();
-    }, [id, store?._id]);
+    }, [slug, store?._id]);
 
     return (
         <main className="min-h-screen bg-[#f8faf8]">
