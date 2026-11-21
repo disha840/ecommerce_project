@@ -100,7 +100,7 @@ export default function Category() {
 
             return (
               <Link
-                href={`/categories/${category._id}`}
+                href={`/categories/${category.slug}`}
                 key={category._id}
                 className="group cursor-pointer rounded-2xl border border-gray-100 bg-white p-4 text-center transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg"
               >
