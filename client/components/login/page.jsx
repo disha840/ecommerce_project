@@ -3,6 +3,7 @@
 
 "use client";
 import { useDispatch } from "react-redux";
+import { store } from "@/redux/store";
 import {setuser} from "../../redux/Slices/AuthSlice"
 import { useState } from "react";
 import axios from "axios";
@@ -27,6 +28,7 @@ export default function Login({ setShowLogin,setShowSignup }) {
     try {
       setLoading(true);
       setMessage("");
+      console.log("hello")
 
       const response = await api.post(
         "/api/login",
@@ -36,10 +38,11 @@ export default function Login({ setShowLogin,setShowSignup }) {
         },
         
       );
-      
+      console.log(response.data.user)
 
       if (response.data.status) {
         dispatch(setuser(response.data.user))
+        console.log("Redux State:", store.getState().auth);
   
 
         if (closeLogin) {

@@ -54,7 +54,10 @@ export default function Navbar() {
 
   // Check Login
   useEffect(() => {
-    dispatch(checkAuth());
+    dispatch(checkAuth()) 
+    .then((result) => {
+      console.log("CheckAuth Result:", result);
+    });
   }, [dispatch]);
 
   // Login hone par hi cart fetch hoga

@@ -14,7 +14,7 @@ export const checkAuth = createAsyncThunk(
           withCredentials: true,
         }
       );
- console.log("response.data.user",response.data.user)
+ console.log("response.data.user",response.data.decoded)
       return response.data.user;
     } catch (error) {
         console.log("error at redux",error.response.data.message)
@@ -36,6 +36,7 @@ const authSlice = createSlice({
 
   reducers: {
     setuser: (state, action) => {
+      console.log("action")
       state.user = action.payload;
       // state.isLoggedIn = true;
       state.error = null;

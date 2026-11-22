@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import api from "../../../axios/api";
@@ -36,9 +35,15 @@ const Page = () => {
       });
 
       dispatch(getCart());
+
+      alert("Product added to cart successfully");
       console.log(response.data);
     } catch (error) {
       console.log("Add to cart error:", error);
+
+      alert(
+        error.response?.data?.message || "Something went wrong"
+      );
     }
   };
 
