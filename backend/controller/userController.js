@@ -446,8 +446,8 @@ const customerLogin = async (req, res) => {
 
     res.cookie("clientToken", clientToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000
     });
 
@@ -472,6 +472,7 @@ const customerLogin = async (req, res) => {
     });
   }
 };
+
 const checkUserAuth = async (req, res) => {
   try {
     const token = req.cookies.clientToken;
@@ -528,11 +529,13 @@ console.log(decoded)
     });
   }
 };
+
+
 const logout = (req, res) => {
   res.clearCookie("clientToken", {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax"
+    secure: true,
+    sameSite: "none"
   });
 
   return res.status(200).json({
@@ -540,6 +543,7 @@ const logout = (req, res) => {
     message: "Logout successfully"
   });
 };
+
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;

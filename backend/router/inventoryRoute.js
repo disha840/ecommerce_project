@@ -6,7 +6,10 @@ const {createInventory,getInventories,getAvailableStoreInventory,getStoreCategor
 
 router.post("/createinventory",auth, checkPermission("inventory","create") ,createInventory);
 router.get("/getinventories",auth,checkPermission("inventory","read"),getInventories)
+
+
 router.get("/store/:storeId", getAvailableStoreInventory);
+
 router.get("/store-categories/:storeId", getStoreCategories);
 router.get(
     "/store-subcategories/:storeId/:categorySlug",

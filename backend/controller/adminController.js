@@ -322,7 +322,9 @@ const changePassword=async(req,res)=>{
 
 const checkAuth=(req,res)=>{
     const token=req.cookies.token;
-    // console.log("my tokan",token)
+    console.log("Token generated:", token);
+console.log("Cookie set");
+    
 
     if (!token) {
     return res.status(200).json({
