@@ -22,6 +22,7 @@ const CartPage = () => {
     
 
     const user = useSelector((state) => state.auth.user);
+    const authLoading = useSelector((state) => state.auth.loading);
 
     const [mounted, setMounted] = useState(false);
 
@@ -32,6 +33,8 @@ const CartPage = () => {
     // Login check and cart fetch
     useEffect(() => {
         setMounted(true);
+         if (authLoading) return;
+
 
         if (user === null) {
             router.replace("/");
@@ -41,7 +44,7 @@ const CartPage = () => {
         if (user) {
             dispatch(getCart());
         }
-    }, [dispatch, user, router]);
+    }, [dispatch, user, router,authLoading]);
 
     // Quantity update
     const handleQuantity = (id, quantity) => {
@@ -57,7 +60,7 @@ const CartPage = () => {
     };
 
     // Loading
-    if (!mounted || !user || loading) {
+    if (!mounted || !user || loading||authLoading) {
         return (
             <div className="flex min-h-screen items-center justify-center">
                 Loading cart...
