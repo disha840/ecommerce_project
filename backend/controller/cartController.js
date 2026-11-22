@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Cart=require("../models/cartModal");
 const CartItem=require("../models/cartItemModal") 
 const ProductVariant=require("../models/productVariant")
+const calculateDeliveryFee=require("./utils/deliveryFee")
 const addToCart = async (req, res) => {
     try {
         const { storeId } = req.params;
@@ -158,6 +159,7 @@ const addToCart = async (req, res) => {
     }
 };
 
+
 const getCart = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -170,7 +172,6 @@ const getCart = async (req, res) => {
             });
         }
 
-        // Find user's cart for selected store
         const cart = await Cart.findOne({
             user: userId,
             store: storeId
@@ -181,7 +182,12 @@ const getCart = async (req, res) => {
                 success: true,
                 message: "Cart is empty",
                 cart: null,
-                items: []
+                items: [],
+                subtotal: 0,
+                discount: 0,
+                deliveryFee: 0,
+                tax: 0,
+                totalAmount: 0
             });
         }
 
@@ -191,10 +197,36 @@ const getCart = async (req, res) => {
             .populate("product")
             .populate("variant");
 
+        let subtotal = 0;
+
+        items.forEach((item) => {
+            const price = Number(item.variant?.sellingPrice || 0);
+            const quantity = Number(item.quantity || 0);
+
+            subtotal += price * quantity;
+        });
+
+        subtotal = Number(subtotal.toFixed(2));
+
+        const discount = 0;
+        const deliveryFee = calculateDeliveryFee(subtotal);
+        const tax = 0;
+
+        const totalAmount = Number(
+            (subtotal - discount + deliveryFee + tax).toFixed(2)
+        );
+
         return res.status(200).json({
             success: true,
             message: "Cart fetched successfully",
-            cart,
+            cart: {
+                ...cart.toObject(),
+                subtotal,
+                discount,
+                deliveryFee,
+                tax,
+                totalAmount
+            },
             items
         });
 
@@ -205,6 +237,7 @@ const getCart = async (req, res) => {
         });
     }
 };
+
 
 const updateCartQuantity = async (req, res) => {
     try {
