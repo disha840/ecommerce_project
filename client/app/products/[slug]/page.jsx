@@ -64,7 +64,6 @@ const Page = () => {
                 )?.product;
 
                 if (currentProduct) {
-                    // Automatically Select Product
                     setSelectedProduct(currentProduct);
 
                     // Automatically Show Its Variants
@@ -143,16 +142,10 @@ const Page = () => {
 
             dispatch(getCart());
 
-            alert("Product added to cart successfully");
-
             console.log(response.data);
 
         } catch (error) {
             console.log("Add to cart error:", error);
-
-            alert(
-                error.response?.data?.message || "Something went wrong"
-            );
         }
     };
 
