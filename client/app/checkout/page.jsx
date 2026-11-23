@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -23,7 +22,6 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
 
-  // REDUX CART DATA
   const cartItems = useSelector((state) => state.cart.items);
   const cartDetails = useSelector((state) => state.cart.cart);
 
@@ -32,11 +30,9 @@ export default function CheckoutPage() {
     return total + (item.totalPrice || item.price * item.quantity);
   }, 0);
 
-  // DISCOUNT AND DELIVERY CHARGES
   const discount = cartDetails?.discount || 0;
   const deliveryFee = cartDetails?.deliveryFee || 0;
 
-  // FINAL TOTAL
   const totalAmount = subtotal - discount + deliveryFee;
 
   // GET PRODUCT IMAGE
@@ -124,12 +120,6 @@ export default function CheckoutPage() {
 
   // DELETE ADDRESS
   const handleDeleteAddress = async (addressId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this address?"
-    );
-
-    if (!confirmDelete) return;
-
     try {
       const response = await api.delete(
         `/address/delete/${addressId}`,
@@ -139,15 +129,10 @@ export default function CheckoutPage() {
       );
 
       if (response.data.success) {
-        alert(response.data.message || "Address deleted successfully");
         await getAddresses();
       }
     } catch (error) {
       console.log("DELETE ADDRESS ERROR:", error.response?.data);
-
-      alert(
-        error.response?.data?.message || "Failed to delete address"
-      );
     }
   };
 
@@ -168,12 +153,12 @@ export default function CheckoutPage() {
   // PLACE ORDER
   const handlePlaceOrder = async (method) => {
     if (!selectedAddress) {
-      alert("Please select a delivery address");
+      console.log("Please select a delivery address");
       return;
     }
 
     if (!cartItems || cartItems.length === 0) {
-      alert("Your cart is empty");
+      console.log("Your cart is empty");
       return;
     }
 
@@ -195,8 +180,6 @@ export default function CheckoutPage() {
         );
 
         if (response.data.success) {
-          alert(response.data.message || "Order placed successfully");
-
           await dispatch(getCart());
           router.push("/orders");
         }
@@ -205,14 +188,12 @@ export default function CheckoutPage() {
       }
 
       // ONLINE PAYMENT
-
-      // Load Razorpay SDK
       const res = await loadScript(
         "https://checkout.razorpay.com/v1/checkout.js"
       );
 
       if (!res) {
-        alert("Razorpay SDK failed to load. Are you online?");
+        console.log("Razorpay SDK failed to load");
         setPlacingOrder(false);
         return;
       }
@@ -234,7 +215,7 @@ export default function CheckoutPage() {
       console.log("Created Online Order:", orderData);
 
       if (!orderData.success || !orderData.razorpay?.orderId) {
-        alert(orderData.message || "Failed to create online order");
+        console.log("Failed to create online order");
         setPlacingOrder(false);
         return;
       }
@@ -271,23 +252,14 @@ export default function CheckoutPage() {
             console.log("Payment Verification:", verifyData);
 
             if (verifyData.success) {
-              alert("Payment Successful! Order placed successfully.");
-
               await dispatch(getCart());
-
               router.push("/orders");
             } else {
-              alert(verifyData.message || "Payment verification failed");
+              console.log("Payment verification failed");
               setPlacingOrder(false);
             }
           } catch (error) {
             console.log("Verification Error:", error);
-
-            alert(
-              error.response?.data?.message ||
-              "Payment verification failed"
-            );
-
             setPlacingOrder(false);
           }
         },
@@ -315,12 +287,6 @@ export default function CheckoutPage() {
 
     } catch (error) {
       console.log("PLACE ORDER ERROR:", error);
-
-      alert(
-        error.response?.data?.message ||
-        "Failed to place order"
-      );
-
       setPlacingOrder(false);
     }
   };
@@ -385,7 +351,7 @@ export default function CheckoutPage() {
                     <div
                       key={address._id}
                       onClick={() => handleSelectAddress(address._id)}
-                      className={`relative border rounded-xl p-4 cursor-pointer transition-all duration-200 ${
+                      className={`relative flex flex-col border rounded-xl p-4 cursor-pointer transition-all duration-200 ${
                         selectedAddress === address._id
                           ? "border-emerald-600 bg-emerald-50/50 shadow-sm"
                           : "border-gray-200 hover:border-emerald-400 hover:shadow-sm"
@@ -437,6 +403,7 @@ export default function CheckoutPage() {
 
                       {/* ADDRESS DETAILS */}
                       <div className="text-sm text-gray-600 mt-3 space-y-1">
+
                         <p className="font-medium text-gray-800">
                           {address.name}
                         </p>
@@ -458,10 +425,11 @@ export default function CheckoutPage() {
                         <p>Pincode: {address.pincode || "-"}</p>
 
                         <p>Phone: {address.phone || "-"}</p>
+
                       </div>
 
                       {/* EDIT AND DELETE BUTTONS */}
-                      <div className="flex items-center gap-3 mt-5 pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-3 mt-auto pt-5">
 
                         <button
                           type="button"
@@ -548,6 +516,7 @@ export default function CheckoutPage() {
                 className="w-full mt-5 min-h-14 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 text-gray-600 hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50/40 transition"
               >
                 <span className="text-xl">+</span>
+
                 <span className="text-sm font-medium">
                   Add New Address
                 </span>
