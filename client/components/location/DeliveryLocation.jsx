@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -15,11 +16,9 @@ import {
 
 /*
  * Palette
- * Ink      #14213D  (dark surfaces, text, icons)
- * Marigold #FCA311  (primary action, accents)
- * Cream    #FFF8E8  (selected state)
- * Slate    Tailwind slate-* for neutrals
- * Chilli   red-600  (errors)
+ * Ink      #14213D
+ * Marigold #FCA311
+ * Cream    #FFF8E8
  */
 
 const formatPhotonSuggestion = (feature) => {
@@ -243,6 +242,10 @@ export default function DeliveryLocation() {
 
     const [location, setLocation] = useState("Select Location");
     const [locationReady, setLocationReady] = useState(false);
+
+    // Prevent location screen flash during initial reload.
+    const [locationInitialized, setLocationInitialized] = useState(false);
+
     const [locationLoading, setLocationLoading] = useState(true);
     const [locationModalOpen, setLocationModalOpen] = useState(false);
 
@@ -255,7 +258,7 @@ export default function DeliveryLocation() {
     const [suggestionError, setSuggestionError] = useState("");
     const [selectedSuggestion, setSelectedSuggestion] = useState(null);
 
-    // Find nearest store and save it in Redux
+    // Find nearest store and save location + store.
     const saveLocation = async (value) => {
         try {
             const response = await api.post("/store/nearest", {
@@ -267,13 +270,20 @@ export default function DeliveryLocation() {
                 throw new Error("Nearest store not found");
             }
 
-            // Save nearest store in Redux
-            dispatch(setSelectedStore(response.data.store));
+            const store = response.data.store;
 
-            // Save customer location only after finding a store
+            // Save nearest store in Redux.
+            dispatch(setSelectedStore(store));
+
+            // Save both location and store in sessionStorage.
             sessionStorage.setItem(
                 "quickkart_location",
                 JSON.stringify(value)
+            );
+
+            sessionStorage.setItem(
+                "quickkart_store",
+                JSON.stringify(store)
             );
 
             setLocation(value.label);
@@ -281,6 +291,7 @@ export default function DeliveryLocation() {
             setLocationModalOpen(false);
             setLocationError("");
             setLocationLoading(false);
+
             setManualAddress("");
             setSuggestions([]);
             setSelectedSuggestion(null);
@@ -315,6 +326,7 @@ export default function DeliveryLocation() {
         address.state ||
         "Selected Location";
 
+    // Get current location using browser Geolocation API.
     const requestCurrentLocation = () => {
         setLocationError("");
 
@@ -420,6 +432,7 @@ export default function DeliveryLocation() {
         }
     };
 
+    // Search manual address suggestions.
     useEffect(() => {
         const query = manualAddress.trim();
 
@@ -482,31 +495,61 @@ export default function DeliveryLocation() {
         };
     }, [manualAddress, selectedSuggestion]);
 
+    // Restore saved location and store on page reload.
     useEffect(() => {
         const savedLocation = sessionStorage.getItem("quickkart_location");
+        const savedStore = sessionStorage.getItem("quickkart_store");
 
-        if (savedLocation) {
-            try {
-                const parsed = JSON.parse(savedLocation);
+        let parsedLocation = null;
 
-                if (
-                    parsed?.label &&
-                    typeof parsed.latitude === "number" &&
-                    Number.isFinite(parsed.latitude) &&
-                    typeof parsed.longitude === "number" &&
-                    Number.isFinite(parsed.longitude)
-                ) {
-                    // Re-fetch nearest store on page reload
-                    saveLocation(parsed);
+        try {
+            if (savedLocation) {
+                parsedLocation = JSON.parse(savedLocation);
+            }
+
+            const validLocation =
+                parsedLocation?.label &&
+                typeof parsedLocation.latitude === "number" &&
+                Number.isFinite(parsedLocation.latitude) &&
+                typeof parsedLocation.longitude === "number" &&
+                Number.isFinite(parsedLocation.longitude);
+
+            if (validLocation && savedStore) {
+                const parsedStore = JSON.parse(savedStore);
+
+                if (parsedStore?._id) {
+                    // Restore location and store without calling GPS
+                    // or /store/nearest again.
+                    setLocation(parsedLocation.label);
+                    dispatch(setSelectedStore(parsedStore));
+
+                    setLocationReady(true);
+                    setLocationLoading(false);
+                    setLocationInitialized(true);
+
                     return;
                 }
-
-                sessionStorage.removeItem("quickkart_location");
-            } catch {
-                sessionStorage.removeItem("quickkart_location");
             }
+
+            // If only location exists, reuse it to fetch the store.
+            if (validLocation) {
+                setLocationInitialized(true);
+                saveLocation(parsedLocation);
+                return;
+            }
+
+            // Invalid saved data.
+            sessionStorage.removeItem("quickkart_location");
+            sessionStorage.removeItem("quickkart_store");
+        } catch (error) {
+            console.log("Saved location error:", error);
+
+            sessionStorage.removeItem("quickkart_location");
+            sessionStorage.removeItem("quickkart_store");
         }
 
+        // No saved location: request GPS for the first time.
+        setLocationInitialized(true);
         requestCurrentLocation();
 
         // Run only once when this component mounts.
@@ -579,7 +622,7 @@ export default function DeliveryLocation() {
             </div>
 
             {/* Mandatory Location Screen */}
-            {!locationReady && (
+            {locationInitialized && !locationReady && (
                 <div className="fixed inset-0 z-9999 flex flex-col overflow-y-auto bg-white md:flex-row">
                     {/* Brand panel */}
                     <div className="flex shrink-0 flex-col justify-between bg-[#14213D] px-6 py-6 text-white md:w-[44%] md:px-12 md:py-12">
@@ -588,7 +631,6 @@ export default function DeliveryLocation() {
                             Quick Kart
                         </div>
 
-                        {/* Radar: the one memorable element */}
                         <div
                             className="relative mx-auto my-10 hidden h-64 w-64 md:block"
                             aria-hidden="true"
@@ -658,7 +700,7 @@ export default function DeliveryLocation() {
                 </div>
             )}
 
-            {/* Change Location Modal (bottom sheet on mobile) */}
+            {/* Change Location Modal */}
             {locationReady && locationModalOpen && (
                 <div className="fixed inset-0 z-9999 flex items-end justify-center bg-[#14213D]/60 sm:items-center sm:px-4 sm:py-6">
                     <div className="max-h-full w-full overflow-y-auto rounded-t-3xl bg-white p-6 pb-8 shadow-2xl sm:max-w-md sm:rounded-3xl sm:pb-6">
