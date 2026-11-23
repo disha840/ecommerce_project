@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,6 +7,7 @@ import AddAddressModal from "@/components/AddAddressModal";
 import { getCart } from "@/redux/Slices/cartSlice";
 import api from "@/axios/api";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function CheckoutPage() {
   const store = useSelector((state) => state.store.selectedStore);
@@ -130,9 +132,12 @@ export default function CheckoutPage() {
 
       if (response.data.success) {
         await getAddresses();
+        toast.success("Address deleted successfully!");
       }
     } catch (error) {
-      console.log("DELETE ADDRESS ERROR:", error.response?.data);
+      toast.error(
+        error.response?.data?.message || "Failed to delete address"
+      );
     }
   };
 
@@ -153,12 +158,12 @@ export default function CheckoutPage() {
   // PLACE ORDER
   const handlePlaceOrder = async (method) => {
     if (!selectedAddress) {
-      console.log("Please select a delivery address");
+      toast.error("Please select a delivery address");
       return;
     }
 
     if (!cartItems || cartItems.length === 0) {
-      console.log("Your cart is empty");
+      toast.error("Your cart is empty");
       return;
     }
 
@@ -180,8 +185,15 @@ export default function CheckoutPage() {
         );
 
         if (response.data.success) {
+          toast.success("Order placed successfully!");
+
           await dispatch(getCart());
+
           router.push("/orders");
+        } else {
+          toast.error(
+            response.data.message || "Failed to place order"
+          );
         }
 
         return;
@@ -193,7 +205,7 @@ export default function CheckoutPage() {
       );
 
       if (!res) {
-        console.log("Razorpay SDK failed to load");
+        toast.error("Razorpay SDK failed to load");
         setPlacingOrder(false);
         return;
       }
@@ -215,7 +227,7 @@ export default function CheckoutPage() {
       console.log("Created Online Order:", orderData);
 
       if (!orderData.success || !orderData.razorpay?.orderId) {
-        console.log("Failed to create online order");
+        toast.error("Failed to create online order");
         setPlacingOrder(false);
         return;
       }
@@ -252,14 +264,23 @@ export default function CheckoutPage() {
             console.log("Payment Verification:", verifyData);
 
             if (verifyData.success) {
+              toast.success("Order placed successfully!");
+
               await dispatch(getCart());
+
               router.push("/orders");
             } else {
-              console.log("Payment verification failed");
+              toast.error("Payment verification failed");
               setPlacingOrder(false);
             }
           } catch (error) {
             console.log("Verification Error:", error);
+
+            toast.error(
+              error.response?.data?.message ||
+              "Payment verification failed"
+            );
+
             setPlacingOrder(false);
           }
         },
@@ -287,6 +308,11 @@ export default function CheckoutPage() {
 
     } catch (error) {
       console.log("PLACE ORDER ERROR:", error);
+
+      toast.error(
+        error.response?.data?.message || "Something went wrong"
+      );
+
       setPlacingOrder(false);
     }
   };

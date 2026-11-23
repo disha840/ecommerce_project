@@ -15,7 +15,7 @@ export const checkAuth = createAsyncThunk(
         }
       );
       console.log("Full response:", response.data);
- console.log("response.data.user",response.data.user)
+      console.log("response.data.user",response.data.user)
       return response.data.user;
     } catch (error) {
         console.log("error at redux",error.response.data.message)
