@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -62,11 +63,13 @@ const AddAddressModal = ({
       let response;
 
       if (address) {
-        response = await api.post(
+        // UPDATE ADDRESS
+        response = await api.put(
           `/address/edit-address/${address._id}`,
           formData
         );
       } else {
+        // ADD ADDRESS
         response = await api.post(
           "/address/add",
           formData
