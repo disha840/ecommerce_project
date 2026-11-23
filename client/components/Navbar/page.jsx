@@ -36,7 +36,7 @@ export default function Navbar() {
   const { showLogin, showSignup } = useSelector(
     (state) => state.ui
   );
-  const {selectedStore}=useSelector((state)=> state.store.selectedStore)
+  const store = useSelector((state) => state.store.selectedStore);
 
   const { items } = useSelector((state) => state.cart);
 
@@ -76,7 +76,7 @@ export default function Navbar() {
         return;
     }
 
-    if (!selectedStore?._id) {
+    if (!store?._id) {
         return;
     }
 
