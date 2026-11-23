@@ -36,6 +36,7 @@ export default function Navbar() {
   const { showLogin, showSignup } = useSelector(
     (state) => state.ui
   );
+  const {selectedStore}=useSelector((state)=> state.store.selectedStore)
 
   const { items } = useSelector((state) => state.cart);
 
