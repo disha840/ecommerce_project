@@ -75,10 +75,6 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: [
         "Placed",
-        "Confirmed",
-        "Processing",
-        "Packed",
-        "Out for Delivery",
         "Delivered",
         "Cancelled",
       ],

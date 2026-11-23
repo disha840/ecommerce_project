@@ -1843,6 +1843,138 @@ const getSingleOrder = async (req, res) => {
     }
 };
 
+const cancelOrder = async (req, res) => {
+    const session = await mongoose.startSession();
+
+    try {
+        const userId = req.user.id;
+        const { orderId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid order ID",
+            });
+        }
+
+        session.startTransaction();
+
+        // Find customer's own order
+        const order = await Order.findOne({
+            _id: orderId,
+            user: userId,
+        }).session(session);
+
+        if (!order) {
+            throw new Error("Order not found");
+        }
+
+        // Check order status
+        if (order.orderStatus === "Delivered") {
+            throw new Error("Delivered order cannot be cancelled");
+        }
+
+        if (order.orderStatus === "Cancelled") {
+            throw new Error("Order is already cancelled");
+        }
+
+        // Find delivery record
+        const delivery = await Delivery.findOne({
+            order: order._id,
+        }).session(session);
+
+        // Do not allow cancellation after partner assignment
+        if (delivery?.deliveryPartner) {
+            throw new Error(
+                "Order cannot be cancelled after delivery partner assignment"
+            );
+        }
+
+        // Get order items
+        const orderItems = await OrderItem.find({
+            order: order._id,
+        }).session(session);
+
+        if (!orderItems.length) {
+            throw new Error("Order items not found");
+        }
+
+        // Restore inventory
+        for (const item of orderItems) {
+            const inventoryUpdate = await StoreInventory.updateOne(
+                {
+                    store: order.store,
+                    product: item.product,
+                    variant: item.variant,
+                },
+                {
+                    $inc: {
+                        availableQuantity: item.quantity,
+                    },
+                },
+                { session }
+            );
+
+            if (inventoryUpdate.matchedCount !== 1) {
+                throw new Error(
+                    "Unable to restore inventory for an order item"
+                );
+            }
+        }
+
+        // Update delivery status
+        if (delivery) {
+            delivery.deliveryStatus = "cancelled";
+            delivery.deliveryOtp = undefined;
+
+            await delivery.save({ session });
+        }
+
+        // Update order status
+        order.orderStatus = "Cancelled";
+
+        await order.save({ session });
+
+        await session.commitTransaction();
+
+        return res.status(200).json({
+            success: true,
+            message: "Order cancelled successfully",
+            order,
+        });
+
+    } catch (error) {
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
+
+        console.log("CANCEL ORDER ERROR:", error);
+
+        let statusCode = 500;
+
+        if (
+            error.message === "Order not found"
+        ) {
+            statusCode = 404;
+        } else if (
+            error.message === "Delivered order cannot be cancelled" ||
+            error.message === "Order is already cancelled" ||
+            error.message === "Order cannot be cancelled after delivery partner assignment"
+        ) {
+            statusCode = 400;
+        }
+
+        return res.status(statusCode).json({
+            success: false,
+            message: error.message || "Unable to cancel order",
+        });
+
+    } finally {
+        await session.endSession();
+    }
+};
+
+
 
 
 
@@ -1856,6 +1988,7 @@ module.exports = {
     assignDeliveryPartner,
     PlaceOnlineOrder,
     verifyOnlinePayment,
-    getSingleOrder
+    getSingleOrder,
+    cancelOrder
 };
 
