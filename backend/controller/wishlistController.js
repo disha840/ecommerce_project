@@ -75,7 +75,6 @@ const getWishlist = async (req, res) => {
             });
         }
 
-        // Find user's wishlist
         const wishlist = await Wishlist.findOne({ user: userId });
 
         if (!wishlist) {
@@ -86,20 +85,27 @@ const getWishlist = async (req, res) => {
             });
         }
 
-        // Get wishlist items
         const wishlistItems = await WishlistItem.find({
             wishlist: wishlist._id,
         })
             .populate("product")
             .populate("variant");
 
-        // Check inventory for selected store
         const updatedWishlist = await Promise.all(
             wishlistItems.map(async (item) => {
+
+                if (!item.variant) {
+                    return {
+                        ...item.toObject(),
+                        isAvailable: false,
+                        availableQuantity: 0,
+                    };
+                }
 
                 const inventory = await Inventory.findOne({
                     store: storeId,
                     variant: item.variant._id,
+                    status: "active",
                 });
 
                 return {
@@ -131,7 +137,5 @@ const getWishlist = async (req, res) => {
         });
     }
 };
-
-
 
 module.exports = { addToWishlist,getWishlist };
