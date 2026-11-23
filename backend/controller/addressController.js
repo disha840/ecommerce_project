@@ -370,5 +370,102 @@ const setDefaultAddress = async (req, res) => {
         });
     }
 };
+const editAddress = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
 
-module.exports={addAddress,getAddresses,deleteAddress,setDefaultAddress}
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid address ID",
+            });
+        }
+
+        const {
+            type,
+            name,
+            phone,
+            houseNumber,
+            street,
+            landmark,
+            city,
+            state,
+            country,
+            pincode,
+        } = req.body;
+
+        const address = await Address.findOne({
+            _id: id,
+            user: userId,
+        });
+
+        if (!address) {
+            return res.status(404).json({
+                success: false,
+                message: "Address not found",
+            });
+        }
+
+        const fullAddress = [
+            houseNumber ?? address.houseNumber,
+            street ?? address.street,
+            city ?? address.city,
+            state ?? address.state,
+            pincode ?? address.pincode,
+            country ?? address.country,
+        ].filter(Boolean).join(", ");
+
+        // Generate updated location
+        const locationData = await geocodeAddress(
+            fullAddress,
+            landmark ?? address.landmark
+        );
+
+        if (!locationData) {
+            return res.status(400).json({
+                success: false,
+                message: "Unable to find location for this address. Please check your address.",
+            });
+        }
+
+        // Update address fields
+        address.type = type ?? address.type;
+        address.name = name ?? address.name;
+        address.phone = phone ?? address.phone;
+        address.houseNumber = houseNumber ?? address.houseNumber;
+        address.street = street ?? address.street;
+        address.landmark = landmark ?? address.landmark;
+        address.city = city ?? address.city;
+        address.state = state ?? address.state;
+        address.country = country ?? address.country;
+        address.pincode = pincode ?? address.pincode;
+
+        // Update coordinates
+        address.location = {
+            type: "Point",
+            coordinates: [
+                locationData.longitude,
+                locationData.latitude,
+            ],
+        };
+
+        await address.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Address updated successfully",
+            address,
+        });
+
+    } catch (error) {
+        console.log("Edit Address Error:", error.message);
+
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+module.exports={addAddress,getAddresses,deleteAddress,setDefaultAddress,editAddress}
