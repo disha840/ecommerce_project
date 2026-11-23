@@ -61,13 +61,27 @@ export default function Navbar() {
   }, [dispatch]);
 
   // Login hone par hi cart fetch hoga
+
+  // useEffect(() => {
+  //   if (user) {
+  //     dispatch(getCart());
+  //   } else {
+  //     dispatch(clearCart());
+  //   }
+  // }, [user, dispatch]);
   useEffect(() => {
-    if (user) {
-      dispatch(getCart());
-    } else {
-      dispatch(clearCart());
+    if (!user) {
+        dispatch(clearCart());
+        return;
     }
-  }, [user, dispatch]);
+
+    if (!selectedStore?._id) {
+        return;
+    }
+
+    dispatch(getCart());
+
+}, [user, selectedStore?._id, dispatch]);
 
   // Logout
   const handleLogout = async () => {

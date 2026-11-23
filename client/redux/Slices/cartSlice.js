@@ -21,6 +21,7 @@ export const getCart = createAsyncThunk(
 
         try {
             const response = await api.get(`/cart/get/${store._id}`);
+            console.log("GET CART RESPONSE:", response.data);
 
             return response.data;
 
