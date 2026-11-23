@@ -79,7 +79,14 @@ export default function ProfilePage() {
             );
 
             if (response.data.success) {
-                await getAddresses();
+                // Update only default status.
+                // Address cards will stay in the same position.
+                setAddresses((previousAddresses) =>
+                    previousAddresses.map((address) => ({
+                        ...address,
+                        isDefault: address._id === id
+                    }))
+                );
             }
         } catch (error) {
             console.log(error.response?.data?.message);
@@ -91,7 +98,6 @@ export default function ProfilePage() {
         (user?.lastName?.[0] || "") || "U";
 
     return (
-
         <div className="min-h-screen bg-green-50 p-6 md:p-10">
 
             {/* Edit Profile Modal */}
@@ -145,7 +151,7 @@ export default function ProfilePage() {
 
                         <button
                             onClick={() => setShowModal(true)}
-                            className="mt-6 w-full bg-emerald-700 text-white text-sm px-4 py-2 rounded-lg hover:bg-green-700"
+                            className="mt-6 w-full bg-emerald-700 text-white text-sm px-4 py-2.5 rounded-lg hover:bg-emerald-800 transition"
                         >
                             Edit Profile
                         </button>
@@ -169,7 +175,7 @@ export default function ProfilePage() {
 
                             <Link
                                 href="/orders"
-                                className="bg-emerald-700 text-white text-sm px-6 py-3 rounded-lg hover:bg-green-700 transition"
+                                className="bg-emerald-700 text-white text-sm px-6 py-3 rounded-lg hover:bg-emerald-800 transition"
                             >
                                 View My Orders →
                             </Link>
@@ -184,7 +190,6 @@ export default function ProfilePage() {
                 <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6">
 
                     <div className="pb-4 mb-6 border-b border-gray-200">
-
                         <h2 className="text-lg font-semibold text-gray-800">
                             Personal Information
                         </h2>
@@ -192,16 +197,13 @@ export default function ProfilePage() {
                         <p className="text-sm text-gray-500 mt-1">
                             Your personal account details
                         </p>
-
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
                         <InfoItem label="First Name" value={user?.firstName} />
                         <InfoItem label="Last Name" value={user?.lastName} />
                         <InfoItem label="Email Address" value={user?.email} />
                         <InfoItem label="Phone Number" value={user?.phone} />
-
                     </div>
 
                 </div>
@@ -223,9 +225,10 @@ export default function ProfilePage() {
 
                         <button
                             onClick={handleAddAddress}
-                            className="bg-emerald-700 text-white text-sm px-5 py-2.5 rounded-lg hover:bg-green-700"
+                            className="flex items-center justify-center gap-2 bg-emerald-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-emerald-800 transition"
                         >
-                            + Add New Address
+                            <span className="text-lg leading-none">+</span>
+                            Add New Address
                         </button>
 
                     </div>
@@ -246,53 +249,54 @@ export default function ProfilePage() {
                                     }}
                                     className={`border rounded-xl p-5 transition cursor-pointer ${
                                         address.isDefault
-                                            ? "border-emerald-500 bg-green-50/30"
-                                            : "border-gray-200 hover:border-emerald-500"
+                                            ? "border-emerald-500 bg-emerald-50/40"
+                                            : "border-gray-200 hover:border-emerald-400 hover:shadow-sm"
                                     }`}
                                 >
 
                                     {/* ADDRESS HEADER */}
                                     <div className="flex justify-between items-center mb-4">
 
-                                        <h3 className="font-semibold text-gray-800">
-                                            {address.type || "Address"}
-                                        </h3>
-
                                         <div className="flex items-center gap-2">
+                                            <h3 className="font-semibold text-gray-800">
+                                                {address.type || "Address"}
+                                            </h3>
 
                                             {address.isDefault && (
-                                                <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
-                                                    Default Address
+                                                <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">
+                                                    Default
                                                 </span>
                                             )}
-
-                                            {/* SET DEFAULT */}
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (!address.isDefault) {
-                                                        handleSetDefault(address._id);
-                                                    }
-                                                }}
-                                                disabled={address.isDefault}
-                                                title={
-                                                    address.isDefault
-                                                        ? "Default Address"
-                                                        : "Set as Default"
-                                                }
-                                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition ${
-                                                    address.isDefault
-                                                        ? "border-emerald-600 bg-emerald-600 cursor-default"
-                                                        : "border-gray-400 bg-white hover:border-emerald-600 cursor-pointer"
-                                                }`}
-                                            >
-                                                {address.isDefault && (
-                                                    <span className="w-2.5 h-2.5 rounded-full bg-white"></span>
-                                                )}
-                                            </button>
-
                                         </div>
+
+                                        {/* DEFAULT BUTTON */}
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+
+                                                if (!address.isDefault) {
+                                                    handleSetDefault(address._id);
+                                                }
+                                            }}
+                                            disabled={address.isDefault}
+                                            title={
+                                                address.isDefault
+                                                    ? "Default Address"
+                                                    : "Set as Default"
+                                            }
+                                            className={`flex items-center justify-center w-7 h-7 rounded-full border-2 transition ${
+                                                address.isDefault
+                                                    ? "border-emerald-600 bg-emerald-600"
+                                                    : "border-gray-300 bg-white hover:border-emerald-600 hover:bg-emerald-50"
+                                            }`}
+                                        >
+                                            {address.isDefault && (
+                                                <span className="text-white text-sm">
+                                                    ✓
+                                                </span>
+                                            )}
+                                        </button>
 
                                     </div>
 
@@ -343,30 +347,34 @@ export default function ProfilePage() {
                                             {address.pincode || "-"}
                                         </p>
 
-                                        {/* ACTION BUTTONS */}
-                                        <div className="flex items-center gap-5 mt-5 pt-4 border-t border-gray-100">
+                                    </div>
 
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleEditAddress(address);
-                                                }}
-                                                className="text-sm font-medium text-emerald-700 hover:underline"
-                                            >
-                                                Edit
-                                            </button>
+                                    {/* ACTION BUTTONS */}
+                                    <div className="flex items-center gap-3 mt-5 pt-4 border-t border-gray-100">
 
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDelete(address._id);
-                                                }}
-                                                className="text-sm font-medium text-red-600 hover:underline"
-                                            >
-                                                Delete
-                                            </button>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleEditAddress(address);
+                                            }}
+                                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm font-medium hover:bg-emerald-100 transition"
+                                        >
+                                            <span>✎</span>
+                                            Edit
+                                        </button>
 
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete(address._id);
+                                            }}
+                                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition"
+                                        >
+                                            <span>🗑</span>
+                                            Delete
+                                        </button>
 
                                     </div>
 
