@@ -32,6 +32,30 @@ const Page = () => {
     const [wishlistVariants, setWishlistVariants] = useState([]);
     const [wishlistLoading, setWishlistLoading] = useState(null);
 
+    // GET WISHLIST
+    const fetchWishlist = async () => {
+        try {
+            const response = await api.get("/wishlist/get", {
+                params: {
+                    storeId: storeId,
+                },
+            });
+
+            if (response.data.success) {
+                const wishlistItems = response.data.data || [];
+
+                const variantIds = wishlistItems
+                    .map((item) => item.variant?._id)
+                    .filter(Boolean);
+
+                setWishlistVariants(variantIds);
+            }
+
+        } catch (error) {
+            console.log("Get Wishlist Error:", error);
+        }
+    };
+
     // Get All Products And Variants
     const fetchVariants = async () => {
         try {
@@ -125,11 +149,21 @@ const Page = () => {
         setVariants(availableVariants);
     };
 
+    // FETCH VARIANTS
     useEffect(() => {
         if (slug && storeId) {
             fetchVariants();
         }
     }, [slug, storeId]);
+
+    // FETCH WISHLIST
+    useEffect(() => {
+        if (user && storeId) {
+            fetchWishlist();
+        } else {
+            setWishlistVariants([]);
+        }
+    }, [user, storeId]);
 
     // ADD TO CART
     const handleAddToCart = async (event, variant) => {
@@ -166,6 +200,11 @@ const Page = () => {
 
         if (!user) {
             return dispatch(setShowLogin(true));
+        }
+
+        // Already added variant
+        if (wishlistVariants.includes(variant._id)) {
+            return;
         }
 
         try {
@@ -324,7 +363,11 @@ const Page = () => {
                                             }
                                             disabled={wishlistLoading === variant._id}
                                             className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition hover:scale-110 disabled:opacity-50"
-                                            title="Add to Wishlist"
+                                            title={
+                                                wishlistVariants.includes(variant._id)
+                                                    ? "Already in Wishlist"
+                                                    : "Add to Wishlist"
+                                            }
                                         >
                                             <Heart
                                                 size={21}

@@ -93,8 +93,8 @@ export default function WishlistPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#F0FAFC] flex items-center justify-center">
-                <p className="text-[#087F95] font-medium">
+            <div className="min-h-screen bg-green-50 flex items-center justify-center">
+                <p className="text-emerald-700 font-medium">
                     Loading wishlist...
                 </p>
             </div>
@@ -103,7 +103,7 @@ export default function WishlistPage() {
 
 
     return (
-        <div className="min-h-screen bg-[#F0FAFC] py-8 px-4">
+        <div className="min-h-screen bg-green-50 py-8 px-4">
 
             <div className="max-w-6xl mx-auto">
 
@@ -112,15 +112,15 @@ export default function WishlistPage() {
 
                     <Heart
                         size={28}
-                        className="text-[#087F95]"
+                        className="text-emerald-700"
                     />
 
                     <div>
-                        <h1 className="text-2xl font-bold text-[#102A43]">
+                        <h1 className="text-2xl font-bold text-gray-800">
                             My Wishlist
                         </h1>
 
-                        <p className="text-sm text-[#627D98]">
+                        <p className="text-sm text-gray-500">
                             Your saved products
                         </p>
                     </div>
@@ -130,14 +130,14 @@ export default function WishlistPage() {
 
                 {!user ? (
 
-                    <div className="bg-white rounded-xl border border-[#D9E8EF] p-10 text-center">
+                    <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
 
                         <Heart
                             size={45}
-                            className="mx-auto text-[#22B8CF] mb-3"
+                            className="mx-auto text-emerald-600 mb-3"
                         />
 
-                        <h2 className="text-lg font-semibold text-[#102A43]">
+                        <h2 className="text-lg font-semibold text-gray-800">
                             Please login to view your wishlist
                         </h2>
 
@@ -145,14 +145,14 @@ export default function WishlistPage() {
 
                 ) : !store?._id ? (
 
-                    <div className="bg-white rounded-xl border border-[#D9E8EF] p-10 text-center">
+                    <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
 
                         <ShoppingBag
                             size={45}
-                            className="mx-auto text-[#22B8CF] mb-3"
+                            className="mx-auto text-emerald-600 mb-3"
                         />
 
-                        <h2 className="text-lg font-semibold text-[#102A43]">
+                        <h2 className="text-lg font-semibold text-gray-800">
                             Please select a store
                         </h2>
 
@@ -160,24 +160,24 @@ export default function WishlistPage() {
 
                 ) : wishlist.length === 0 ? (
 
-                    <div className="bg-white rounded-xl border border-[#D9E8EF] p-10 text-center">
+                    <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
 
                         <Heart
                             size={45}
-                            className="mx-auto text-[#22B8CF] mb-3"
+                            className="mx-auto text-emerald-600 mb-3"
                         />
 
-                        <h2 className="text-lg font-semibold text-[#102A43]">
+                        <h2 className="text-lg font-semibold text-gray-800">
                             Your wishlist is empty
                         </h2>
 
-                        <p className="text-[#627D98] text-sm mt-2">
+                        <p className="text-gray-500 text-sm mt-2">
                             Products you save will appear here.
                         </p>
 
                         <Link
                             href="/categories"
-                            className="inline-block mt-5 bg-[#087F95] hover:bg-[#066A7D] text-white px-6 py-2 rounded-lg transition"
+                            className="inline-block mt-5 bg-emerald-700 hover:bg-emerald-800 text-white px-6 py-2 rounded-lg transition"
                         >
                             Continue Shopping
                         </Link>
@@ -199,11 +199,11 @@ export default function WishlistPage() {
 
                                 <div
                                     key={item._id}
-                                    className="bg-white rounded-xl border border-[#D9E8EF] overflow-hidden hover:shadow-md transition"
+                                    className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition"
                                 >
 
                                     {/* PRODUCT IMAGE */}
-                                    <div className="relative h-48 bg-[#F0FAFC] flex items-center justify-center">
+                                    <div className="relative h-48 bg-emerald-50 flex items-center justify-center">
 
                                         {image ? (
 
@@ -217,7 +217,7 @@ export default function WishlistPage() {
 
                                             <ShoppingBag
                                                 size={45}
-                                                className="text-[#B0C9D4]"
+                                                className="text-emerald-300"
                                             />
 
                                         )}
@@ -226,13 +226,13 @@ export default function WishlistPage() {
                                         <button
                                             onClick={() => removeFromWishlist(item._id)}
                                             disabled={removingId === item._id}
-                                            className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:bg-[#D7F2F6] transition disabled:opacity-50"
+                                            className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:bg-emerald-50 transition disabled:opacity-50"
                                             title="Remove from wishlist"
                                         >
                                             <Heart
                                                 size={21}
-                                                fill="#087F95"
-                                                className="text-[#087F95]"
+                                                fill="#047857"
+                                                className="text-emerald-700"
                                             />
                                         </button>
 
@@ -242,15 +242,15 @@ export default function WishlistPage() {
                                     {/* PRODUCT DETAILS */}
                                     <div className="p-4">
 
-                                        <h2 className="font-semibold text-[#102A43]">
+                                        <h2 className="font-semibold text-gray-800">
                                             {product?.name}
                                         </h2>
 
-                                        <p className="text-sm text-[#627D98] mt-1">
+                                        <p className="text-sm text-gray-500 mt-1">
                                             {variant?.name}
                                         </p>
 
-                                        <p className="font-bold text-[#102A43] mt-3">
+                                        <p className="font-bold text-gray-800 mt-3">
                                             ₹{variant?.sellingPrice}
                                         </p>
 
@@ -258,7 +258,7 @@ export default function WishlistPage() {
                                         {/* AVAILABILITY */}
                                         {item.isAvailable ? (
 
-                                            <p className="text-sm text-[#087F95] mt-3 font-medium">
+                                            <p className="text-sm text-emerald-700 mt-3 font-medium">
                                                 In Stock
                                             </p>
 
@@ -273,7 +273,7 @@ export default function WishlistPage() {
 
                                         <Link
                                             href={`/variants/${variant?.slug}`}
-                                            className="block text-center mt-4 bg-[#087F95] hover:bg-[#066A7D] text-white py-2 rounded-lg transition"
+                                            className="block text-center mt-4 bg-emerald-700 hover:bg-emerald-800 text-white py-2 rounded-lg transition"
                                         >
                                             View Product
                                         </Link>
