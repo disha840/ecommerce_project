@@ -1,12 +1,15 @@
 
+
 "use client";
 
 import api from "../../../axios/api";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Heart } from "lucide-react";
 import { getCart } from "@/redux/Slices/cartSlice";
 import { setShowLogin } from "@/redux/Slices/uiSlice";
+import toast from "react-hot-toast";
 
 const Page = () => {
   const { slug } = useParams();
@@ -22,6 +25,69 @@ const Page = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // Wishlist states
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  // GET WISHLIST
+  const getWishlist = async (variantId) => {
+    try {
+      const response = await api.get("/wishlist/get", {
+        params: {
+          storeId: storeId,
+        },
+      });
+
+      if (response.data.success) {
+        const wishlistItems = response.data.data || [];
+
+        const isAdded = wishlistItems.some(
+          (item) => item.variant?._id === variantId
+        );
+
+        setIsWishlisted(isAdded);
+      }
+
+    } catch (error) {
+      console.log("Get Wishlist Error:", error);
+    }
+  };
+
+  // ADD TO WISHLIST
+  const handleAddToWishlist = async () => {
+    if (!user) {
+      return dispatch(setShowLogin(true));
+    }
+
+    if (isWishlisted || wishlistLoading) {
+      return;
+    }
+
+    try {
+      setWishlistLoading(true);
+
+      const response = await api.post("/wishlist/add", {
+        product: variant.product?._id || variant.product,
+        variant: variant._id,
+      });
+
+      if (response.data.success) {
+        setIsWishlisted(true);
+        toast.success("Product added to wishlist!");
+      }
+
+    } catch (error) {
+      console.log("Add to wishlist error:", error);
+
+      toast.error(
+        error.response?.data?.message || "Unable to add to wishlist"
+      );
+
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
   const handleAddToCart = async (variant) => {
     if (!user) {
       return dispatch(setShowLogin(true));
@@ -36,9 +102,14 @@ const Page = () => {
 
       dispatch(getCart());
 
+      toast.success("Product added to cart!");
+
       console.log(response.data);
     } catch (error) {
       console.log("Add to cart error:", error);
+      toast.error(
+        error.response?.data?.message || "Unable to add product to cart"
+      );
     }
   };
 
@@ -82,9 +153,11 @@ const Page = () => {
 
       setImages(imageUrls);
       setSelectedImage(0);
+
     } catch (error) {
       console.log("Get variant error:", error);
       setVariant(null);
+
     } finally {
       setLoading(false);
     }
@@ -95,6 +168,15 @@ const Page = () => {
       getVariant();
     }
   }, [slug, storeId]);
+
+  // CHECK IF VARIANT IS ALREADY IN WISHLIST
+  useEffect(() => {
+    if (user && storeId && variant?._id) {
+      getWishlist(variant._id);
+    } else {
+      setIsWishlisted(false);
+    }
+  }, [user, storeId, variant?._id]);
 
   if (loading) {
     return (
@@ -123,17 +205,39 @@ const Page = () => {
   const savings = variant.mrp - variant.sellingPrice;
 
   return (
-    <div className="min-h-screen from-emerald-50 to-gray-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-gray-50 p-8">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-100 md:grid-cols-2">
 
         {/* Images */}
         <div>
           <div className="relative flex h-96 items-center justify-center rounded-2xl bg-gray-50 p-6 ring-1 ring-gray-100">
+
             {variant.discountPercentage > 0 && (
-              <span className="absolute left-4 top-4 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white">
+              <span className="absolute left-4 top-4 z-10 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white">
                 {variant.discountPercentage}% OFF
               </span>
             )}
+
+            {/* Wishlist Heart */}
+            <button
+              onClick={handleAddToWishlist}
+              disabled={isWishlisted || wishlistLoading}
+              title={
+                isWishlisted
+                  ? "Already in Wishlist"
+                  : "Add to Wishlist"
+              }
+              className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md transition hover:scale-110 disabled:cursor-default"
+            >
+              <Heart
+                size={24}
+                className={
+                  isWishlisted
+                    ? "fill-red-500 text-red-500"
+                    : "text-gray-600 hover:text-red-500"
+                }
+              />
+            </button>
 
             {images.length > 0 ? (
               <img
@@ -225,10 +329,7 @@ const Page = () => {
           </div>
 
           <button
-            onClick={(event) => {
-              event.stopPropagation();
-              handleAddToCart(variant);
-            }}
+            onClick={() => handleAddToCart(variant)}
             className="mt-8 w-full rounded-xl bg-emerald-600 p-4 font-bold text-white shadow-lg hover:bg-emerald-700"
           >
             Add To Cart

@@ -271,12 +271,7 @@ export default function WishlistPage() {
                                         )}
 
 
-                                        <Link
-                                            href={`/variants/${variant?.slug}`}
-                                            className="block text-center mt-4 bg-emerald-700 hover:bg-emerald-800 text-white py-2 rounded-lg transition"
-                                        >
-                                            View Product
-                                        </Link>
+                                        
 
                                     </div>
 
