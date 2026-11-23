@@ -1,5 +1,6 @@
 const Wishlist = require("../models/wishlistModal");
 const WishlistItem = require("../models/wishlistItemModal");
+const Inventory = require("../models/inventoryModel");
 const user=require("../models/userModel")
 
 // ADD TO WISHLIST
@@ -62,4 +63,75 @@ const addToWishlist = async (req, res) => {
     }
 };
 
-module.exports = { addToWishlist };
+const getWishlist = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { storeId } = req.query;
+
+        if (!storeId) {
+            return res.status(400).json({
+                success: false,
+                message: "Store ID is required",
+            });
+        }
+
+        // Find user's wishlist
+        const wishlist = await Wishlist.findOne({ user: userId });
+
+        if (!wishlist) {
+            return res.status(200).json({
+                success: true,
+                message: "Wishlist is empty",
+                data: [],
+            });
+        }
+
+        // Get wishlist items
+        const wishlistItems = await WishlistItem.find({
+            wishlist: wishlist._id,
+        })
+            .populate("product")
+            .populate("variant");
+
+        // Check inventory for selected store
+        const updatedWishlist = await Promise.all(
+            wishlistItems.map(async (item) => {
+
+                const inventory = await Inventory.findOne({
+                    store: storeId,
+                    variant: item.variant._id,
+                });
+
+                return {
+                    ...item.toObject(),
+
+                    isAvailable: inventory
+                        ? inventory.availableQuantity > 0
+                        : false,
+
+                    availableQuantity: inventory
+                        ? inventory.availableQuantity
+                        : 0,
+                };
+            })
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Wishlist fetched successfully",
+            data: updatedWishlist,
+        });
+
+    } catch (error) {
+        console.log("Get Wishlist Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+
+
+
+module.exports = { addToWishlist,getWishlist };
