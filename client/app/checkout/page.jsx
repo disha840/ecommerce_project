@@ -93,6 +93,39 @@ export default function CheckoutPage() {
     getAddresses();
   }, []);
 
+
+const handleSelectAddress = async (addressId) => {
+  try {
+    const response = await api.put(
+      `/address/set-default/${addressId}`,
+      {},
+      {
+        withCredentials: true,
+      }
+    );
+
+    if (response.data.success) {
+      setSelectedAddress(addressId);
+
+      setAddresses((previousAddresses) =>
+        previousAddresses.map((address) => ({
+          ...address,
+          isDefault: address._id === addressId,
+        }))
+      );
+    }
+  } catch (error) {
+    console.log("SET DEFAULT ADDRESS ERROR:", error.response?.data);
+  }
+};
+
+
+
+
+
+
+
+
   const loadScript = (src) => {
     return new Promise((resolve) => {
       const script = document.createElement("script");
@@ -314,7 +347,7 @@ const handlePlaceOrder = async (method) => {
                   {addresses.map((address) => (
                     <div
                       key={address._id}
-                      onClick={() => setSelectedAddress(address._id)}
+                      onClick={() => handleSelectAddress(address._id)}
                       className={`relative border rounded-xl p-4 cursor-pointer transition ${
                         selectedAddress === address._id
                           ? "border-emerald-600 bg-green-50/40"
