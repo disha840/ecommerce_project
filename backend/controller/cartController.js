@@ -128,12 +128,13 @@ const addToCart = async (req, res) => {
         );
 
         cart.subtotal = subtotal;
+cart.deliveryFee = calculateDeliveryFee(subtotal);
 
-        cart.totalAmount =
-            subtotal -
-            cart.discount +
-            cart.deliveryFee +
-            cart.tax;
+cart.totalAmount =
+    subtotal -
+    cart.discount +
+    cart.deliveryFee +
+    cart.tax;
 
         await cart.save();
 
@@ -305,14 +306,15 @@ const updateCartQuantity = async (req, res) => {
             subtotal = subtotal + item.totalPrice;
         });
 
-        // Cart total update karo
+        
         cart.subtotal = subtotal;
+cart.deliveryFee = calculateDeliveryFee(subtotal);
 
-        cart.totalAmount =
-            subtotal -
-            cart.discount +
-            cart.deliveryFee +
-            cart.tax;
+cart.totalAmount =
+    subtotal -
+    cart.discount +
+    cart.deliveryFee +
+    cart.tax;
 
         await cart.save();
 
@@ -337,6 +339,7 @@ const updateCartQuantity = async (req, res) => {
         });
     }
 };
+
 const removeCartItem = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -394,12 +397,13 @@ const removeCartItem = async (req, res) => {
 
         // Cart total update karo
         cart.subtotal = subtotal;
+cart.deliveryFee = calculateDeliveryFee(subtotal);
 
-        cart.totalAmount =
-            subtotal -
-            cart.discount +
-            cart.deliveryFee +
-            cart.tax;
+cart.totalAmount =
+    subtotal -
+    cart.discount +
+    cart.deliveryFee +
+    cart.tax;
 
         await cart.save();
 
@@ -424,5 +428,6 @@ const removeCartItem = async (req, res) => {
         });
     }
 };
+
 
 module.exports={addToCart,getCart,updateCartQuantity,removeCartItem}
