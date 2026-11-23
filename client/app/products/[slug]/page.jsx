@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import api from "../../../axios/api";
@@ -30,6 +29,7 @@ const Page = () => {
 
     // Wishlist states
     const [wishlistVariants, setWishlistVariants] = useState([]);
+    const [wishlistItemIds, setWishlistItemIds] = useState({});
     const [wishlistLoading, setWishlistLoading] = useState(null);
 
     // GET WISHLIST
@@ -48,9 +48,17 @@ const Page = () => {
                     .map((item) => item.variant?._id)
                     .filter(Boolean);
 
-                setWishlistVariants(variantIds);
-            }
+                const itemIds = {};
 
+                wishlistItems.forEach((item) => {
+                    if (item.variant?._id) {
+                        itemIds[item.variant._id] = item._id;
+                    }
+                });
+
+                setWishlistVariants(variantIds);
+                setWishlistItemIds(itemIds);
+            }
         } catch (error) {
             console.log("Get Wishlist Error:", error);
         }
@@ -106,7 +114,7 @@ const Page = () => {
                         .map((inventory) => ({
                             ...inventory.variant,
                             product: inventory.product,
-                            availableQuantity: inventory.availableQuantity
+                            availableQuantity: inventory.availableQuantity,
                         }));
 
                     setVariants(availableVariants);
@@ -119,7 +127,6 @@ const Page = () => {
                 setVariants([]);
                 setSelectedProduct(null);
             }
-
         } catch (error) {
             console.log("Error fetching variants:", error);
             setProducts([]);
@@ -143,7 +150,7 @@ const Page = () => {
             .map((inventory) => ({
                 ...inventory.variant,
                 product: inventory.product,
-                availableQuantity: inventory.availableQuantity
+                availableQuantity: inventory.availableQuantity,
             }));
 
         setVariants(availableVariants);
@@ -162,6 +169,7 @@ const Page = () => {
             fetchWishlist();
         } else {
             setWishlistVariants([]);
+            setWishlistItemIds({});
         }
     }, [user, storeId]);
 
@@ -185,7 +193,6 @@ const Page = () => {
             toast.success("Product added to cart!");
 
             console.log(response.data);
-
         } catch (error) {
             console.log("Add to cart error:", error);
             toast.error(
@@ -194,7 +201,7 @@ const Page = () => {
         }
     };
 
-    // ADD TO WISHLIST
+    // ADD / REMOVE FROM WISHLIST
     const handleAddToWishlist = async (event, variant) => {
         event.stopPropagation();
 
@@ -202,35 +209,51 @@ const Page = () => {
             return dispatch(setShowLogin(true));
         }
 
-        // Already added variant
-        if (wishlistVariants.includes(variant._id)) {
-            return;
-        }
-
         try {
             setWishlistLoading(variant._id);
 
-            const response = await api.post("/wishlist/add", {
-                product: variant.product?._id,
-                variant: variant._id
-            });
+            // REMOVE FROM WISHLIST
+            if (wishlistVariants.includes(variant._id)) {
+                const wishlistItemId = wishlistItemIds[variant._id];
 
-            if (response.data.success) {
-                setWishlistVariants((previous) => [
-                    ...previous,
-                    variant._id
-                ]);
+                if (!wishlistItemId) {
+                    toast.error("Wishlist item not found");
+                    return;
+                }
 
-                toast.success("Product added to wishlist!");
+                await api.delete(`/wishlist/remove/${wishlistItemId}`);
+
+                setWishlistVariants((previous) =>
+                    previous.filter((id) => id !== variant._id)
+                );
+
+                setWishlistItemIds((previous) => {
+                    const updated = { ...previous };
+                    delete updated[variant._id];
+                    return updated;
+                });
+
+                toast.success("Product removed from wishlist!");
             }
 
+            // ADD TO WISHLIST
+            else {
+                const response = await api.post("/wishlist/add", {
+                    product: variant.product?._id,
+                    variant: variant._id,
+                });
+
+                if (response.data.success) {
+                    await fetchWishlist();
+                    toast.success("Product added to wishlist!");
+                }
+            }
         } catch (error) {
-            console.log("Add to wishlist error:", error);
+            console.log("Wishlist Error:", error);
 
             toast.error(
-                error.response?.data?.message || "Unable to add to wishlist"
+                error.response?.data?.message || "Unable to update wishlist"
             );
-
         } finally {
             setWishlistLoading(null);
         }
@@ -365,7 +388,7 @@ const Page = () => {
                                             className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition hover:scale-110 disabled:opacity-50"
                                             title={
                                                 wishlistVariants.includes(variant._id)
-                                                    ? "Already in Wishlist"
+                                                    ? "Remove from Wishlist"
                                                     : "Add to Wishlist"
                                             }
                                         >
