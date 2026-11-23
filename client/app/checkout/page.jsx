@@ -1,9 +1,9 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import AddAddressModal from "@/components/AddAddressModal";
-import { useDispatch } from "react-redux";
 import { getCart } from "@/redux/Slices/cartSlice";
 import api from "@/axios/api";
 import { useRouter } from "next/navigation";
@@ -11,14 +11,14 @@ import { useRouter } from "next/navigation";
 export default function CheckoutPage() {
   const store = useSelector((state) => state.store.selectedStore);
 
-
-  const router = useRouter()
-  console.log("Selected Store:", store);
-  console.log("Store ID:", store?._id);
+  const router = useRouter();
   const dispatch = useDispatch();
+
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState("");
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(null);
+
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [loading, setLoading] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
@@ -55,12 +55,6 @@ export default function CheckoutPage() {
 
     return null;
   };
-//   console.log("CART ITEMS:", cartItems);
-
-// cartItems.forEach((item) => {
-//   console.log("PRODUCT IMAGES:", item.product?.images);
-//   console.log("VARIANT IMAGES:", item.variant?.images);
-// });
 
   // GET ADDRESSES
   const getAddresses = async () => {
@@ -73,7 +67,9 @@ export default function CheckoutPage() {
 
       setAddresses(addressList);
 
-      const defaultAddress = addressList.find((address) => address.isDefault);
+      const defaultAddress = addressList.find(
+        (address) => address.isDefault
+      );
 
       if (defaultAddress) {
         setSelectedAddress(defaultAddress._id);
@@ -93,81 +89,139 @@ export default function CheckoutPage() {
     getAddresses();
   }, []);
 
+  // SELECT ADDRESS
+  const handleSelectAddress = async (addressId) => {
+    setSelectedAddress(addressId);
 
-const handleSelectAddress = async (addressId) => {
-  // Pehle UI update karo
-  setSelectedAddress(addressId);
+    setAddresses((previousAddresses) =>
+      previousAddresses.map((address) => ({
+        ...address,
+        isDefault: address._id === addressId,
+      }))
+    );
 
-  setAddresses((previousAddresses) =>
-    previousAddresses.map((address) => ({
-      ...address,
-      isDefault: address._id === addressId,
-    }))
-  );
+    try {
+      const response = await api.put(
+        `/address/set-default/${addressId}`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
 
-  // Phir backend mein default address update karo
-  try {
-    const response = await api.put(
-      `/address/set-default/${addressId}`,
-      {},
-      {
-        withCredentials: true,
+      console.log("Default Address Response:", response.data);
+
+      if (!response.data.success) {
+        console.log("Default address update failed");
       }
-    );
-
-    console.log("Default Address Response:", response.data);
-
-    if (!response.data.success) {
-      console.log("Default address update failed");
+    } catch (error) {
+      console.log(
+        "SET DEFAULT ADDRESS ERROR:",
+        error.response?.data || error.message
+      );
     }
-  } catch (error) {
-    console.log(
-      "SET DEFAULT ADDRESS ERROR:",
-      error.response?.data || error.message
+  };
+
+  // DELETE ADDRESS
+  const handleDeleteAddress = async (addressId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this address?"
     );
-  }
-};
 
+    if (!confirmDelete) return;
 
+    try {
+      const response = await api.delete(
+        `/address/delete/${addressId}`,
+        {
+          withCredentials: true,
+        }
+      );
 
+      if (response.data.success) {
+        alert(response.data.message || "Address deleted successfully");
+        await getAddresses();
+      }
+    } catch (error) {
+      console.log("DELETE ADDRESS ERROR:", error.response?.data);
 
+      alert(
+        error.response?.data?.message || "Failed to delete address"
+      );
+    }
+  };
 
-
-
-
+  // LOAD RAZORPAY SCRIPT
   const loadScript = (src) => {
     return new Promise((resolve) => {
       const script = document.createElement("script");
+
       script.src = src;
+
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);
+
       document.body.appendChild(script);
     });
   };
 
-  
+  // PLACE ORDER
+  const handlePlaceOrder = async (method) => {
+    if (!selectedAddress) {
+      alert("Please select a delivery address");
+      return;
+    }
 
-const handlePlaceOrder = async (method) => {
-  if (!selectedAddress) {
-    alert("Please select a delivery address");
-    return;
-  }
+    if (!cartItems || cartItems.length === 0) {
+      alert("Your cart is empty");
+      return;
+    }
 
-  if (!cartItems || cartItems.length === 0) {
-    alert("Your cart is empty");
-    return;
-  }
+    try {
+      setPlacingOrder(true);
 
-  try {
-    setPlacingOrder(true);
+      // COD ORDER
+      if (method === "COD") {
+        const response = await api.post(
+          "/order/place",
+          {
+            addressId: selectedAddress,
+            paymentMethod: "COD",
+            storeId: store?._id,
+          },
+          {
+            withCredentials: true,
+          }
+        );
 
-    // COD ORDER - unchanged
-    if (method === "COD") {
-      const response = await api.post(
-        "/order/place",
+        if (response.data.success) {
+          alert(response.data.message || "Order placed successfully");
+
+          await dispatch(getCart());
+          router.push("/orders");
+        }
+
+        return;
+      }
+
+      // ONLINE PAYMENT
+
+      // Load Razorpay SDK
+      const res = await loadScript(
+        "https://checkout.razorpay.com/v1/checkout.js"
+      );
+
+      if (!res) {
+        alert("Razorpay SDK failed to load. Are you online?");
+        setPlacingOrder(false);
+        return;
+      }
+
+      // CREATE ONLINE ORDER
+      const orderResponse = await api.post(
+        "/order/create-online-order",
         {
           addressId: selectedAddress,
-          paymentMethod: "COD",
           storeId: store?._id,
         },
         {
@@ -175,155 +229,123 @@ const handlePlaceOrder = async (method) => {
         }
       );
 
-      if (response.data.success) {
-        alert(response.data.message || "Order placed successfully");
+      const orderData = orderResponse.data;
 
-        await dispatch(getCart());
-        router.push("/orders");
+      console.log("Created Online Order:", orderData);
+
+      if (!orderData.success || !orderData.razorpay?.orderId) {
+        alert(orderData.message || "Failed to create online order");
+        setPlacingOrder(false);
+        return;
       }
 
-      return;
-    }
+      // RAZORPAY CHECKOUT
+      const options = {
+        key: orderData.razorpay.keyId,
+        amount: orderData.razorpay.amount,
+        currency: orderData.razorpay.currency,
 
-    // ONLINE PAYMENT
+        name: "QuickKart",
+        description: "QuickKart Order Payment",
 
-    // Load Razorpay SDK
-    const res = await loadScript(
-      "https://checkout.razorpay.com/v1/checkout.js"
-    );
+        order_id: orderData.razorpay.orderId,
 
-    if (!res) {
-      alert("Razorpay SDK failed to load. Are you online?");
-      setPlacingOrder(false);
-      return;
-    }
+        handler: async function (response) {
+          try {
+            // VERIFY ONLINE PAYMENT
+            const verifyResponse = await api.post(
+              "/order/verify-online-payment",
+              {
+                orderId: orderData.order._id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              },
+              {
+                withCredentials: true,
+              }
+            );
 
-    // 1. Create Online Order
-    const orderResponse = await api.post(
-      "/order/create-online-order",
-      {
-        addressId: selectedAddress,
-        storeId: store?._id,
-      },
-      {
-        withCredentials: true,
-      }
-    );
+            const verifyData = verifyResponse.data;
 
-    const orderData = orderResponse.data;
+            console.log("Payment Verification:", verifyData);
 
-    console.log("Created Online Order:", orderData);
+            if (verifyData.success) {
+              alert("Payment Successful! Order placed successfully.");
 
-    if (!orderData.success || !orderData.razorpay?.orderId) {
-      alert(orderData.message || "Failed to create online order");
-      setPlacingOrder(false);
-      return;
-    }
+              await dispatch(getCart());
 
-    // 2. Razorpay Checkout
-    const options = {
-      key: orderData.razorpay.keyId,
-      amount: orderData.razorpay.amount,
-      currency: orderData.razorpay.currency,
-
-      name: "QuickKart",
-      description: "QuickKart Order Payment",
-
-      order_id: orderData.razorpay.orderId,
-
-      handler: async function (response) {
-        try {
-          // 3. Verify Online Payment
-          const verifyResponse = await api.post(
-            "/order/verify-online-payment",
-            {
-              orderId: orderData.order._id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            },
-            {
-              withCredentials: true,
+              router.push("/orders");
+            } else {
+              alert(verifyData.message || "Payment verification failed");
+              setPlacingOrder(false);
             }
-          );
+          } catch (error) {
+            console.log("Verification Error:", error);
 
-          const verifyData = verifyResponse.data;
+            alert(
+              error.response?.data?.message ||
+              "Payment verification failed"
+            );
 
-          console.log("Payment Verification:", verifyData);
-
-          if (verifyData.success) {
-            alert("Payment Successful! Order placed successfully.");
-
-            await dispatch(getCart());
-
-            router.push("/orders");
-          } else {
-            alert(verifyData.message || "Payment verification failed");
             setPlacingOrder(false);
           }
-
-        } catch (error) {
-          console.log("Verification Error:", error);
-
-          alert(
-            error.response?.data?.message ||
-            "Payment verification failed"
-          );
-
-          setPlacingOrder(false);
-        }
-      },
-
-      modal: {
-        ondismiss: function () {
-          setPlacingOrder(false);
         },
-      },
 
-      prefill: {
-        name: "",
-        email: "",
-        contact: "",
-      },
+        modal: {
+          ondismiss: function () {
+            setPlacingOrder(false);
+          },
+        },
 
-      theme: {
-        color: "#3399cc",
-      },
-    };
+        prefill: {
+          name: "",
+          email: "",
+          contact: "",
+        },
 
-    const paymentObject = new window.Razorpay(options);
+        theme: {
+          color: "#3399cc",
+        },
+      };
 
-    paymentObject.open();
+      const paymentObject = new window.Razorpay(options);
 
-  } catch (error) {
-    console.log("PLACE ORDER ERROR:", error);
+      paymentObject.open();
 
-    alert(
-      error.response?.data?.message ||
-      "Failed to place order"
-    );
+    } catch (error) {
+      console.log("PLACE ORDER ERROR:", error);
 
-    setPlacingOrder(false);
-  }
-};
+      alert(
+        error.response?.data?.message ||
+        "Failed to place order"
+      );
 
-
+      setPlacingOrder(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 md:px-8">
+
+      {/* ADDRESS MODAL */}
       <AddAddressModal
         isOpen={showAddressModal}
-        onClose={() => setShowAddressModal(false)}
-        onAddressAdded={() => {
+        onClose={() => {
           setShowAddressModal(false);
-          getAddresses();
+          setEditingAddress(null);
         }}
+        onAddressAdded={getAddresses}
+        address={editingAddress}
       />
 
       <div className="max-w-7xl mx-auto">
+
         {/* PAGE TITLE */}
         <div className="mb-7">
-          <h1 className="text-2xl font-bold text-gray-800">Checkout</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Checkout
+          </h1>
 
           <p className="text-sm text-gray-500 mt-1">
             Complete your order by selecting delivery address and payment
@@ -332,10 +354,13 @@ const handlePlaceOrder = async (method) => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
           {/* LEFT SECTION */}
           <div className="lg:col-span-2 space-y-6">
+
             {/* DELIVERY ADDRESS */}
             <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                   <span className="text-emerald-700">📍</span>
@@ -352,19 +377,26 @@ const handlePlaceOrder = async (method) => {
                   Loading addresses...
                 </p>
               ) : addresses.length > 0 ? (
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
                   {addresses.map((address) => (
+
                     <div
                       key={address._id}
                       onClick={() => handleSelectAddress(address._id)}
-                      className={`relative border rounded-xl p-4 cursor-pointer transition ${
+                      className={`relative border rounded-xl p-4 cursor-pointer transition-all duration-200 ${
                         selectedAddress === address._id
-                          ? "border-emerald-600 bg-green-50/40"
-                          : "border-gray-200 hover:border-emerald-400"
+                          ? "border-emerald-600 bg-emerald-50/50 shadow-sm"
+                          : "border-gray-200 hover:border-emerald-400 hover:shadow-sm"
                       }`}
                     >
+
+                      {/* ADDRESS HEADER */}
                       <div className="flex justify-between items-center mb-3">
+
                         <div className="flex items-center gap-2">
+
                           <div
                             className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                               selectedAddress === address._id
@@ -378,6 +410,7 @@ const handlePlaceOrder = async (method) => {
                           <h3 className="font-semibold text-gray-800">
                             {address.type || "Address"}
                           </h3>
+
                         </div>
 
                         <div
@@ -391,20 +424,30 @@ const handlePlaceOrder = async (method) => {
                             <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
                           )}
                         </div>
+
                       </div>
 
+                      {/* DEFAULT ADDRESS */}
                       {address.isDefault && (
-                        <span className="text-xs font-medium text-emerald-700">
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">
+                          <span>✓</span>
                           Default Address
                         </span>
                       )}
 
-                      <div className="text-sm text-gray-600 mt-2 space-y-1">
+                      {/* ADDRESS DETAILS */}
+                      <div className="text-sm text-gray-600 mt-3 space-y-1">
+                        <p className="font-medium text-gray-800">
+                          {address.name}
+                        </p>
+
                         <p>
                           {address.houseNumber || "-"}, {address.street || "-"}
                         </p>
 
-                        {address.landmark && <p>{address.landmark}</p>}
+                        {address.landmark && (
+                          <p>{address.landmark}</p>
+                        )}
 
                         <p>
                           {address.city || "-"}, {address.state || "-"}
@@ -413,17 +456,38 @@ const handlePlaceOrder = async (method) => {
                         <p>{address.country || "-"}</p>
 
                         <p>Pincode: {address.pincode || "-"}</p>
+
+                        <p>Phone: {address.phone || "-"}</p>
                       </div>
 
-                      <div className="flex gap-4 mt-4 pt-3 border-t border-gray-100">
+                      {/* EDIT AND DELETE BUTTONS */}
+                      <div className="flex items-center gap-3 mt-5 pt-3 border-t border-gray-100">
+
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log("Edit Address", address);
+
+                            setEditingAddress(address);
+                            setShowAddressModal(true);
                           }}
-                          className="text-xs font-medium text-emerald-700 hover:underline"
+                          className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 hover:border-emerald-300"
                         >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" />
+                          </svg>
+
                           Edit
                         </button>
 
@@ -431,37 +495,69 @@ const handlePlaceOrder = async (method) => {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log("View Address", address);
+                            handleDeleteAddress(address._id);
                           }}
-                          className="text-xs font-medium text-blue-600 hover:underline"
+                          className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100 hover:border-red-300"
                         >
-                          View
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M8 6V4h8v2" />
+                            <path d="m19 6-1 14H6L5 6" />
+                            <path d="M10 11v5" />
+                            <path d="M14 11v5" />
+                          </svg>
+
+                          Delete
                         </button>
+
                       </div>
+
                     </div>
+
                   ))}
+
                 </div>
+
               ) : (
+
                 <div className="text-center py-8">
                   <p className="text-gray-500 text-sm">
                     No saved addresses found.
                   </p>
                 </div>
+
               )}
 
               {/* ADD NEW ADDRESS */}
               <button
                 type="button"
-                onClick={() => setShowAddressModal(true)}
-                className="w-full mt-5 min-h-14 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 text-gray-600 hover:border-emerald-500 hover:text-emerald-700 transition"
+                onClick={() => {
+                  setEditingAddress(null);
+                  setShowAddressModal(true);
+                }}
+                className="w-full mt-5 min-h-14 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 text-gray-600 hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50/40 transition"
               >
                 <span className="text-xl">+</span>
-                <span className="text-sm font-medium">Add New Address</span>
+                <span className="text-sm font-medium">
+                  Add New Address
+                </span>
               </button>
+
             </div>
 
             {/* PAYMENT METHOD */}
             <div className="bg-white rounded-xl border border-gray-200 p-5 md:p-6">
+
               <div className="mb-5">
                 <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                   <span className="text-emerald-700">💳</span>
@@ -474,6 +570,7 @@ const handlePlaceOrder = async (method) => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
                 {/* COD */}
                 <div
                   onClick={() => setPaymentMethod("COD")}
@@ -483,7 +580,9 @@ const handlePlaceOrder = async (method) => {
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
+
                   <div className="flex justify-between items-center">
+
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">🚚</span>
 
@@ -509,7 +608,9 @@ const handlePlaceOrder = async (method) => {
                         <div className="w-2.5 h-2.5 rounded-full bg-emerald-600"></div>
                       )}
                     </div>
+
                   </div>
+
                 </div>
 
                 {/* ONLINE PAYMENT */}
@@ -521,7 +622,9 @@ const handlePlaceOrder = async (method) => {
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
+
                   <div className="flex justify-between items-center">
+
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">💳</span>
 
@@ -547,25 +650,37 @@ const handlePlaceOrder = async (method) => {
                         <div className="w-2.5 h-2.5 rounded-full bg-emerald-600"></div>
                       )}
                     </div>
+
                   </div>
+
                 </div>
+
               </div>
+
             </div>
+
           </div>
 
           {/* RIGHT SECTION - ORDER SUMMARY */}
           <div className="lg:col-span-1">
+
             <div className="bg-white rounded-xl border border-gray-200 p-5 sticky top-6">
+
               <h2 className="text-lg font-semibold text-gray-800 pb-4 border-b border-gray-200">
                 Order Summary
               </h2>
 
               {/* CART ITEMS */}
               <div className="py-4 space-y-4">
+
                 {cartItems && cartItems.length > 0 ? (
+
                   cartItems.map((item) => (
+
                     <div key={item._id} className="flex gap-3">
+
                       <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+
                         {getProductImage(item) ? (
                           <img
                             src={getProductImage(item)}
@@ -575,9 +690,11 @@ const handlePlaceOrder = async (method) => {
                         ) : (
                           <span className="text-2xl">📦</span>
                         )}
+
                       </div>
 
                       <div className="flex-1 min-w-0">
+
                         <h3 className="text-sm font-semibold text-gray-800 line-clamp-2">
                           {item.product?.name ||
                             item.product?.title ||
@@ -595,10 +712,15 @@ const handlePlaceOrder = async (method) => {
                         <p className="text-sm font-semibold text-gray-800 mt-1">
                           ₹{item.totalPrice || item.price * item.quantity}
                         </p>
+
                       </div>
+
                     </div>
+
                   ))
+
                 ) : (
+
                   <div className="text-center py-6">
                     <div className="text-3xl mb-3">🛒</div>
 
@@ -606,14 +728,16 @@ const handlePlaceOrder = async (method) => {
                       Your cart is empty
                     </p>
                   </div>
+
                 )}
+
               </div>
 
               {/* PRICE DETAILS */}
               <div className="border-t border-gray-200 pt-4 space-y-3">
+
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Subtotal</span>
-
                   <span className="text-gray-800">₹{subtotal}</span>
                 </div>
 
@@ -627,14 +751,16 @@ const handlePlaceOrder = async (method) => {
 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Discount</span>
-
                   <span className="text-emerald-700">- ₹{discount}</span>
                 </div>
+
               </div>
 
               {/* TOTAL */}
               <div className="border-t border-gray-200 mt-5 pt-5">
+
                 <div className="flex justify-between items-center">
+
                   <span className="font-semibold text-gray-800">
                     Total Amount
                   </span>
@@ -642,13 +768,15 @@ const handlePlaceOrder = async (method) => {
                   <span className="text-xl font-bold text-gray-900">
                     ₹{totalAmount}
                   </span>
+
                 </div>
+
               </div>
 
               {/* PLACE ORDER */}
               <button
                 type="button"
-                onClick={()=>handlePlaceOrder(paymentMethod)}
+                onClick={() => handlePlaceOrder(paymentMethod)}
                 disabled={
                   !cartItems ||
                   cartItems.length === 0 ||
@@ -668,10 +796,15 @@ const handlePlaceOrder = async (method) => {
                 <span>🔒</span>
                 Secure Checkout
               </div>
+
             </div>
+
           </div>
+
         </div>
+
       </div>
+
     </div>
   );
 }

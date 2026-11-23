@@ -1,26 +1,50 @@
 
+
 "use client";
 
-import { useState } from "react";
-import axios from "axios";
-import api from "@/axios/api"
+import { useState, useEffect } from "react";
+import api from "@/axios/api";
 
-const AddAddressModal = ({ isOpen, onClose ,onAddressAdded}) => {
+const initialFormData = {
+  type: "HOME",
+  name: "",
+  phone: "",
+  houseNumber: "",
+  street: "",
+  landmark: "",
+  city: "",
+  state: "",
+  country: "India",
+  pincode: "",
+};
 
-  const [formData, setFormData] = useState({
-    type: "HOME",
-    name: "",
-    phone: "",
-    houseNumber: "",
-    street: "",
-    landmark: "",
-    city: "",
-    state: "",
-    country: "India",
-    pincode: "",
-  });
-
+const AddAddressModal = ({
+  isOpen,
+  onClose,
+  onAddressAdded,
+  address,
+}) => {
+  const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (address) {
+      setFormData({
+        type: address.type || "HOME",
+        name: address.name || "",
+        phone: address.phone || "",
+        houseNumber: address.houseNumber || "",
+        street: address.street || "",
+        landmark: address.landmark || "",
+        city: address.city || "",
+        state: address.state || "",
+        country: address.country || "India",
+        pincode: address.pincode || "",
+      });
+    } else {
+      setFormData(initialFormData);
+    }
+  }, [address, isOpen]);
 
   const handleChange = (e) => {
     setFormData({
@@ -35,28 +59,26 @@ const AddAddressModal = ({ isOpen, onClose ,onAddressAdded}) => {
     try {
       setLoading(true);
 
-      const response = await api.post(
-        "/address/add",
-        formData
-      );
+      let response;
+
+      if (address) {
+        response = await api.post(
+          `/address/edit-address/${address._id}`,
+          formData
+        );
+      } else {
+        response = await api.post(
+          "/address/add",
+          formData
+        );
+      }
 
       alert(response.data.message);
 
       onAddressAdded();
       onClose();
 
-      setFormData({
-        type: "HOME",
-        name: "",
-        phone: "",
-        houseNumber: "",
-        street: "",
-        landmark: "",
-        city: "",
-        state: "",
-        country: "India",
-        pincode: "",
-      });
+      setFormData(initialFormData);
 
     } catch (error) {
       console.log(error);
@@ -70,15 +92,15 @@ const AddAddressModal = ({ isOpen, onClose ,onAddressAdded}) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-
       <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
 
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-800">
-            Add New Address
+            {address ? "Edit Address" : "Add New Address"}
           </h2>
 
           <button
+            type="button"
             onClick={onClose}
             className="text-2xl text-gray-500 hover:text-black"
           >
@@ -88,7 +110,6 @@ const AddAddressModal = ({ isOpen, onClose ,onAddressAdded}) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {/* Address Type */}
           <div>
             <label className="mb-2 block text-sm font-medium">
               Address Type
@@ -110,7 +131,6 @@ const AddAddressModal = ({ isOpen, onClose ,onAddressAdded}) => {
             </div>
           </div>
 
-          {/* Name and Phone */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium">
@@ -143,7 +163,6 @@ const AddAddressModal = ({ isOpen, onClose ,onAddressAdded}) => {
             </div>
           </div>
 
-          {/* House Number and Street */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium">
@@ -176,7 +195,6 @@ const AddAddressModal = ({ isOpen, onClose ,onAddressAdded}) => {
             </div>
           </div>
 
-          {/* Landmark */}
           <div>
             <label className="mb-1 block text-sm font-medium">
               Landmark
@@ -191,7 +209,6 @@ const AddAddressModal = ({ isOpen, onClose ,onAddressAdded}) => {
             />
           </div>
 
-          {/* City and State */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium">
@@ -224,7 +241,6 @@ const AddAddressModal = ({ isOpen, onClose ,onAddressAdded}) => {
             </div>
           </div>
 
-          {/* Country and Pincode */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium">
@@ -256,7 +272,6 @@ const AddAddressModal = ({ isOpen, onClose ,onAddressAdded}) => {
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex justify-end gap-3 pt-3">
             <button
               type="button"
@@ -271,7 +286,11 @@ const AddAddressModal = ({ isOpen, onClose ,onAddressAdded}) => {
               disabled={loading}
               className="rounded-lg bg-cyan-700 px-5 py-2.5 text-white hover:bg-cyan-800 disabled:opacity-50"
             >
-              {loading ? "Saving..." : "Save Address"}
+              {loading
+                ? "Saving..."
+                : address
+                  ? "Update Address"
+                  : "Save Address"}
             </button>
           </div>
 
