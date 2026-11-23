@@ -1,6 +1,5 @@
 
 
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -34,6 +33,10 @@ const statusConfig = {
         label: "Delivered",
         color: "bg-emerald-50 text-emerald-700 border-emerald-100",
     },
+    Cancelled: {
+        label: "Cancelled",
+        color: "bg-red-50 text-red-700 border-red-100",
+    },
 };
 
 const orderSteps = ["Placed", "Delivered"];
@@ -51,6 +54,9 @@ export default function MyOrdersPage() {
     const [loading, setLoading] = useState(true);
     const [expandedOrder, setExpandedOrder] = useState(null);
     const [filter, setFilter] = useState("All");
+
+    const [cancelOrderId, setCancelOrderId] = useState(null);
+    const [cancelling, setCancelling] = useState(false);
 
     const fetchOrders = async () => {
         try {
@@ -71,6 +77,32 @@ export default function MyOrdersPage() {
     useEffect(() => {
         fetchOrders();
     }, []);
+
+    // CANCEL ORDER API
+    const handleCancelOrder = async () => {
+        if (!cancelOrderId) return;
+
+        try {
+            setCancelling(true);
+
+            const { data } = await api.put(
+                `/order/cancel/${cancelOrderId}`
+            );
+
+            if (data.success) {
+                setCancelOrderId(null);
+                setExpandedOrder(null);
+                await fetchOrders();
+            }
+        } catch (error) {
+            alert(
+                error.response?.data?.message ||
+                "Unable to cancel order"
+            );
+        } finally {
+            setCancelling(false);
+        }
+    };
 
     const filteredOrders =
         filter === "All"
@@ -201,7 +233,7 @@ export default function MyOrdersPage() {
 
                 {/* FILTERS */}
                 <div className="mb-6 flex gap-2">
-                    {["All", "Placed", "Delivered"].map((status) => (
+                    {["All", "Placed", "Delivered", "Cancelled"].map((status) => (
                         <button
                             key={status}
                             onClick={() => setFilter(status)}
@@ -371,46 +403,52 @@ export default function MyOrdersPage() {
                                                     Order Tracking
                                                 </h3>
 
-                                                <div className="flex items-center gap-3">
-                                                    {orderSteps.map((step, index) => {
-                                                        const completed = currentStep >= index;
+                                                {order.orderStatus === "Cancelled" ? (
+                                                    <p className="rounded-xl bg-red-50 p-4 text-sm font-semibold text-red-700">
+                                                        This order has been cancelled.
+                                                    </p>
+                                                ) : (
+                                                    <div className="flex items-center gap-3">
+                                                        {orderSteps.map((step, index) => {
+                                                            const completed = currentStep >= index;
 
-                                                        return (
-                                                            <div
-                                                                key={step}
-                                                                className="flex flex-1 items-center gap-2"
-                                                            >
-                                                                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                                                                    completed
-                                                                        ? "bg-emerald-600 text-white"
-                                                                        : "bg-gray-200 text-gray-400"
-                                                                }`}>
-                                                                    {completed ? "✓" : "◷"}
+                                                            return (
+                                                                <div
+                                                                    key={step}
+                                                                    className="flex flex-1 items-center gap-2"
+                                                                >
+                                                                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                                                                        completed
+                                                                            ? "bg-emerald-600 text-white"
+                                                                            : "bg-gray-200 text-gray-400"
+                                                                    }`}>
+                                                                        {completed ? "✓" : "◷"}
+                                                                    </div>
+
+                                                                    <span className={`text-xs font-bold ${
+                                                                        completed
+                                                                            ? "text-emerald-700"
+                                                                            : "text-gray-400"
+                                                                    }`}>
+                                                                        {step}
+                                                                    </span>
+
+                                                                    {index === 0 && (
+                                                                        <div className={`h-1 flex-1 rounded-full ${
+                                                                            currentStep >= 1
+                                                                                ? "bg-emerald-600"
+                                                                                : "bg-gray-200"
+                                                                        }`} />
+                                                                    )}
                                                                 </div>
-
-                                                                <span className={`text-xs font-bold ${
-                                                                    completed
-                                                                        ? "text-emerald-700"
-                                                                        : "text-gray-400"
-                                                                }`}>
-                                                                    {step}
-                                                                </span>
-
-                                                                {index === 0 && (
-                                                                    <div className={`h-1 flex-1 rounded-full ${
-                                                                        currentStep >= 1
-                                                                            ? "bg-emerald-600"
-                                                                            : "bg-gray-200"
-                                                                    }`} />
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
                                             </section>
 
                                             {/* DELIVERY OTP */}
-                                            {order.deliveryOtp && order.orderStatus !== "Delivered" && (
+                                            {order.deliveryOtp && order.orderStatus !== "Delivered" && order.orderStatus !== "Cancelled" && (
                                                 <section className="rounded-xl border border-emerald-100 bg-emerald-50 p-5">
                                                     <h3 className="font-extrabold text-gray-900">
                                                         Delivery OTP
@@ -592,6 +630,18 @@ export default function MyOrdersPage() {
                                                 </div>
                                             </section>
 
+                                            {/* CANCEL ORDER BUTTON */}
+                                            {order.orderStatus === "Placed" && (
+                                                <div className="flex justify-end">
+                                                    <button
+                                                        onClick={() => setCancelOrderId(order._id)}
+                                                        className="rounded-xl border border-red-200 bg-white px-5 py-3 text-sm font-bold text-red-600 transition hover:bg-red-50"
+                                                    >
+                                                        Cancel Order
+                                                    </button>
+                                                </div>
+                                            )}
+
                                         </div>
                                     )}
                                 </article>
@@ -600,6 +650,47 @@ export default function MyOrdersPage() {
                     </div>
                 )}
             </main>
+
+            {/* CANCEL CONFIRMATION POPUP */}
+            {cancelOrderId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-2xl font-bold text-red-600">
+                            !
+                        </div>
+
+                        <h2 className="mt-4 text-center text-xl font-extrabold text-gray-900">
+                            Cancel Order?
+                        </h2>
+
+                        <p className="mt-2 text-center text-sm leading-6 text-gray-500">
+                            Are you sure you want to cancel this order?
+                            This action cannot be undone.
+                        </p>
+
+                        <div className="mt-6 flex gap-3">
+                            <button
+                                onClick={() => setCancelOrderId(null)}
+                                disabled={cancelling}
+                                className="flex-1 rounded-xl border border-gray-200 px-4 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                No, Keep Order
+                            </button>
+
+                            <button
+                                onClick={handleCancelOrder}
+                                disabled={cancelling}
+                                className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {cancelling ? "Cancelling..." : "Yes, Cancel"}
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }
