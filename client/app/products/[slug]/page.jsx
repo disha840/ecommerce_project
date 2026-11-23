@@ -6,6 +6,8 @@ import api from "../../../axios/api";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Heart } from "lucide-react";
+import toast from "react-hot-toast";
 
 import { getCart } from "@/redux/Slices/cartSlice";
 import { setShowLogin } from "@/redux/Slices/uiSlice";
@@ -25,6 +27,10 @@ const Page = () => {
 
     const [variants, setVariants] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Wishlist states
+    const [wishlistVariants, setWishlistVariants] = useState([]);
+    const [wishlistLoading, setWishlistLoading] = useState(null);
 
     // Get All Products And Variants
     const fetchVariants = async () => {
@@ -142,10 +148,52 @@ const Page = () => {
 
             dispatch(getCart());
 
+            toast.success("Product added to cart!");
+
             console.log(response.data);
 
         } catch (error) {
             console.log("Add to cart error:", error);
+            toast.error(
+                error.response?.data?.message || "Unable to add product to cart"
+            );
+        }
+    };
+
+    // ADD TO WISHLIST
+    const handleAddToWishlist = async (event, variant) => {
+        event.stopPropagation();
+
+        if (!user) {
+            return dispatch(setShowLogin(true));
+        }
+
+        try {
+            setWishlistLoading(variant._id);
+
+            const response = await api.post("/wishlist/add", {
+                product: variant.product?._id,
+                variant: variant._id
+            });
+
+            if (response.data.success) {
+                setWishlistVariants((previous) => [
+                    ...previous,
+                    variant._id
+                ]);
+
+                toast.success("Product added to wishlist!");
+            }
+
+        } catch (error) {
+            console.log("Add to wishlist error:", error);
+
+            toast.error(
+                error.response?.data?.message || "Unable to add to wishlist"
+            );
+
+        } finally {
+            setWishlistLoading(null);
         }
     };
 
@@ -268,6 +316,26 @@ const Page = () => {
                                             <span className="text-6xl">🛒</span>
                                         )}
 
+                                        {/* Wishlist Icon */}
+
+                                        <button
+                                            onClick={(event) =>
+                                                handleAddToWishlist(event, variant)
+                                            }
+                                            disabled={wishlistLoading === variant._id}
+                                            className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition hover:scale-110 disabled:opacity-50"
+                                            title="Add to Wishlist"
+                                        >
+                                            <Heart
+                                                size={21}
+                                                className={
+                                                    wishlistVariants.includes(variant._id)
+                                                        ? "fill-red-500 text-red-500"
+                                                        : "text-slate-700"
+                                                }
+                                            />
+                                        </button>
+
                                         {variant.discountPercentage > 0 && (
                                             <span className="absolute left-3 top-3 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
                                                 {variant.discountPercentage}% OFF
@@ -312,7 +380,9 @@ const Page = () => {
                                         {/* Add to Cart */}
 
                                         <button
-                                            onClick={(event) => handleAddToCart(event, variant)}
+                                            onClick={(event) =>
+                                                handleAddToCart(event, variant)
+                                            }
                                             className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95"
                                         >
                                             <span className="text-lg">+</span>
