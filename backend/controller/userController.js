@@ -498,9 +498,6 @@ console.log(decoded)
       "role",
       "name"
     );
-
-    
-
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -518,7 +515,8 @@ console.log(decoded)
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        role: user.role.name
+        role: user.role.name,
+        phone:user.phone
       }
     });
 
