@@ -4,7 +4,7 @@ const router=express.Router();
 const auth = require("../middleware/authMiddleware");
 
 router.post("/add",auth,addAddress)
-router.post("/edit-address/:id",auth,editAddress)
+router.put("/edit-address/:id",auth,editAddress)
 router.get("/get",auth,getAddresses)
 router.delete("/delete/:id",auth,deleteAddress)
 router.patch("/set-default/:id", auth, setDefaultAddress);

@@ -590,6 +590,7 @@ const getMyOrders = async (req, res) => {
 
         const orders = await Order.find({
             user: userId,
+            isDeleted: false
         })
             .populate({
                 path: "address",
@@ -1974,9 +1975,52 @@ const cancelOrder = async (req, res) => {
     }
 };
 
+const deleteOrder = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const userId = req.user.id;
 
+        const order = await Order.findOne({
+            _id: orderId,
+            user: userId,
+        });
 
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "Order not found",
+            });
+        }
 
+        // Only Delivered and Cancelled orders can be deleted
+        if (
+            order.orderStatus !== "Delivered" &&
+            order.orderStatus !== "Cancelled"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "You cannot delete a placed order",
+            });
+        }
+
+        order.isDeleted = true;
+
+        await order.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Order deleted successfully",
+        });
+
+    } catch (error) {
+        console.log("Delete Order Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to delete order",
+        });
+    }
+};
 
 
 module.exports = {
@@ -1989,6 +2033,7 @@ module.exports = {
     PlaceOnlineOrder,
     verifyOnlinePayment,
     getSingleOrder,
-    cancelOrder
+    cancelOrder,
+    deleteOrder
 };
 

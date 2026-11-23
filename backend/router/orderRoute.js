@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { placeOrder ,getAllOrders ,getMyOrders,createOrder,assignDeliveryPartner,verifyDeliveryOtp,verifyOnlinePayment,PlaceOnlineOrder,getSingleOrder,cancelOrder} =require("../controller/orderController")
+const { placeOrder ,getAllOrders ,getMyOrders,createOrder,assignDeliveryPartner,verifyDeliveryOtp,verifyOnlinePayment,PlaceOnlineOrder,getSingleOrder,cancelOrder,deleteOrder} =require("../controller/orderController")
 const auth = require("../middleware/authMiddleware");
 const checkPermission = require("../middleware/permissions");
 
@@ -22,6 +22,7 @@ router.post(
     auth,
     verifyOnlinePayment
 );
+router.delete("/delete/:orderId", auth, deleteOrder);
 router.put("/cancel/:orderId", auth, cancelOrder);
 router.get("/single/:id", auth, getSingleOrder);
 router.post("/verify-otp", auth, verifyDeliveryOtp);

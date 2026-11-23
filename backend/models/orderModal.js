@@ -91,6 +91,10 @@ const orderSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    isDeleted: {
+    type: Boolean,
+    default: false,
+},
 
     placedAt: {
       type: Date,
