@@ -95,6 +95,17 @@ export default function CheckoutPage() {
 
 
 const handleSelectAddress = async (addressId) => {
+  // Pehle UI update karo
+  setSelectedAddress(addressId);
+
+  setAddresses((previousAddresses) =>
+    previousAddresses.map((address) => ({
+      ...address,
+      isDefault: address._id === addressId,
+    }))
+  );
+
+  // Phir backend mein default address update karo
   try {
     const response = await api.put(
       `/address/set-default/${addressId}`,
@@ -104,18 +115,16 @@ const handleSelectAddress = async (addressId) => {
       }
     );
 
-    if (response.data.success) {
-      setSelectedAddress(addressId);
+    console.log("Default Address Response:", response.data);
 
-      setAddresses((previousAddresses) =>
-        previousAddresses.map((address) => ({
-          ...address,
-          isDefault: address._id === addressId,
-        }))
-      );
+    if (!response.data.success) {
+      console.log("Default address update failed");
     }
   } catch (error) {
-    console.log("SET DEFAULT ADDRESS ERROR:", error.response?.data);
+    console.log(
+      "SET DEFAULT ADDRESS ERROR:",
+      error.response?.data || error.message
+    );
   }
 };
 
