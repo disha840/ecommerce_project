@@ -27,6 +27,7 @@ const Page = () => {
 
   // Wishlist states
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistItemId, setWishlistItemId] = useState(null);
   const [wishlistLoading, setWishlistLoading] = useState(false);
 
   // GET WISHLIST
@@ -41,11 +42,12 @@ const Page = () => {
       if (response.data.success) {
         const wishlistItems = response.data.data || [];
 
-        const isAdded = wishlistItems.some(
+        const wishlistItem = wishlistItems.find(
           (item) => item.variant?._id === variantId
         );
 
-        setIsWishlisted(isAdded);
+        setIsWishlisted(!!wishlistItem);
+        setWishlistItemId(wishlistItem?._id || null);
       }
 
     } catch (error) {
@@ -53,34 +55,53 @@ const Page = () => {
     }
   };
 
-  // ADD TO WISHLIST
-  const handleAddToWishlist = async () => {
+  // ADD / REMOVE FROM WISHLIST
+  const handleWishlist = async () => {
     if (!user) {
       return dispatch(setShowLogin(true));
     }
 
-    if (isWishlisted || wishlistLoading) {
-      return;
-    }
+    if (wishlistLoading) return;
 
     try {
       setWishlistLoading(true);
 
-      const response = await api.post("/wishlist/add", {
-        product: variant.product?._id || variant.product,
-        variant: variant._id,
-      });
+      // REMOVE FROM WISHLIST
+      if (isWishlisted) {
+        const response = await api.delete(
+          `/wishlist/remove/${wishlistItemId}`
+        );
 
-      if (response.data.success) {
-        setIsWishlisted(true);
-        toast.success("Product added to wishlist!");
+        if (response.data.success) {
+          setIsWishlisted(false);
+          setWishlistItemId(null);
+
+          toast.success("Product removed from wishlist!");
+        }
+
+      } else {
+
+        // ADD TO WISHLIST
+        const response = await api.post("/wishlist/add", {
+          product: variant.product?._id || variant.product,
+          variant: variant._id,
+        });
+
+        if (response.data.success) {
+          setIsWishlisted(true);
+
+          // Get Wishlist Item ID
+          await getWishlist(variant._id);
+
+          toast.success("Product added to wishlist!");
+        }
       }
 
     } catch (error) {
-      console.log("Add to wishlist error:", error);
+      console.log("Wishlist Error:", error);
 
       toast.error(
-        error.response?.data?.message || "Unable to add to wishlist"
+        error.response?.data?.message || "Unable to update wishlist"
       );
 
     } finally {
@@ -88,6 +109,7 @@ const Page = () => {
     }
   };
 
+  // ADD TO CART
   const handleAddToCart = async (variant) => {
     if (!user) {
       return dispatch(setShowLogin(true));
@@ -105,14 +127,17 @@ const Page = () => {
       toast.success("Product added to cart!");
 
       console.log(response.data);
+
     } catch (error) {
       console.log("Add to cart error:", error);
+
       toast.error(
         error.response?.data?.message || "Unable to add product to cart"
       );
     }
   };
 
+  // GET VARIANT
   const getVariant = async () => {
     try {
       setLoading(true);
@@ -175,6 +200,7 @@ const Page = () => {
       getWishlist(variant._id);
     } else {
       setIsWishlisted(false);
+      setWishlistItemId(null);
     }
   }, [user, storeId, variant?._id]);
 
@@ -220,14 +246,14 @@ const Page = () => {
 
             {/* Wishlist Heart */}
             <button
-              onClick={handleAddToWishlist}
-              disabled={isWishlisted || wishlistLoading}
+              onClick={handleWishlist}
+              disabled={wishlistLoading}
               title={
                 isWishlisted
-                  ? "Already in Wishlist"
+                  ? "Remove from Wishlist"
                   : "Add to Wishlist"
               }
-              className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md transition hover:scale-110 disabled:cursor-default"
+              className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md transition hover:scale-110 disabled:opacity-50"
             >
               <Heart
                 size={24}
