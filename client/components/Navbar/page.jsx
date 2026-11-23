@@ -1,12 +1,11 @@
 
-
 "use client";
 import api from "@/axios/api";
 import { useDispatch, useSelector } from "react-redux";
 import { getCart, clearCart } from "@/redux/Slices/cartSlice";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Login from "@/components/login/page";
 import Signup from "@/components/signup/page";
 import { logout, checkAuth } from "@/redux/Slices/AuthSlice";
@@ -29,6 +28,9 @@ export default function Navbar() {
 
   const [showDropdown, setShowDropdown] = useState(false);
 
+  // Dropdown reference
+  const dropdownRef = useRef(null);
+
   const user = useSelector((state) => state.auth.user);
 
   const dispatch = useDispatch();
@@ -36,9 +38,28 @@ export default function Navbar() {
   const { showLogin, showSignup } = useSelector(
     (state) => state.ui
   );
+
   const store = useSelector((state) => state.store.selectedStore);
 
   const { items } = useSelector((state) => state.cart);
+
+  // Dropdown ke bahar click karne par close hoga
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Modal open hone par background scroll band karna
   useEffect(() => {
@@ -55,34 +76,24 @@ export default function Navbar() {
 
   // Check Login
   useEffect(() => {
-    dispatch(checkAuth()) 
-    .then((result) => {
+    dispatch(checkAuth()).then((result) => {
       console.log("CheckAuth Result:", result);
     });
   }, [dispatch]);
 
   // Login hone par hi cart fetch hoga
-
-  // useEffect(() => {
-  //   if (user) {
-  //     dispatch(getCart());
-  //   } else {
-  //     dispatch(clearCart());
-  //   }
-  // }, [user, dispatch]);
   useEffect(() => {
     if (!user) {
-        dispatch(clearCart());
-        return;
+      dispatch(clearCart());
+      return;
     }
 
     if (!store?._id) {
-        return;
+      return;
     }
 
     dispatch(getCart());
-
-}, [user, store?._id, dispatch]);
+  }, [user, store?._id, dispatch]);
 
   // Logout
   const handleLogout = async () => {
@@ -155,7 +166,7 @@ export default function Navbar() {
 
           {/* User Login / Dropdown */}
           {user ? (
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
                 className="w-10 h-10 rounded-full bg-cyan-600 text-white font-semibold"
@@ -169,7 +180,6 @@ export default function Navbar() {
                   {/* User Information */}
                   <div className="px-4 py-4 bg-[#F0FAFC] border-b border-[#D9E8EF]">
                     <div className="flex items-center gap-3">
-
                       <div className="w-11 h-11 rounded-full bg-[#087F95] text-white flex items-center justify-center text-lg font-semibold">
                         {user?.firstName?.charAt(0).toUpperCase()}
                       </div>
@@ -183,13 +193,11 @@ export default function Navbar() {
                           {user?.email}
                         </p>
                       </div>
-
                     </div>
                   </div>
 
                   {/* Menu Items */}
                   <div className="p-2">
-
                     <button
                       onClick={() => {
                         setShowDropdown(false);
@@ -224,7 +232,6 @@ export default function Navbar() {
                         </p>
                       </div>
                     </button>
-
                   </div>
                 </div>
               )}
@@ -260,13 +267,11 @@ export default function Navbar() {
               Cart
             </button>
           )}
-
         </nav>
 
         {/* Navigation Links */}
         <div className="border-b border-emerald-100 bg-emerald-50/60">
           <div className="mx-auto flex max-w-7xl items-center gap-4 overflow-x-auto px-5 md:gap-8 md:px-8">
-
             <Link
               href="/categories"
               className="flex shrink-0 items-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold text-slate-800 transition hover:bg-white hover:text-emerald-700"
@@ -297,7 +302,6 @@ export default function Navbar() {
             >
               All Products
             </Link>
-
           </div>
         </div>
       </header>
