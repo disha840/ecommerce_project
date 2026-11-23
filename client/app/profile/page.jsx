@@ -239,7 +239,12 @@ export default function ProfilePage() {
 
                                 <div
                                     key={address._id}
-                                    className={`border rounded-xl p-5 transition ${
+                                    onClick={() => {
+                                        if (!address.isDefault) {
+                                            handleSetDefault(address._id);
+                                        }
+                                    }}
+                                    className={`border rounded-xl p-5 transition cursor-pointer ${
                                         address.isDefault
                                             ? "border-emerald-500 bg-green-50/30"
                                             : "border-gray-200 hover:border-emerald-500"
@@ -264,9 +269,12 @@ export default function ProfilePage() {
                                             {/* SET DEFAULT */}
                                             <button
                                                 type="button"
-                                                onClick={() =>
-                                                    handleSetDefault(address._id)
-                                                }
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (!address.isDefault) {
+                                                        handleSetDefault(address._id);
+                                                    }
+                                                }}
                                                 disabled={address.isDefault}
                                                 title={
                                                     address.isDefault
@@ -339,18 +347,20 @@ export default function ProfilePage() {
                                         <div className="flex items-center gap-5 mt-5 pt-4 border-t border-gray-100">
 
                                             <button
-                                                onClick={() =>
-                                                    handleEditAddress(address)
-                                                }
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEditAddress(address);
+                                                }}
                                                 className="text-sm font-medium text-emerald-700 hover:underline"
                                             >
                                                 Edit
                                             </button>
 
                                             <button
-                                                onClick={() =>
-                                                    handleDelete(address._id)
-                                                }
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(address._id);
+                                                }}
                                                 className="text-sm font-medium text-red-600 hover:underline"
                                             >
                                                 Delete
