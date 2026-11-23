@@ -82,7 +82,7 @@ export default function Navbar() {
 
     dispatch(getCart());
 
-}, [user, selectedStore?._id, dispatch]);
+}, [user, store?._id, dispatch]);
 
   // Logout
   const handleLogout = async () => {
