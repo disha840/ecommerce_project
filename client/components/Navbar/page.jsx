@@ -4,6 +4,7 @@ import api from "@/axios/api";
 import { useDispatch, useSelector } from "react-redux";
 import { getCart, clearCart } from "@/redux/Slices/cartSlice";
 import Link from "next/link";
+import { UserRound, LogOut, Heart } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Login from "@/components/login/page";
@@ -216,6 +217,24 @@ export default function Navbar() {
                         </p>
                       </div>
                     </button>
+                    <button
+  onClick={() => {
+    setShowDropdown(false);
+    router.push("/wishlist");
+  }}
+  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-[#102A43] hover:bg-[#F0FAFC] transition-all duration-200"
+>
+  <div className="w-9 h-9 rounded-lg bg-[#D7F2F6] flex items-center justify-center">
+    <Heart size={18} className="text-[#087F95]" />
+  </div>
+
+  <div className="text-left">
+    <p className="text-sm font-semibold">My Wishlist</p>
+    <p className="text-xs text-[#627D98]">
+      View your saved products
+    </p>
+  </div>
+</button>
 
                     <button
                       onClick={handleLogout}
