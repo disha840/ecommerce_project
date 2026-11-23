@@ -58,6 +58,9 @@ export default function MyOrdersPage() {
     const [cancelOrderId, setCancelOrderId] = useState(null);
     const [cancelling, setCancelling] = useState(false);
 
+    const [deleteOrderId, setDeleteOrderId] = useState(null);
+    const [deleting, setDeleting] = useState(false);
+
     const fetchOrders = async () => {
         try {
             setLoading(true);
@@ -101,6 +104,32 @@ export default function MyOrdersPage() {
             );
         } finally {
             setCancelling(false);
+        }
+    };
+
+    // DELETE ORDER API
+    const handleDeleteOrder = async () => {
+        if (!deleteOrderId) return;
+
+        try {
+            setDeleting(true);
+
+            const { data } = await api.delete(
+                `/order/delete/${deleteOrderId}`
+            );
+
+            if (data.success) {
+                setDeleteOrderId(null);
+                setExpandedOrder(null);
+                await fetchOrders();
+            }
+        } catch (error) {
+            alert(
+                error.response?.data?.message ||
+                "Unable to delete order"
+            );
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -232,7 +261,7 @@ export default function MyOrdersPage() {
                 </div>
 
                 {/* FILTERS */}
-                <div className="mb-6 flex gap-2">
+                <div className="mb-6 flex flex-wrap gap-2">
                     {["All", "Placed", "Delivered", "Cancelled"].map((status) => (
                         <button
                             key={status}
@@ -642,6 +671,18 @@ export default function MyOrdersPage() {
                                                 </div>
                                             )}
 
+                                            {/* DELETE ORDER BUTTON */}
+                                            {(order.orderStatus === "Delivered" || order.orderStatus === "Cancelled") && (
+                                                <div className="flex justify-end">
+                                                    <button
+                                                        onClick={() => setDeleteOrderId(order._id)}
+                                                        className="rounded-xl border border-red-200 bg-white px-5 py-3 text-sm font-bold text-red-600 transition hover:bg-red-50"
+                                                    >
+                                                        Delete Order
+                                                    </button>
+                                                </div>
+                                            )}
+
                                         </div>
                                     )}
                                 </article>
@@ -684,6 +725,45 @@ export default function MyOrdersPage() {
                                 className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {cancelling ? "Cancelling..." : "Yes, Cancel"}
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+            {/* DELETE CONFIRMATION POPUP */}
+            {deleteOrderId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-2xl font-bold text-red-600">
+                            !
+                        </div>
+
+                        <h2 className="mt-4 text-center text-xl font-extrabold text-gray-900">
+                            Delete Order?
+                        </h2>
+
+                        <p className="mt-2 text-center text-sm leading-6 text-gray-500">
+                            Are you sure you want to remove this order from your order history?
+                        </p>
+
+                        <div className="mt-6 flex gap-3">
+                            <button
+                                onClick={() => setDeleteOrderId(null)}
+                                disabled={deleting}
+                                className="flex-1 rounded-xl border border-gray-200 px-4 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                No, Keep Order
+                            </button>
+
+                            <button
+                                onClick={handleDeleteOrder}
+                                disabled={deleting}
+                                className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {deleting ? "Deleting..." : "Yes, Delete"}
                             </button>
                         </div>
 

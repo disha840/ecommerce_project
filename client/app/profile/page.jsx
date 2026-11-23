@@ -22,6 +22,7 @@ export default function ProfilePage() {
     const [showModal, setShowModal] = useState(false);
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [addresses, setAddresses] = useState([]);
+    const [selectedAddress, setSelectedAddress] = useState(null);
 
     const { user } = useSelector((state) => state.auth);
 
@@ -39,17 +40,34 @@ export default function ProfilePage() {
         getAddresses();
     }, []);
 
+    // Add Address
+    const handleAddAddress = () => {
+        setSelectedAddress(null);
+        setShowAddressModal(true);
+    };
+
+    // Edit Address
+    const handleEditAddress = (address) => {
+        setSelectedAddress(address);
+        setShowAddressModal(true);
+    };
+
     // Delete Address
     const handleDelete = async (id) => {
+        const confirmDelete = window.confirm(
+            "Are you sure you want to delete this address?"
+        );
+
+        if (!confirmDelete) return;
+
         try {
-            await api.delete(`/address/delete/${id}`);
+            const response = await api.delete(`/address/delete/${id}`);
 
-            setAddresses((previousAddresses) =>
-                previousAddresses.filter((item) => item._id !== id)
-            );
-
+            if (response.data.success) {
+                await getAddresses();
+            }
         } catch (error) {
-            console.log(error.response?.data);
+            console.log(error.response?.data?.message);
         }
     };
 
@@ -60,10 +78,9 @@ export default function ProfilePage() {
                 `/address/set-default/${id}`
             );
 
-            console.log(response.data.message);
-
-            getAddresses();
-
+            if (response.data.success) {
+                await getAddresses();
+            }
         } catch (error) {
             console.log(error.response?.data?.message);
         }
@@ -84,11 +101,15 @@ export default function ProfilePage() {
                 />
             )}
 
-            {/* Add Address Modal */}
+            {/* Add / Edit Address Modal */}
             <AddAddressModal
                 isOpen={showAddressModal}
-                onClose={() => setShowAddressModal(false)}
+                onClose={() => {
+                    setShowAddressModal(false);
+                    setSelectedAddress(null);
+                }}
                 onAddressAdded={getAddresses}
+                address={selectedAddress}
             />
 
             <div className="max-w-6xl mx-auto">
@@ -176,25 +197,10 @@ export default function ProfilePage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                        <InfoItem
-                            label="First Name"
-                            value={user?.firstName}
-                        />
-
-                        <InfoItem
-                            label="Last Name"
-                            value={user?.lastName}
-                        />
-
-                        <InfoItem
-                            label="Email Address"
-                            value={user?.email}
-                        />
-
-                        <InfoItem
-                            label="Phone Number"
-                            value={user?.phone}
-                        />
+                        <InfoItem label="First Name" value={user?.firstName} />
+                        <InfoItem label="Last Name" value={user?.lastName} />
+                        <InfoItem label="Email Address" value={user?.email} />
+                        <InfoItem label="Phone Number" value={user?.phone} />
 
                     </div>
 
@@ -216,7 +222,7 @@ export default function ProfilePage() {
                         </div>
 
                         <button
-                            onClick={() => setShowAddressModal(true)}
+                            onClick={handleAddAddress}
                             className="bg-emerald-700 text-white text-sm px-5 py-2.5 rounded-lg hover:bg-green-700"
                         >
                             + Add New Address
@@ -255,7 +261,7 @@ export default function ProfilePage() {
                                                 </span>
                                             )}
 
-                                            {/* RADIO CIRCLE */}
+                                            {/* SET DEFAULT */}
                                             <button
                                                 type="button"
                                                 onClick={() =>
@@ -334,7 +340,7 @@ export default function ProfilePage() {
 
                                             <button
                                                 onClick={() =>
-                                                    console.log("Edit Address:", address)
+                                                    handleEditAddress(address)
                                                 }
                                                 className="text-sm font-medium text-emerald-700 hover:underline"
                                             >
