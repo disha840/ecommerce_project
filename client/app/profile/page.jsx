@@ -54,12 +54,6 @@ export default function ProfilePage() {
 
     // Delete Address
     const handleDelete = async (id) => {
-        const confirmDelete = window.confirm(
-            "Are you sure you want to delete this address?"
-        );
-
-        if (!confirmDelete) return;
-
         try {
             const response = await api.delete(`/address/delete/${id}`);
 
@@ -79,8 +73,6 @@ export default function ProfilePage() {
             );
 
             if (response.data.success) {
-                // Update only default status.
-                // Address cards will stay in the same position.
                 setAddresses((previousAddresses) =>
                     previousAddresses.map((address) => ({
                         ...address,
