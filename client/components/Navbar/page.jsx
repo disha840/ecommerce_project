@@ -4,7 +4,6 @@ import api from "@/axios/api";
 import { useDispatch, useSelector } from "react-redux";
 import { getCart, clearCart } from "@/redux/Slices/cartSlice";
 import Link from "next/link";
-import { UserRound, LogOut, Heart } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Login from "@/components/login/page";
@@ -21,6 +20,7 @@ import {
   ChevronDown,
   Leaf,
   Menu,
+  Heart
 } from "lucide-react";
 
 export default function Navbar() {
