@@ -1,10 +1,11 @@
 const Wishlist = require("../models/wishlistModal");
 const WishlistItem = require("../models/wishlistItemModal");
+const user=require("../models/userModel")
 
 // ADD TO WISHLIST
 const addToWishlist = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = req.user.id;
         const { product, variant } = req.body;
 
         if (!product || !variant) {
