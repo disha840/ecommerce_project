@@ -10,21 +10,22 @@ const {
     updateBanner,
     deleteBanner,
 } = require("../controller/bannerController");
+const { analyticshub } = require("googleapis/build/src/apis/analyticshub");
 
 // Create Banner
-router.post("/add", createBanner);
+router.post("/add",auth, createBanner);
 
 // Get All Banners
-router.get("/get", getBanners);
+router.get("/get",auth, getBanners);
 
 // Get Single Banner
-router.get("/get/:id", getBanner);
+router.get("/get/:id",auth, getBanner);
 
 // Update Banner
-router.put("/update/:id", updateBanner);
+router.put("/update/:id",auth, updateBanner);
 
 // Delete Banner
-router.delete("/delete/:id", deleteBanner);
+router.delete("/delete/:id",auth, deleteBanner);
 
 
 
