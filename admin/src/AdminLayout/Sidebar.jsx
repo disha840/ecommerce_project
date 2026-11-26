@@ -70,6 +70,11 @@ const Sidebar = () => {
       icon: Boxes,
       path: "/admin/inventory",
     },
+     {
+      name:"Banner",
+      icon: ClipboardList,
+      path:"/admin/banner"
+    },
     {
       name: "Product",
       icon: Package,
