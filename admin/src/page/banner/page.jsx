@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
     FiEye,
     FiEdit2,
@@ -13,10 +14,11 @@ import {
     FiX,
 } from "react-icons/fi";
 
-import api from '../../api'
+import api from "../../api";
 import { toast } from "react-toastify";
 
 import { CKEditor } from "@ckeditor/ckeditor5-react";
+
 import {
     ClassicEditor,
     Essentials,
@@ -65,7 +67,7 @@ const Banner = () => {
         try {
             setLoading(true);
 
-            const res = await API.get("/banner/get");
+            const res = await api.get("/banner/get");
 
             setBanners(res.data.banners || res.data.data || []);
         } catch (error) {
@@ -121,14 +123,14 @@ const Banner = () => {
             };
 
             if (editingBanner) {
-                await API.put(
+                await api.put(
                     `/banner/update/${editingBanner._id}`,
                     payload
                 );
 
                 toast.success("Banner updated successfully");
             } else {
-                await API.post("/banner/add", payload);
+                await api.post("/banner/add", payload);
 
                 toast.success("Banner added successfully");
             }
@@ -154,7 +156,7 @@ const Banner = () => {
         try {
             setDeletingId(bannerToDelete._id);
 
-            await API.delete(`/banner/delete/${bannerToDelete._id}`);
+            await api.delete(`/banner/delete/${bannerToDelete._id}`);
 
             toast.success("Banner deleted successfully");
 
@@ -207,7 +209,6 @@ const Banner = () => {
 
             {/* STATISTICS CARD */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-
                 <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
@@ -225,13 +226,11 @@ const Banner = () => {
                         </div>
                     </div>
                 </div>
-
             </div>
 
             {/* SEARCH */}
             <div className="rounded-2xl border border-[#D9E8EF] bg-white p-4 shadow-sm">
                 <div className="relative w-full sm:max-w-md">
-
                     <FiSearch
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-[#627D98]"
                         size={19}
@@ -249,7 +248,6 @@ const Banner = () => {
 
             {/* BANNER TABLE */}
             <div className="overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-sm">
-
                 <div className="border-b border-[#D9E8EF] p-5">
                     <h2 className="font-semibold text-[#102A43]">
                         All Banners
@@ -262,7 +260,6 @@ const Banner = () => {
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-
                         <thead className="border-b border-[#D9E8EF] bg-[#F8FCFD]">
                             <tr>
                                 {[
@@ -283,7 +280,6 @@ const Banner = () => {
                         </thead>
 
                         <tbody className="divide-y divide-[#D9E8EF]">
-
                             {loading ? (
                                 <tr>
                                     <td
@@ -348,7 +344,6 @@ const Banner = () => {
                                         {/* ACTIONS */}
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
-
                                                 <button
                                                     onClick={() =>
                                                         navigate(
@@ -380,13 +375,11 @@ const Banner = () => {
                                                 >
                                                     <FiTrash2 size={18} />
                                                 </button>
-
                                             </div>
                                         </td>
                                     </tr>
                                 ))
                             )}
-
                         </tbody>
                     </table>
                 </div>
@@ -395,12 +388,10 @@ const Banner = () => {
             {/* ADD / EDIT MODAL */}
             {modal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#102A43]/50 p-4">
-
                     <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-[#D9E8EF] bg-white shadow-xl">
 
                         {/* MODAL HEADER */}
                         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#D9E8EF] bg-white p-5">
-
                             <div>
                                 <h2 className="text-xl font-bold text-[#102A43]">
                                     {editingBanner
@@ -427,7 +418,6 @@ const Banner = () => {
                             onSubmit={handleSubmit}
                             className="space-y-5 p-6"
                         >
-
                             <div>
                                 <label className="mb-2 block text-sm font-semibold text-[#102A43]">
                                     Banner Content
@@ -505,7 +495,6 @@ const Banner = () => {
 
                             {/* FORM BUTTONS */}
                             <div className="flex flex-wrap justify-end gap-3 border-t border-[#D9E8EF] pt-5">
-
                                 <button
                                     type="button"
                                     onClick={handleCloseModal}
@@ -526,7 +515,6 @@ const Banner = () => {
                                             ? "Update Banner"
                                             : "Add Banner"}
                                 </button>
-
                             </div>
                         </form>
                     </div>
@@ -536,11 +524,8 @@ const Banner = () => {
             {/* DELETE CONFIRMATION MODAL */}
             {bannerToDelete && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#102A43]/50 p-4">
-
                     <div className="w-full max-w-md rounded-2xl border border-[#D9E8EF] bg-white p-6 shadow-xl">
-
                         <div className="mb-4 flex items-center gap-3">
-
                             <div className="rounded-xl bg-[#F0FAFC] p-3 text-[#087F95]">
                                 <FiTrash2 size={22} />
                             </div>
@@ -556,7 +541,6 @@ const Banner = () => {
                         </p>
 
                         <div className="mt-6 flex justify-end gap-3">
-
                             <button
                                 type="button"
                                 onClick={() => setBannerToDelete(null)}
@@ -572,16 +556,12 @@ const Banner = () => {
                                 disabled={deletingId !== null}
                                 className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
                             >
-                                {deletingId
-                                    ? "Deleting..."
-                                    : "Delete"}
+                                {deletingId ? "Deleting..." : "Delete"}
                             </button>
-
                         </div>
                     </div>
                 </div>
             )}
-
         </div>
     );
 };
