@@ -19,6 +19,7 @@ const inventoryRoute=require("./router/inventoryRoute")
 const orderRoutes=require("./router/orderRoute")
 const deliveryPartnerRoute=require("./router/deliveryPartner")
 const wishlistRoute=require("./router/wishlistRoute")
+const bannerRoute=require("./router/bannerRoute")
 const app=express();
 
 // app.use(cors({
@@ -60,6 +61,7 @@ app.use("/order", orderRoutes);
 app.use("/inventory",inventoryRoute)
 app.use("/deliverypartner",deliveryPartnerRoute)
 app.use("/wishlist",wishlistRoute)
+app.use("/banner",bannerRoute)
 
 app.listen(3000,()=>{
     console.log("server is running");
