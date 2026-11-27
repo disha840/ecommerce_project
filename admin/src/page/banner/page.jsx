@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -311,7 +312,7 @@ const Banner = () => {
 
                                         {/* PREVIEW */}
                                         <td className="px-6 py-4">
-                                            <div className="overflow-hidden rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] p-1">
+                                            <div className="mx-4 overflow-hidden rounded-xl border border-[#D9E8EF] bg-[#F8FCFD] p-1">
                                                 <iframe
                                                     title={`Banner ${index + 1}`}
                                                     srcDoc={decodeHtml(
