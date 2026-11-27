@@ -1,7 +1,5 @@
 
-
 "use client";
-
 import api from "@/axios/api";
 import { useDispatch, useSelector } from "react-redux";
 import { getCart, clearCart } from "@/redux/Slices/cartSlice";
@@ -22,42 +20,31 @@ import {
   ChevronDown,
   Leaf,
   Menu,
-  Heart,
-  X,
-  Package,
-  Tag,
+  Heart
 } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const dispatch = useDispatch();
 
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // Search States
-  const [searchText, setSearchText] = useState("");
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [loading, setLoading] = useState(false);
-
+  // Dropdown reference
   const dropdownRef = useRef(null);
-  const searchRef = useRef(null);
 
   const user = useSelector((state) => state.auth.user);
+
+  const dispatch = useDispatch();
 
   const { showLogin, showSignup } = useSelector(
     (state) => state.ui
   );
 
-  const store = useSelector(
-    (state) => state.store.selectedStore
-  );
+  const store = useSelector((state) => state.store.selectedStore);
 
   const { items } = useSelector((state) => state.cart);
 
-  // Close dropdown and search on outside click
+  // Dropdown ke bahar click karne par close hoga
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -65,13 +52,6 @@ export default function Navbar() {
         !dropdownRef.current.contains(event.target)
       ) {
         setShowDropdown(false);
-      }
-
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target)
-      ) {
-        setShowSuggestions(false);
       }
     };
 
@@ -82,7 +62,7 @@ export default function Navbar() {
     };
   }, []);
 
-  // Stop background scroll when modal opens
+  // Modal open hone par background scroll band karna
   useEffect(() => {
     if (showLogin || showSignup) {
       document.body.style.overflow = "hidden";
@@ -102,7 +82,7 @@ export default function Navbar() {
     });
   }, [dispatch]);
 
-  // Fetch Cart
+  // Login hone par hi cart fetch hoga
   useEffect(() => {
     if (!user) {
       dispatch(clearCart());
@@ -115,83 +95,6 @@ export default function Navbar() {
 
     dispatch(getCart());
   }, [user, store?._id, dispatch]);
-
-  // Search Product and Category
-  useEffect(() => {
-    const query = searchText.trim();
-
-    if (query.length < 2 || !store?._id) {
-      setCategories([]);
-      setProducts([]);
-      setLoading(false);
-      return;
-    }
-
-    let isActive = true;
-
-    const timer = setTimeout(async () => {
-      try {
-        setLoading(true);
-
-        const response = await api.get(
-          "/product/search-suggestions",
-          {
-            params: {
-              storeId: store._id,
-              q: query,
-            },
-          }
-        );
-
-        if (isActive) {
-          setCategories(response.data.categories || []);
-          setProducts(response.data.products || []);
-        }
-      } catch (error) {
-        if (isActive) {
-          console.log("Search Error:", error);
-          setCategories([]);
-          setProducts([]);
-        }
-      } finally {
-        if (isActive) {
-          setLoading(false);
-        }
-      }
-    }, 300);
-
-    return () => {
-      isActive = false;
-      clearTimeout(timer);
-    };
-  }, [searchText, store?._id]);
-
-  // Open Category
-  const handleCategoryClick = (category) => {
-    setSearchText("");
-    setShowSuggestions(false);
-    router.push(`/categories/${category.slug}`);
-  };
-
-  // Open Product
-  const handleProductClick = (product) => {
-    setSearchText("");
-    setShowSuggestions(false);
-
-    router.push(
-      `/products?category=${encodeURIComponent(
-        product.category?.slug || ""
-      )}&product=${encodeURIComponent(product.slug)}`
-    );
-  };
-
-  // Clear Search
-  const handleClearSearch = () => {
-    setSearchText("");
-    setCategories([]);
-    setProducts([]);
-    setShowSuggestions(false);
-  };
 
   // Logout
   const handleLogout = async () => {
@@ -208,11 +111,6 @@ export default function Navbar() {
       console.log(error);
     }
   };
-
-  // Clear suggestions on route change
-  useEffect(() => {
-    setShowSuggestions(false);
-  }, [pathname]);
 
   return (
     <>
@@ -235,7 +133,6 @@ export default function Navbar() {
       <header className="sticky top-0 z-50 bg-white">
         <nav className="mx-auto flex max-w-7xl items-center gap-5 border-b border-emerald-100 px-5 py-4 md:px-8">
 
-          {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-sm">
               <Leaf size={25} />
@@ -258,173 +155,14 @@ export default function Navbar() {
           </div>
 
           {/* Search */}
-          <div
-            className="relative flex min-w-0 flex-1"
-            ref={searchRef}
-          >
-            <div className="flex w-full min-w-0 items-center rounded-2xl border border-emerald-100 bg-emerald-50/50 p-1.5 transition focus-within:border-emerald-400">
+          <div className="flex min-w-0 flex-1 items-center rounded-2xl border border-emerald-100 bg-emerald-50/50 p-1.5 transition focus-within:border-emerald-400">
+            <Search size={20} className="ml-3 shrink-0 text-emerald-700" />
 
-              <Search
-                size={20}
-                className="ml-3 shrink-0 text-emerald-700"
-              />
-
-              <input
-                type="text"
-                value={searchText}
-                placeholder="Search for groceries..."
-                onChange={(event) => {
-                  setSearchText(event.target.value);
-                  setShowSuggestions(true);
-                }}
-                onFocus={() => {
-                  if (searchText.trim().length >= 2) {
-                    setShowSuggestions(true);
-                  }
-                }}
-                className="w-full min-w-0 bg-transparent px-3 py-2.5 text-sm text-slate-800 outline-none placeholder:text-slate-400"
-              />
-
-              {searchText && (
-                <button
-                  onClick={handleClearSearch}
-                  className="mr-2 rounded-full p-1 text-slate-500 hover:bg-emerald-100 hover:text-emerald-700"
-                >
-                  <X size={18} />
-                </button>
-              )}
-            </div>
-
-            {/* Search Suggestions */}
-            {showSuggestions && searchText.trim().length >= 2 && (
-              <div className="absolute left-0 right-0 top-full z-[100] mt-2 max-h-[420px] overflow-y-auto rounded-2xl border border-emerald-100 bg-white shadow-xl">
-
-                {/* Loading */}
-                {loading && (
-                  <div className="px-5 py-5 text-center text-sm text-slate-500">
-                    Searching...
-                  </div>
-                )}
-
-                {!loading && (
-                  <>
-                    {/* Categories */}
-                    {categories.length > 0 && (
-                      <div className="p-3">
-                        <div className="mb-2 flex items-center gap-2 px-2">
-                          <Tag
-                            size={16}
-                            className="text-emerald-600"
-                          />
-
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                            Categories
-                          </h3>
-                        </div>
-
-                        {categories.map((category) => (
-                          <button
-                            key={category._id}
-                            onClick={() =>
-                              handleCategoryClick(category)
-                            }
-                            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-emerald-50"
-                          >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-                              <Tag size={19} />
-                            </div>
-
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-semibold text-slate-800">
-                                {category.name}
-                              </p>
-
-                              <p className="text-xs text-slate-400">
-                                View Category
-                              </p>
-                            </div>
-
-                            <ChevronDown
-                              size={16}
-                              className="-rotate-90 text-slate-400"
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Divider */}
-                    {categories.length > 0 && products.length > 0 && (
-                      <div className="mx-4 border-t border-emerald-100" />
-                    )}
-
-                    {/* Products */}
-                    {products.length > 0 && (
-                      <div className="p-3">
-                        <div className="mb-2 flex items-center gap-2 px-2">
-                          <Package
-                            size={16}
-                            className="text-emerald-600"
-                          />
-
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                            Products
-                          </h3>
-                        </div>
-
-                        {products.map((product) => (
-                          <button
-                            key={product._id}
-                            onClick={() =>
-                              handleProductClick(product)
-                            }
-                            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-emerald-50"
-                          >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-                              <Package size={19} />
-                            </div>
-
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold text-slate-800">
-                                {product.name}
-                              </p>
-
-                              <p className="text-xs text-slate-400">
-                                {product.category?.name || "Product"}
-                              </p>
-                            </div>
-
-                            <Search
-                              size={16}
-                              className="text-slate-400"
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* No Results */}
-                    {categories.length === 0 &&
-                      products.length === 0 && (
-                        <div className="px-5 py-8 text-center">
-                          <Search
-                            size={28}
-                            className="mx-auto mb-2 text-slate-300"
-                          />
-
-                          <p className="text-sm font-semibold text-slate-700">
-                            No results found
-                          </p>
-
-                          <p className="mt-1 text-xs text-slate-400">
-                            Try searching for another product or category.
-                          </p>
-                        </div>
-                      )}
-                  </>
-                )}
-              </div>
-            )}
+            <input
+              type="text"
+              placeholder="Search for groceries..."
+              className="w-full min-w-0 bg-transparent px-3 py-2.5 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+            />
           </div>
 
           {/* User Login / Dropdown */}
@@ -432,27 +170,27 @@ export default function Navbar() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-600 font-semibold text-white"
+                className="w-10 h-10 rounded-full bg-cyan-600 text-white font-semibold"
               >
                 {user?.firstName?.charAt(0).toUpperCase()}
               </button>
 
               {showDropdown && (
-                <div className="absolute right-0 top-14 z-50 w-64 overflow-hidden rounded-2xl border border-[#D9E8EF] bg-white shadow-xl">
+                <div className="absolute right-0 top-14 w-64 bg-white rounded-2xl shadow-xl border border-[#D9E8EF] z-50 overflow-hidden">
 
                   {/* User Information */}
-                  <div className="border-b border-[#D9E8EF] bg-[#F0FAFC] px-4 py-4">
+                  <div className="px-4 py-4 bg-[#F0FAFC] border-b border-[#D9E8EF]">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#087F95] text-lg font-semibold text-white">
+                      <div className="w-11 h-11 rounded-full bg-[#087F95] text-white flex items-center justify-center text-lg font-semibold">
                         {user?.firstName?.charAt(0).toUpperCase()}
                       </div>
 
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-[#102A43]">
+                        <p className="text-sm font-semibold text-[#102A43] truncate">
                           {user?.firstName} {user?.lastName}
                         </p>
 
-                        <p className="truncate text-xs text-[#627D98]">
+                        <p className="text-xs text-[#627D98] truncate">
                           {user?.email}
                         </p>
                       </div>
@@ -466,9 +204,9 @@ export default function Navbar() {
                         setShowDropdown(false);
                         router.push("/profile");
                       }}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-[#102A43] transition-all duration-200 hover:bg-[#F0FAFC]"
+                      className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-[#102A43] hover:bg-[#F0FAFC] transition-all duration-200"
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D7F2F6]">
+                      <div className="w-9 h-9 rounded-lg bg-[#D7F2F6] flex items-center justify-center">
                         <UserRound size={18} className="text-[#087F95]" />
                       </div>
 
@@ -479,31 +217,30 @@ export default function Navbar() {
                         </p>
                       </div>
                     </button>
-
                     <button
-                      onClick={() => {
-                        setShowDropdown(false);
-                        router.push("/wishlist");
-                      }}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-[#102A43] transition-all duration-200 hover:bg-[#F0FAFC]"
-                    >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D7F2F6]">
-                        <Heart size={18} className="text-[#087F95]" />
-                      </div>
+  onClick={() => {
+    setShowDropdown(false);
+    router.push("/wishlist");
+  }}
+  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-[#102A43] hover:bg-[#F0FAFC] transition-all duration-200"
+>
+  <div className="w-9 h-9 rounded-lg bg-[#D7F2F6] flex items-center justify-center">
+    <Heart size={18} className="text-[#087F95]" />
+  </div>
 
-                      <div className="text-left">
-                        <p className="text-sm font-semibold">My Wishlist</p>
-                        <p className="text-xs text-[#627D98]">
-                          View your saved products
-                        </p>
-                      </div>
-                    </button>
+  <div className="text-left">
+    <p className="text-sm font-semibold">My Wishlist</p>
+    <p className="text-xs text-[#627D98]">
+      View your saved products
+    </p>
+  </div>
+</button>
 
                     <button
                       onClick={handleLogout}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-red-600 transition-all duration-200 hover:bg-red-50"
+                      className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200"
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50">
+                      <div className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center">
                         <LogOut size={18} />
                       </div>
 
@@ -531,7 +268,7 @@ export default function Navbar() {
             </button>
           )}
 
-          {/* Cart */}
+          {/* Cart - Only for Logged In User */}
           {user ? (
             <Link
               href="/cart"
@@ -554,7 +291,6 @@ export default function Navbar() {
         {/* Navigation Links */}
         <div className="border-b border-emerald-100 bg-emerald-50/60">
           <div className="mx-auto flex max-w-7xl items-center gap-4 overflow-x-auto px-5 md:gap-8 md:px-8">
-
             <Link
               href="/categories"
               className="flex shrink-0 items-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold text-slate-800 transition hover:bg-white hover:text-emerald-700"
