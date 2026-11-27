@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,6 +7,7 @@ import axios from "axios";
 
 export default function Hero() {
     const [banners, setBanners] = useState([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
 
     const getBanners = async () => {
         try {
@@ -23,16 +25,45 @@ export default function Hero() {
         getBanners();
     }, []);
 
+    useEffect(() => {
+        if (banners.length <= 1) return;
+
+        const interval = setInterval(() => {
+            setCurrentIndex((previousIndex) =>
+                (previousIndex + 1) % banners.length
+            );
+        }, 4000);
+
+        return () => clearInterval(interval);
+    }, [banners]);
+
+    if (banners.length === 0) {
+        return null;
+    }
+
     return (
-        <>
-            {banners.map((banner) => (
-                <section
-                    key={banner._id}
-                    dangerouslySetInnerHTML={{
-                        __html: banner.htmlContent,
-                    }}
-                />
-            ))}
-        </>
+        <div className="relative">
+            <div
+                dangerouslySetInnerHTML={{
+                    __html: banners[currentIndex].htmlContent,
+                }}
+            />
+
+            {banners.length > 1 && (
+                <div className="mt-3 flex justify-center gap-2">
+                    {banners.map((banner, index) => (
+                        <button
+                            key={banner._id}
+                            onClick={() => setCurrentIndex(index)}
+                            className={`h-2.5 w-2.5 rounded-full transition ${
+                                currentIndex === index
+                                    ? "bg-emerald-700"
+                                    : "bg-emerald-300"
+                            }`}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
     );
 }
