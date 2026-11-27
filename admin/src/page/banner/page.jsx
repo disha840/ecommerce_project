@@ -523,7 +523,7 @@ const Banner = () => {
 
             {/* DELETE CONFIRMATION MODAL */}
             {bannerToDelete && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#102A43]/50 p-4">
+                <div className="fixed inset-0 z-60 flex items-center justify-center bg-[#102A43]/50 p-4">
                     <div className="w-full max-w-md rounded-2xl border border-[#D9E8EF] bg-white p-6 shadow-xl">
                         <div className="mb-4 flex items-center gap-3">
                             <div className="rounded-xl bg-[#F0FAFC] p-3 text-[#087F95]">
