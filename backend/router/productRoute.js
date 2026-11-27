@@ -12,6 +12,7 @@ const {
     showFeaturedProducts,
     deleteProduct,
     showProductsBySubcategory,
+    getSearchSuggestions
 } = require("../controller/productController");
 
 router.post(

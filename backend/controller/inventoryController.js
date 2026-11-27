@@ -463,8 +463,142 @@ const getStoreSubcategoryProducts = async (req, res) => {
         });
     }
 };
+const getSearchSuggestions = async (req, res) => {
+    try {
+        const { storeId, q } = req.query;
+
+        if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Valid Store ID is required"
+            });
+        }
+
+        const searchQuery = String(q || "").trim();
+
+        if (!searchQuery) {
+            return res.status(200).json({
+                success: true,
+                categories: [],
+                products: []
+            });
+        }
+
+        const searchRegex = new RegExp(
+            searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+            "i"
+        );
+
+        // Get available inventory of selected store
+        const inventories = await Inventory.find({
+            store: storeId,
+            status: "active",
+            availableQuantity: { $gt: 0 }
+        })
+            .populate({
+                path: "product",
+                match: { isActive: true },
+                select: "name slug category images"
+            })
+            .populate({
+                path: "variant",
+                match: { status: "ACTIVE" },
+                select: "name slug sku unit unitValue mrp sellingPrice images"
+            })
+            .populate({
+                path: "product",
+                populate: {
+                    path: "category",
+                    select: "name slug"
+                }
+            });
+
+        const categories = [];
+        const products = [];
+        const categoryIds = new Set();
+        const productIds = new Set();
+
+        inventories.forEach((item) => {
+            const product = item.product;
+            const variant = item.variant;
+
+            if (!product || !variant) {
+                return;
+            }
+
+            const category = product.category;
+
+            // Category suggestions
+            if (
+                category &&
+                category.name &&
+                searchRegex.test(category.name) &&
+                !categoryIds.has(category._id.toString())
+            ) {
+                categoryIds.add(category._id.toString());
+
+                categories.push({
+                    _id: category._id,
+                    name: category.name,
+                    slug: category.slug
+                });
+            }
+
+            // Product and variant suggestions
+            const productMatch = searchRegex.test(product.name);
+            const variantMatch = searchRegex.test(variant.name);
+
+            if (productMatch || variantMatch) {
+                const uniqueKey = `${product._id}-${variant._id}`;
+
+                if (!productIds.has(uniqueKey)) {
+                    productIds.add(uniqueKey);
+
+                    products.push({
+                        _id: product._id,
+                        name: product.name,
+                        slug: product.slug,
+                        images: product.images,
+                        category: category
+                            ? {
+                                _id: category._id,
+                                name: category.name,
+                                slug: category.slug
+                            }
+                            : null,
+                        variant: {
+                            _id: variant._id,
+                            name: variant.name,
+                            slug: variant.slug,
+                            sku: variant.sku,
+                            unit: variant.unit,
+                            unitValue: variant.unitValue,
+                            mrp: variant.mrp,
+                            sellingPrice: variant.sellingPrice,
+                            images: variant.images
+                        },
+                        availableQuantity: item.availableQuantity
+                    });
+                }
+            }
+        });
+
+        return res.status(200).json({
+            success: true,
+            count: products.length,
+            categories,
+            products
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 
 
 module.exports = {
-    createInventory,getInventories,getAvailableStoreInventory,getStoreCategories,getStoreSubcategories,getStoreSubcategoryProducts
+    createInventory,getInventories,getAvailableStoreInventory,getStoreCategories,getStoreSubcategories,getStoreSubcategoryProducts,getSearchSuggestions
 };

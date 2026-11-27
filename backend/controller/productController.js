@@ -5,6 +5,9 @@ const Subcategory = require("../models/subcategoryModel");
 const Brand = require("../models/brandModel");
 const cloudinary = require("../cloudinary");
 const mongoose = require("../database/db");
+const Inventory = require("../models/inventoryModel");
+const ProductVariant = require("../models/productVariant");
+const Store = require("../models/storeModel");
 
 const createProduct = async (req, res) => {
   try {
@@ -410,6 +413,9 @@ const showFeaturedProducts = async (req, res) => {
     });
   }
 };
+
+
+
 
 module.exports = {
   createProduct,
