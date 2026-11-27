@@ -43,6 +43,45 @@ export default function Hero() {
         return textarea.value;
     };
 
+    // MAKE BANNER BUTTONS CLICKABLE
+    const makeButtonsClickable = (html) => {
+        const parser = new DOMParser();
+        const documentHTML = parser.parseFromString(html, "text/html");
+
+        const buttons = [
+            "SHOP NOW",
+            "EXPLORE NOW",
+            "SHOP ESSENTIALS",
+            "GRAB THE DEAL",
+        ];
+
+        const elements = documentHTML.querySelectorAll("span");
+
+        elements.forEach((element) => {
+            const text = element.textContent.trim().toUpperCase();
+
+            if (buttons.some((button) => text.includes(button))) {
+                const link = documentHTML.createElement("a");
+
+                Array.from(element.attributes).forEach((attribute) => {
+                    link.setAttribute(attribute.name, attribute.value);
+                });
+
+                link.href = "/products";
+                link.style.cursor = "pointer";
+                link.style.textDecoration = "none";
+
+                while (element.firstChild) {
+                    link.appendChild(element.firstChild);
+                }
+
+                element.replaceWith(link);
+            }
+        });
+
+        return documentHTML.body.innerHTML;
+    };
+
     if (banners.length === 0) {
         return null;
     }
@@ -53,7 +92,9 @@ export default function Hero() {
             <div
                 key={banners[currentIndex]._id}
                 dangerouslySetInnerHTML={{
-                    __html: decodeHTML(banners[currentIndex].htmlContent),
+                    __html: makeButtonsClickable(
+                        decodeHTML(banners[currentIndex].htmlContent)
+                    ),
                 }}
             />
 
