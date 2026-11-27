@@ -37,15 +37,23 @@ export default function Hero() {
         return () => clearInterval(interval);
     }, [banners]);
 
+    const decodeHTML = (html) => {
+        const textarea = document.createElement("textarea");
+        textarea.innerHTML = html;
+        return textarea.value;
+    };
+
     if (banners.length === 0) {
         return null;
     }
 
     return (
         <div className="relative">
+
             <div
+                key={banners[currentIndex]._id}
                 dangerouslySetInnerHTML={{
-                    __html: banners[currentIndex].htmlContent,
+                    __html: decodeHTML(banners[currentIndex].htmlContent),
                 }}
             />
 
@@ -64,6 +72,7 @@ export default function Hero() {
                     ))}
                 </div>
             )}
+
         </div>
     );
 }
