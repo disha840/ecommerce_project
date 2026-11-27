@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -37,12 +38,6 @@ export default function Hero() {
         return () => clearInterval(interval);
     }, [banners]);
 
-    const decodeHTML = (html) => {
-        const textarea = document.createElement("textarea");
-        textarea.innerHTML = html;
-        return textarea.value;
-    };
-
     if (banners.length === 0) {
         return null;
     }
@@ -53,7 +48,7 @@ export default function Hero() {
             <div
                 key={banners[currentIndex]._id}
                 dangerouslySetInnerHTML={{
-                    __html: decodeHTML(banners[currentIndex].htmlContent),
+                    __html: banners[currentIndex].htmlContent,
                 }}
             />
 
