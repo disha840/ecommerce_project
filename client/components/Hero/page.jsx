@@ -48,7 +48,7 @@ export default function Hero() {
     }
 
     return (
-        <div className="relative">
+        <div className="relative px-4 md:px-8 lg:px-12">
 
             <div
                 key={banners[currentIndex]._id}
