@@ -16,7 +16,7 @@ const {
 router.post("/add",auth, createBanner);
 
 // Get All Banners
-router.get("/get",auth, getBanners);
+router.get("/get", getBanners);
 
 // Get Single Banner
 // router.get("/get/:id",auth, getBanner);
