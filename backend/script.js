@@ -63,6 +63,9 @@ app.use("/inventory",inventoryRoute)
 app.use("/deliverypartner",deliveryPartnerRoute)
 app.use("/wishlist",wishlistRoute)
 app.use("/banner",bannerRoute)
+app.get("/test", (req, res) => {
+    res.send("Server working");
+});
 
 app.listen(PORT,()=>{
     console.log("server is running");

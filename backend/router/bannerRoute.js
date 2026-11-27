@@ -6,20 +6,20 @@ const router=express.Router();
 const {
     createBanner,
     getBanners,
-    getBanner,
+    // getBanner,
     updateBanner,
     deleteBanner,
 } = require("../controller/bannerController");
-const { analyticshub } = require("googleapis/build/src/apis/analyticshub");
+
 
 // Create Banner
 router.post("/add",auth, createBanner);
 
 // Get All Banners
-router.get("/get",auth, getBanners);
+router.get("/get", getBanners);
 
 // Get Single Banner
-router.get("/get/:id",auth, getBanner);
+// router.get("/get/:id",auth, getBanner);
 
 // Update Banner
 router.put("/update/:id",auth, updateBanner);
