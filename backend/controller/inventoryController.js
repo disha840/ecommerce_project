@@ -4,8 +4,8 @@ const Store = require("../models/storeModel");
 const mongoose = require("mongoose");
 const Product=require("../models/productModel")
 const Category=require("../models/categoryModel")
-// const Subcategory=require("../models/subcategoryModel")
 const Subcategory=require("../models/subcategoryModel")
+const ProductVariant = require("../models/productVariant");
 
 
 // CREATE INVENTORY
@@ -463,10 +463,12 @@ const getStoreSubcategoryProducts = async (req, res) => {
         });
     }
 };
+
 const getSearchSuggestions = async (req, res) => {
     try {
         const { storeId, q } = req.query;
 
+        // Validate Store ID
         if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
             return res.status(400).json({
                 success: false,
@@ -474,6 +476,7 @@ const getSearchSuggestions = async (req, res) => {
             });
         }
 
+        // Validate search query
         const searchQuery = String(q || "").trim();
 
         if (!searchQuery) {
@@ -484,119 +487,213 @@ const getSearchSuggestions = async (req, res) => {
             });
         }
 
+        if (searchQuery.length > 80) {
+            return res.status(400).json({
+                success: false,
+                message: "Search query is too long"
+            });
+        }
+
+        if (searchQuery.length < 2) {
+            return res.status(200).json({
+                success: true,
+                categories: [],
+                products: []
+            });
+        }
+
+        // Check active store
+        const store = await Store.findOne({
+            _id: storeId,
+            status: "active"
+        }).select("_id");
+
+        if (!store) {
+            return res.status(404).json({
+                success: false,
+                message: "Active store not found"
+            });
+        }
+
+        // Escape regex
+        const escapeRegex = (value) =>
+            value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
         const searchRegex = new RegExp(
-            searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+            escapeRegex(searchQuery),
             "i"
         );
 
-        // Get available inventory of selected store
-        const inventories = await Inventory.find({
-            store: storeId,
-            status: "active",
-            availableQuantity: { $gt: 0 }
+        const storeObjectId = new mongoose.Types.ObjectId(storeId);
+
+        // Search available products in selected store
+        const availableProducts = await Inventory.aggregate([
+            {
+                $match: {
+                    store: storeObjectId,
+                    status: "active",
+                    availableQuantity: { $gt: 0 }
+                }
+            },
+            {
+                $lookup: {
+                    from: Product.collection.name,
+                    localField: "product",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+            { $unwind: "$product" },
+            {
+                $match: {
+                    "product.isActive": true
+                }
+            },
+            {
+                $lookup: {
+                    from: ProductVariant.collection.name,
+                    localField: "variant",
+                    foreignField: "_id",
+                    as: "variant"
+                }
+            },
+            { $unwind: "$variant" },
+            {
+                $match: {
+                    "variant.status": "ACTIVE",
+                    $expr: {
+                        $eq: ["$variant.product", "$product._id"]
+                    },
+                    $or: [
+                        { "product.name": searchRegex },
+                        { "variant.name": searchRegex }
+                    ]
+                }
+            },
+            {
+                $lookup: {
+                    from: Category.collection.name,
+                    localField: "product.category",
+                    foreignField: "_id",
+                    as: "category"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$category",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $project: {
+                    _id: "$product._id",
+                    name: "$product.name",
+                    slug: "$product.slug",
+                    images: "$product.images",
+
+                    category: {
+                        $cond: [
+                            { $ifNull: ["$category._id", false] },
+                            {
+                                _id: "$category._id",
+                                name: "$category.name",
+                                slug: "$category.slug"
+                            },
+                            null
+                        ]
+                    },
+
+                    variant: {
+                        _id: "$variant._id",
+                        name: "$variant.name",
+                        slug: "$variant.slug",
+                        sku: "$variant.sku",
+                        unit: "$variant.unit",
+                        unitValue: "$variant.unitValue",
+                        mrp: "$variant.mrp",
+                        sellingPrice: "$variant.sellingPrice",
+                        images: "$variant.images"
+                    },
+
+                    availableQuantity: 1
+                }
+            },
+            { $sort: { name: 1 } },
+            { $limit: 10 }
+        ]);
+
+        // Get categories having available products in this store
+        const availableCategoryIds = await Inventory.aggregate([
+            {
+                $match: {
+                    store: storeObjectId,
+                    status: "active",
+                    availableQuantity: { $gt: 0 }
+                }
+            },
+            {
+                $lookup: {
+                    from: Product.collection.name,
+                    localField: "product",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+            { $unwind: "$product" },
+            {
+                $match: {
+                    "product.isActive": true
+                }
+            },
+            {
+                $lookup: {
+                    from: ProductVariant.collection.name,
+                    localField: "variant",
+                    foreignField: "_id",
+                    as: "variant"
+                }
+            },
+            { $unwind: "$variant" },
+            {
+                $match: {
+                    "variant.status": "ACTIVE",
+                    $expr: {
+                        $eq: ["$variant.product", "$product._id"]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: "$product.category"
+                }
+            }
+        ]);
+
+        const categoryIds = availableCategoryIds
+            .map(item => item._id)
+            .filter(Boolean);
+
+        // Search categories
+        const categories = await Category.find({
+            _id: { $in: categoryIds },
+            name: searchRegex
         })
-            .populate({
-                path: "product",
-                match: { isActive: true },
-                select: "name slug category images"
-            })
-            .populate({
-                path: "variant",
-                match: { status: "ACTIVE" },
-                select: "name slug sku unit unitValue mrp sellingPrice images"
-            })
-            .populate({
-                path: "product",
-                populate: {
-                    path: "category",
-                    select: "name slug"
-                }
-            });
-
-        const categories = [];
-        const products = [];
-        const categoryIds = new Set();
-        const productIds = new Set();
-
-        inventories.forEach((item) => {
-            const product = item.product;
-            const variant = item.variant;
-
-            if (!product || !variant) {
-                return;
-            }
-
-            const category = product.category;
-
-            // Category suggestions
-            if (
-                category &&
-                category.name &&
-                searchRegex.test(category.name) &&
-                !categoryIds.has(category._id.toString())
-            ) {
-                categoryIds.add(category._id.toString());
-
-                categories.push({
-                    _id: category._id,
-                    name: category.name,
-                    slug: category.slug
-                });
-            }
-
-            // Product and variant suggestions
-            const productMatch = searchRegex.test(product.name);
-            const variantMatch = searchRegex.test(variant.name);
-
-            if (productMatch || variantMatch) {
-                const uniqueKey = `${product._id}-${variant._id}`;
-
-                if (!productIds.has(uniqueKey)) {
-                    productIds.add(uniqueKey);
-
-                    products.push({
-                        _id: product._id,
-                        name: product.name,
-                        slug: product.slug,
-                        images: product.images,
-                        category: category
-                            ? {
-                                _id: category._id,
-                                name: category.name,
-                                slug: category.slug
-                            }
-                            : null,
-                        variant: {
-                            _id: variant._id,
-                            name: variant.name,
-                            slug: variant.slug,
-                            sku: variant.sku,
-                            unit: variant.unit,
-                            unitValue: variant.unitValue,
-                            mrp: variant.mrp,
-                            sellingPrice: variant.sellingPrice,
-                            images: variant.images
-                        },
-                        availableQuantity: item.availableQuantity
-                    });
-                }
-            }
-        });
+            .select("_id name slug image")
+            .limit(10)
+            .lean();
 
         return res.status(200).json({
             success: true,
-            count: products.length,
+            message: "Search suggestions fetched successfully",
             categories,
-            products
+            products: availableProducts
         });
 
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        return handleResponseError(error, res);
     }
 };
+
 
 
 module.exports = {
