@@ -39,6 +39,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(cookieParser());
+const PORT = process.env.PORT ||3000;
 
 
 app.use("/ping", (_, res) => {
@@ -63,6 +64,6 @@ app.use("/deliverypartner",deliveryPartnerRoute)
 app.use("/wishlist",wishlistRoute)
 app.use("/banner",bannerRoute)
 
-app.listen(3000,()=>{
+app.listen(PORT,()=>{
     console.log("server is running");
 })
