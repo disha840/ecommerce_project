@@ -12,7 +12,6 @@ import {
   FiEye,
   FiEdit2,
   FiTrash2,
-  FiPower,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 
@@ -32,7 +31,6 @@ function ProductVariant() {
   const [deleteId, setDeleteId] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusLoading, setStatusLoading] = useState(null);
 
   if (
     !permissions.some((permission) =>
@@ -82,16 +80,13 @@ function ProductVariant() {
   // Change Variant Status
   const handleStatusChange = async (id) => {
     try {
-      setStatusLoading(id);
-
       const response = await api.patch(
         `/productvariant/change-status/${id}`
       );
 
       toast.success(response.data.message);
 
-      getProductVariants();
-
+      await getProductVariants();
     } catch (error) {
       console.log("Status change error:", error);
 
@@ -99,8 +94,6 @@ function ProductVariant() {
         error.response?.data?.message ||
         "Failed to update variant status"
       );
-    } finally {
-      setStatusLoading(null);
     }
   };
 
@@ -304,11 +297,9 @@ function ProductVariant() {
             </thead>
 
             <tbody>
-
               {filteredVariants.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="px-5 py-16 text-center">
-
                     <div className="flex flex-col items-center">
                       <div className="mb-3 rounded-full bg-[#D7F2F6] p-4 text-[#087F95]">
                         <FiPackage size={28} />
@@ -322,11 +313,9 @@ function ProductVariant() {
                         Product variants will appear here.
                       </p>
                     </div>
-
                   </td>
                 </tr>
               ) : (
-
                 filteredVariants.map((variant) => (
                   <tr
                     key={variant._id}
@@ -363,17 +352,25 @@ function ProductVariant() {
                       ₹{variant.sellingPrice}
                     </td>
 
-                    {/* Status */}
+                    {/* Clickable Status */}
                     <td className="whitespace-nowrap px-5 py-4">
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                      <button
+                        type="button"
+                        disabled={!permissions.includes("product-variant:update")}
+                        onClick={() => handleStatusChange(variant._id)}
+                        title={
                           variant.status === "ACTIVE"
-                            ? "bg-[#D7F2F6] text-[#087F95]"
-                            : "bg-[#EAF7FA] text-[#627D98]"
+                            ? "Click to deactivate"
+                            : "Click to activate"
+                        }
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                          variant.status === "ACTIVE"
+                            ? "bg-[#D7F2F6] text-[#087F95] hover:bg-red-100 hover:text-red-600"
+                            : "bg-[#EAF7FA] text-[#627D98] hover:bg-green-100 hover:text-green-600"
                         }`}
                       >
                         {variant.status}
-                      </span>
+                      </button>
                     </td>
 
                     {/* Actions */}
@@ -406,29 +403,6 @@ function ProductVariant() {
                           </button>
                         )}
 
-                        {/* Change Status */}
-                        {permissions.includes("product-variant:update") && (
-                          <button
-                            type="button"
-                            title={
-                              variant.status === "ACTIVE"
-                                ? "Deactivate Variant"
-                                : "Activate Variant"
-                            }
-                            disabled={statusLoading === variant._id}
-                            onClick={() =>
-                              handleStatusChange(variant._id)
-                            }
-                            className={`rounded-lg border p-2 transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                              variant.status === "ACTIVE"
-                                ? "border-red-200 text-red-500 hover:bg-red-50"
-                                : "border-green-200 text-green-600 hover:bg-green-50"
-                            }`}
-                          >
-                            <FiPower size={17} />
-                          </button>
-                        )}
-
                         {/* Delete */}
                         {permissions.includes("product-variant:delete") && (
                           <button
@@ -449,14 +423,11 @@ function ProductVariant() {
 
                   </tr>
                 ))
-
               )}
-
             </tbody>
           </table>
         </div>
       </div>
-
     </div>
   );
 }

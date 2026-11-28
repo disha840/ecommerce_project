@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import {
   FiSearch,
@@ -16,7 +17,6 @@ const Category = () => {
   const navigate = useNavigate();
 
   const user = useSelector((state) => state.auth.user);
-
   const permissions = user?.permissions || [];
 
   const [createcategory, setCreateCategory] = useState(false);
@@ -28,40 +28,73 @@ const Category = () => {
   const [editData, setEditData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // GET ALL CATEGORIES
-  async function getdata() {
+  // PAGINATION STATES
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCategories, setTotalCategories] = useState(0);
+
+  const limit = 5;
+
+  // GET ALL CATEGORIES WITH PAGINATION
+  async function getdata(page = 1) {
     try {
-  
-      const response = await api.get("/category/showcategories");
+      setLoading(true);
+
+      const response = await api.get(
+        `/category/showcategories?page=${page}&limit=${limit}`
+      );
+
+      console.log("Category Pagination:", response.data);
+
       setData(response.data.category || []);
+      setCurrentPage(Number(response.data.currentPage) || page);
+      setTotalPages(Number(response.data.totalPages) || 1);
+      setTotalCategories(Number(response.data.totalCategories) || 0);
+
     } catch (error) {
       console.log(error.response?.data || error.message);
       toast.error("Failed to fetch categories");
-    } 
+    } finally {
+      setLoading(false);
+    }
   }
 
+  // INITIAL FETCH
   useEffect(() => {
-    getdata();
+    getdata(1);
   }, []);
 
   // SEARCH CATEGORIES
   async function SearchCategory(searchvalue = "") {
     try {
+      setLoading(true);
+
       const response = await api.get(
         `/category/searched?search=${encodeURIComponent(searchvalue)}`
       );
-      setData(response.data.category || []);
+
+      const categories = response.data.category || [];
+
+      setData(categories);
+      setTotalCategories(categories.length);
+      setCurrentPage(1);
+      setTotalPages(1);
+
     } catch (error) {
       console.log(error.response?.data || error.message);
+      toast.error("Failed to search categories");
+    } finally {
+      setLoading(false);
     }
   }
 
+  // SEARCH DEBOUNCE
   useEffect(() => {
     const timer = setTimeout(() => {
       if (search.trim()) {
         SearchCategory(search);
       } else {
-        getdata();
+        getdata(1);
       }
     }, 400);
 
@@ -77,13 +110,15 @@ const Category = () => {
   async function handleStatusChange(id) {
     try {
       await api.put(`/category/toggle-status/${id}`);
+
       toast.success("Category status updated");
 
       if (search.trim()) {
         await SearchCategory(search);
       } else {
-        await getdata();
+        await getdata(currentPage);
       }
+
     } catch (error) {
       console.log(error.response?.data || error.message);
       toast.error("Failed to update status");
@@ -100,12 +135,17 @@ const Category = () => {
   ).length;
 
   // PAGE ACCESS
-  if (!user?.permissions?.some((permission) => permission.includes("categories"))) {
+  if (
+    !user?.permissions?.some((permission) =>
+      permission.includes("categories")
+    )
+  ) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
   return (
     <>
+      {/* ADD CATEGORY */}
       {createcategory && (
         <AddCategory
           onClose={() => setCreateCategory(false)}
@@ -113,6 +153,7 @@ const Category = () => {
         />
       )}
 
+      {/* EDIT CATEGORY */}
       {editCat && (
         <AddCategory
           onClose={() => {
@@ -124,6 +165,7 @@ const Category = () => {
         />
       )}
 
+      {/* DELETE CATEGORY */}
       {deleteCat && (
         <DeleteCategoryModal
           catId={catId}
@@ -132,10 +174,18 @@ const Category = () => {
             setDelete(false);
           }}
           onDeleted={async () => {
+            setDelete(false);
+            setCatid(null);
+
             if (search.trim()) {
               await SearchCategory(search);
             } else {
-              await getdata();
+              const pageToLoad =
+                data.length === 1 && currentPage > 1
+                  ? currentPage - 1
+                  : currentPage;
+
+              await getdata(pageToLoad);
             }
           }}
         />
@@ -157,16 +207,18 @@ const Category = () => {
         {/* STATISTICS */}
         <div className="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-3">
 
+          {/* TOTAL CATEGORIES */}
           <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
             <p className="text-sm text-[#627D98]">
               Total Categories
             </p>
 
             <h2 className="mt-2 text-3xl font-bold text-[#102A43]">
-              {data.length}
+              {totalCategories}
             </h2>
           </div>
 
+          {/* ACTIVE CATEGORIES */}
           <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
             <p className="text-sm text-[#627D98]">
               Active Categories
@@ -177,6 +229,7 @@ const Category = () => {
             </h2>
           </div>
 
+          {/* INACTIVE CATEGORIES */}
           <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
             <p className="text-sm text-[#627D98]">
               Inactive Categories
@@ -273,20 +326,27 @@ const Category = () => {
                       key={item._id}
                       className="border-t border-[#EAF2F5] transition hover:bg-[#F4FBFC]"
                     >
+
+                      {/* SERIAL NUMBER */}
                       <td className="whitespace-nowrap px-5 py-5">
-                        {index + 1}
+                        {search.trim()
+                          ? index + 1
+                          : (currentPage - 1) * limit + index + 1}
                       </td>
 
+                      {/* CATEGORY NAME */}
                       <td className="whitespace-nowrap px-5 py-5 font-medium text-[#102A43]">
                         {item.name}
                       </td>
 
+                      {/* DESCRIPTION */}
                       <td className="px-5 py-5 text-[#627D98]">
                         {item.description || "—"}
                       </td>
 
+                      {/* STATUS */}
                       <td className="whitespace-nowrap px-5 py-5">
-                        {permissions.includes("categories:update") && (
+                        {permissions.includes("categories:update") ? (
                           <button
                             type="button"
                             onClick={() => handleStatusChange(item._id)}
@@ -298,13 +358,12 @@ const Category = () => {
                           >
                             {item.status}
                           </button>
-                        )}
-
-                        {!permissions.includes("categories:update") && (
+                        ) : (
                           <span>{item.status}</span>
                         )}
                       </td>
 
+                      {/* CREATED AT */}
                       <td className="whitespace-nowrap px-5 py-5 text-[#627D98]">
                         {item.createdAt
                           ? new Date(item.createdAt).toLocaleDateString(
@@ -318,9 +377,11 @@ const Category = () => {
                           : "—"}
                       </td>
 
+                      {/* ACTIONS */}
                       <td className="whitespace-nowrap px-5 py-5">
                         <div className="flex justify-center gap-2">
 
+                          {/* VIEW */}
                           {permissions.includes("categories:read") && (
                             <button
                               type="button"
@@ -332,6 +393,7 @@ const Category = () => {
                             </button>
                           )}
 
+                          {/* EDIT */}
                           {permissions.includes("categories:update") && (
                             <button
                               type="button"
@@ -346,6 +408,7 @@ const Category = () => {
                             </button>
                           )}
 
+                          {/* DELETE */}
                           {permissions.includes("categories:delete") && (
                             <button
                               type="button"
@@ -362,6 +425,7 @@ const Category = () => {
 
                         </div>
                       </td>
+
                     </tr>
                   ))
                 )}
@@ -369,6 +433,50 @@ const Category = () => {
 
             </table>
           </div>
+
+          {/* PAGINATION */}
+          {!search.trim() && (
+            <div className="flex flex-col items-center justify-between gap-3 border-t border-[#D9E8EF] px-5 py-4 sm:flex-row">
+
+              <p className="text-sm text-[#627D98]">
+                Showing{" "}
+                {data.length > 0
+                  ? (currentPage - 1) * limit + 1
+                  : 0}
+                {" - "}
+                {(currentPage - 1) * limit + data.length}
+                {" of "}
+                {totalCategories} categories
+              </p>
+
+              <div className="flex items-center gap-3">
+
+                <button
+                  type="button"
+                  onClick={() => getdata(currentPage - 1)}
+                  disabled={currentPage <= 1 || loading}
+                  className="rounded-lg border border-[#D9E8EF] bg-white px-4 py-2 text-sm font-medium text-[#102A43] transition hover:bg-[#EAF7FA] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Previous
+                </button>
+
+                <span className="text-sm font-medium text-[#102A43]">
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => getdata(currentPage + 1)}
+                  disabled={currentPage >= totalPages || loading}
+                  className="rounded-lg border border-[#D9E8EF] bg-white px-4 py-2 text-sm font-medium text-[#102A43] transition hover:bg-[#EAF7FA] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Next
+                </button>
+
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </>
