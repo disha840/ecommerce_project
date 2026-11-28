@@ -21,6 +21,6 @@ router.get(
     getStoreSubcategoryProducts
 );
 
-router.get("/search-suggestions",auth, getSearchSuggestions);
+router.get("/search-suggestions", getSearchSuggestions);
 
 module.exports = router;

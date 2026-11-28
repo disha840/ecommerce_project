@@ -466,6 +466,7 @@ const getStoreSubcategoryProducts = async (req, res) => {
 
 const getSearchSuggestions = async (req, res) => {
     try {
+         console.log("SEARCH API HIT");
         const { storeId, q } = req.query;
 
         // Validate Store ID
@@ -475,6 +476,7 @@ const getSearchSuggestions = async (req, res) => {
                 message: "Valid Store ID is required"
             });
         }
+        console.log("hello")
 
         // Validate search query
         const searchQuery = String(q || "").trim();
