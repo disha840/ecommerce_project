@@ -1,9 +1,10 @@
 
+
 import { useEffect, useState } from "react";
 import CreateInventory from "../../components/Inventory/CreateInventory";
 import api from "../../api";
 import { useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import {
   FiEye,
   FiEdit2,
@@ -15,6 +16,8 @@ import { toast } from "react-toastify";
 const Inventory = () => {
   const user = useSelector((state) => state.auth.user);
   const permissions = user?.permissions || [];
+
+  const navigate = useNavigate();
 
   const [showCreateInventory, setShowCreateInventory] = useState(false);
   const [selectedInventory, setSelectedInventory] = useState(null);
@@ -68,6 +71,11 @@ const Inventory = () => {
     setShowCreateInventory(false);
     setSelectedInventory(null);
     getInventories();
+  };
+
+  // VIEW INVENTORY DETAILS
+  const handleViewInventory = (id) => {
+    navigate(`/admin/inventory/view/${id}`);
   };
 
   // OPEN DELETE CONFIRMATION POPUP
@@ -137,7 +145,7 @@ const Inventory = () => {
   ).length;
 
   // PAGE ACCESS
-  if (!user?.permissions?.some((permission) => permission.includes("inventory"))) {
+  if (!permissions.some((permission) => permission.includes("inventory"))) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -393,9 +401,9 @@ const Inventory = () => {
                         {permissions.includes("inventory:read") && (
                           <button
                             type="button"
-                            disabled
-                            title="View details coming soon"
-                            className="cursor-not-allowed rounded-lg bg-blue-50 p-2 text-blue-500 opacity-60"
+                            onClick={() => handleViewInventory(item._id)}
+                            title="View Inventory"
+                            className="rounded-lg bg-blue-50 p-2 text-blue-600 transition hover:bg-blue-100"
                           >
                             <FiEye size={17} />
                           </button>
