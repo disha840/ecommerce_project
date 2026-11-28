@@ -1,4 +1,5 @@
 
+
 import { Navigate, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -11,7 +12,9 @@ import {
   FiEye,
   FiEdit2,
   FiTrash2,
+  FiPower,
 } from "react-icons/fi";
+import { toast } from "react-toastify";
 
 import AddVariant from "../../components/ProductVariant/AddVariant";
 import api from "../../api";
@@ -28,6 +31,8 @@ function ProductVariant() {
   const [deletemodal, setShowDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusLoading, setStatusLoading] = useState(null);
 
   if (
     !permissions.some((permission) =>
@@ -37,13 +42,17 @@ function ProductVariant() {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
+  // Get Product Variants
   const getProductVariants = async () => {
     try {
-      const response = await api.get("/productvariant/getproductvariants");
-      console.log(response);
+      const response = await api.get(
+        "/productvariant/getproductvariants"
+      );
+
       setVariants(response.data.variants);
     } catch (error) {
       console.log(error);
+      toast.error("Failed to fetch product variants");
     }
   };
 
@@ -51,24 +60,64 @@ function ProductVariant() {
     getProductVariants();
   }, []);
 
+  // Add Variant
   function handleAdd() {
     setSelectedVariant(null);
     setShowModal(true);
   }
 
+  // Edit Variant
   function handleEdit(variant) {
     setSelectedVariant(variant);
     setShowModal(true);
   }
 
+  // Close Modal
   function handleClose() {
     setShowModal(false);
     setSelectedVariant(null);
     getProductVariants();
   }
 
+  // Change Variant Status
+  const handleStatusChange = async (id) => {
+    try {
+      setStatusLoading(id);
+
+      const response = await api.patch(
+        `/productvariant/change-status/${id}`
+      );
+
+      toast.success(response.data.message);
+
+      getProductVariants();
+
+    } catch (error) {
+      console.log("Status change error:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+        "Failed to update variant status"
+      );
+    } finally {
+      setStatusLoading(null);
+    }
+  };
+
+  // Search Variants
+  const filteredVariants = variants.filter((variant) => {
+    const search = searchQuery.toLowerCase();
+
+    return (
+      variant.name?.toLowerCase().includes(search) ||
+      variant.product?.name?.toLowerCase().includes(search) ||
+      variant.sku?.toLowerCase().includes(search)
+    );
+  });
+
   return (
     <div className="min-h-screen bg-[#F0FAFC] p-6 text-[#102A43]">
+
       {/* Add / Edit Modal */}
       {showModal && (
         <AddVariant
@@ -81,7 +130,10 @@ function ProductVariant() {
       {deletemodal && permissions.includes("product-variant:delete") && (
         <DeleteVariantModal
           variantId={deleteId}
-          onClose={() => setShowDelete(false)}
+          onClose={() => {
+            setShowDelete(false);
+            setDeleteId(null);
+          }}
           onDeleted={getProductVariants}
         />
       )}
@@ -99,10 +151,15 @@ function ProductVariant() {
 
       {/* Statistics Cards */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+        {/* Total Variants */}
         <div className="rounded-xl border border-[#D9E8EF] bg-white p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#627D98]">Total Variants</p>
+              <p className="text-sm text-[#627D98]">
+                Total Variants
+              </p>
+
               <h2 className="mt-2 text-2xl font-bold text-[#102A43]">
                 {variants.length}
               </h2>
@@ -114,10 +171,14 @@ function ProductVariant() {
           </div>
         </div>
 
+        {/* Active Variants */}
         <div className="rounded-xl border border-[#D9E8EF] bg-white p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#627D98]">Active Variants</p>
+              <p className="text-sm text-[#627D98]">
+                Active Variants
+              </p>
+
               <h2 className="mt-2 text-2xl font-bold text-[#087F95]">
                 {
                   variants.filter(
@@ -133,10 +194,14 @@ function ProductVariant() {
           </div>
         </div>
 
+        {/* Total Selling Price */}
         <div className="rounded-xl border border-[#D9E8EF] bg-white p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#627D98]">Total Selling Price</p>
+              <p className="text-sm text-[#627D98]">
+                Total Selling Price
+              </p>
+
               <h2 className="mt-2 text-2xl font-bold text-[#102A43]">
                 ₹
                 {variants.reduce(
@@ -152,10 +217,12 @@ function ProductVariant() {
             </div>
           </div>
         </div>
+
       </div>
 
       {/* Search and Add Variant */}
       <div className="mb-5 flex flex-col gap-3 rounded-xl border border-[#D9E8EF] bg-white p-4 sm:flex-row sm:items-center">
+
         <div className="relative w-full sm:flex-1">
           <FiSearch
             className="absolute left-3 top-1/2 -translate-y-1/2 text-[#627D98]"
@@ -165,6 +232,8 @@ function ProductVariant() {
           <input
             type="text"
             placeholder="Search variants..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-lg border border-[#D9E8EF] bg-[#F8FCFD] py-3 pl-10 pr-4 text-sm text-[#102A43] outline-none placeholder:text-[#627D98] focus:border-[#22B8CF] focus:ring-2 focus:ring-[#22B8CF]/20"
           />
         </div>
@@ -179,10 +248,12 @@ function ProductVariant() {
             Add Variant
           </button>
         )}
+
       </div>
 
       {/* Variants Table */}
       <div className="overflow-hidden rounded-xl border border-[#D9E8EF] bg-white">
+
         <div className="border-b border-[#D9E8EF] px-5 py-4">
           <h2 className="font-semibold text-[#102A43]">
             All Product Variants
@@ -195,23 +266,49 @@ function ProductVariant() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
+
             <thead className="bg-[#EAF7FA] text-[#102A43]">
               <tr>
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">Variant</th>
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">Product</th>
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">SKU</th>
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">Unit</th>
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">MRP</th>
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">Selling Price</th>
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">Status</th>
-                <th className="whitespace-nowrap px-5 py-4 font-semibold">Actions</th>
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">
+                  Variant
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">
+                  Product
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">
+                  SKU
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">
+                  Unit
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">
+                  MRP
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">
+                  Selling Price
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">
+                  Status
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">
+                  Actions
+                </th>
               </tr>
             </thead>
 
             <tbody>
-              {variants.length === 0 ? (
+
+              {filteredVariants.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="px-5 py-16 text-center">
+
                     <div className="flex flex-col items-center">
                       <div className="mb-3 rounded-full bg-[#D7F2F6] p-4 text-[#087F95]">
                         <FiPackage size={28} />
@@ -225,38 +322,48 @@ function ProductVariant() {
                         Product variants will appear here.
                       </p>
                     </div>
+
                   </td>
                 </tr>
               ) : (
-                variants.map((variant) => (
+
+                filteredVariants.map((variant) => (
                   <tr
                     key={variant._id}
                     className="border-t border-[#D9E8EF] transition hover:bg-[#F8FCFD]"
                   >
+
+                    {/* Variant */}
                     <td className="whitespace-nowrap px-5 py-4 font-medium text-[#102A43]">
                       {variant.name}
                     </td>
 
+                    {/* Product */}
                     <td className="whitespace-nowrap px-5 py-4 text-[#627D98]">
                       {variant.product?.name || "N/A"}
                     </td>
 
+                    {/* SKU */}
                     <td className="whitespace-nowrap px-5 py-4 text-[#627D98]">
                       {variant.sku || "N/A"}
                     </td>
 
+                    {/* Unit */}
                     <td className="whitespace-nowrap px-5 py-4 text-[#627D98]">
                       {variant.unitValue} {variant.unit}
                     </td>
 
+                    {/* MRP */}
                     <td className="whitespace-nowrap px-5 py-4 text-[#102A43]">
                       ₹{variant.mrp}
                     </td>
 
+                    {/* Selling Price */}
                     <td className="whitespace-nowrap px-5 py-4 font-semibold text-[#087F95]">
                       ₹{variant.sellingPrice}
                     </td>
 
+                    {/* Status */}
                     <td className="whitespace-nowrap px-5 py-4">
                       <span
                         className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
@@ -269,8 +376,11 @@ function ProductVariant() {
                       </span>
                     </td>
 
+                    {/* Actions */}
                     <td className="whitespace-nowrap px-5 py-4">
                       <div className="flex items-center gap-2">
+
+                        {/* View */}
                         {permissions.includes("product-variant:read") && (
                           <button
                             type="button"
@@ -284,6 +394,7 @@ function ProductVariant() {
                           </button>
                         )}
 
+                        {/* Edit */}
                         {permissions.includes("product-variant:update") && (
                           <button
                             type="button"
@@ -295,6 +406,30 @@ function ProductVariant() {
                           </button>
                         )}
 
+                        {/* Change Status */}
+                        {permissions.includes("product-variant:update") && (
+                          <button
+                            type="button"
+                            title={
+                              variant.status === "ACTIVE"
+                                ? "Deactivate Variant"
+                                : "Activate Variant"
+                            }
+                            disabled={statusLoading === variant._id}
+                            onClick={() =>
+                              handleStatusChange(variant._id)
+                            }
+                            className={`rounded-lg border p-2 transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                              variant.status === "ACTIVE"
+                                ? "border-red-200 text-red-500 hover:bg-red-50"
+                                : "border-green-200 text-green-600 hover:bg-green-50"
+                            }`}
+                          >
+                            <FiPower size={17} />
+                          </button>
+                        )}
+
+                        {/* Delete */}
                         {permissions.includes("product-variant:delete") && (
                           <button
                             type="button"
@@ -308,15 +443,20 @@ function ProductVariant() {
                             <FiTrash2 size={17} />
                           </button>
                         )}
+
                       </div>
                     </td>
+
                   </tr>
                 ))
+
               )}
+
             </tbody>
           </table>
         </div>
       </div>
+
     </div>
   );
 }
