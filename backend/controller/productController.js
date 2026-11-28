@@ -2,6 +2,7 @@
 const Product = require("../models/productModel");
 const Category = require("../models/categoryModel");
 const Subcategory = require("../models/subcategoryModel");
+const mongoose = require("mongoose");
 const Brand = require("../models/brandModel");
 const cloudinary = require("../cloudinary");
 const mongoose = require("../database/db");
