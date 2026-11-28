@@ -55,16 +55,29 @@ async function createCategory(req, res) {
 // SHOW ALL CATEGORIES
 async function showCategory(req, res) {
   try {
-    const category = await Category.find().sort({
-      createdAt: -1
-    });
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+
+    const skip = (page - 1) * limit;
+
+    const totalCategories = await Category.countDocuments();
+
+    const category = await Category.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     res.status(200).send({
       category,
+      currentPage: page,
+      totalPages: Math.ceil(totalCategories / limit),
+      totalCategories,
       message: "Fetch all categories successfully"
     });
 
   } catch (error) {
+    console.log("Show category error:", error);
+
     res.status(500).send({
       message: "Internal server error"
     });
