@@ -27,31 +27,7 @@ export default function Footer() {
               delivered straight to your doorstep.
             </p>
 
-            <div className="mt-5 flex gap-3">
-              <a
-                href="#"
-                aria-label="Instagram"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-xs font-semibold transition hover:bg-emerald-600 hover:text-white"
-              >
-                IG
-              </a>
-
-              <a
-                href="#"
-                aria-label="Facebook"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-xs font-semibold transition hover:bg-emerald-600 hover:text-white"
-              >
-                FB
-              </a>
-
-              <a
-                href="#"
-                aria-label="YouTube"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-800 text-xs font-semibold transition hover:bg-emerald-600 hover:text-white"
-              >
-                YT
-              </a>
-            </div>
+            
           </div>
 
           {/* Quick Links */}
@@ -97,7 +73,7 @@ export default function Footer() {
 
             <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/account" className="transition hover:text-emerald-400">
+                <Link href="/profile" className="transition hover:text-emerald-400">
                   My Account
                 </Link>
               </li>
@@ -107,20 +83,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/shipping" className="transition hover:text-emerald-400">
+                <Link href="/shipping-policy" className="transition hover:text-emerald-400">
                   Shipping Policy
                 </Link>
               </li>
-              <li>
-                <Link href="/returns" className="transition hover:text-emerald-400">
-                  Returns & Refunds
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="transition hover:text-emerald-400">
-                  FAQs
-                </Link>
-              </li>
+              
             </ul>
           </div>
 
@@ -133,9 +100,9 @@ export default function Footer() {
             <ul className="space-y-4 text-sm text-gray-400">
               <li>
                 <span className="mb-1 block font-medium text-white">
-                  Address
+                  bhakrota
                 </span>
-                Your City, India
+                jaipur, India
               </li>
 
               <li>
@@ -149,7 +116,7 @@ export default function Footer() {
                 <span className="mb-1 block font-medium text-white">
                   Phone
                 </span>
-                +91 XXXXX XXXXX
+                +91 98765 43210
               </li>
             </ul>
           </div>

@@ -92,7 +92,7 @@ export default function Product() {
     }, [storeId]);
 
     const viewProduct = (slug) => {
-        router.push(`/variants/${slug}`);
+        router.push(`/products/${slug}`);
     };
 
     const renderProducts = (products) => (

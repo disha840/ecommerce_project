@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import api from "@/axios/api";
@@ -181,7 +182,8 @@ export default function Navbar() {
             signal: controller.signal,
           }
         );
-        console.log(response)
+
+        console.log("response", response);
 
         setSuggestions({
           categories: response.data.categories || [],
@@ -227,14 +229,14 @@ export default function Navbar() {
   const handleProductClick = (product) => {
     clearSearch();
 
-    router.push(`/variants/${product.slug}`);
+    router.push(`/products/${product.slug}`);
   };
 
   // Category click
   const handleCategoryClick = (category) => {
     clearSearch();
 
-    router.push(`/categories/${category._id}`);
+    router.push(`/categories/${category.slug}`);
   };
 
   // Enter press
@@ -378,7 +380,7 @@ export default function Navbar() {
 
             {/* Search Suggestions Dropdown */}
             {showSuggestions && searchQuery.trim().length >= 2 && (
-              <div className="absolute left-0 top-full z-[100] mt-2 max-h-[450px] w-full overflow-y-auto rounded-2xl border border-emerald-100 bg-white shadow-xl">
+              <div className="absolute left-0 top-full z-100 mt-2 max-h-450px w-full overflow-y-auto rounded-2xl border border-emerald-100 bg-white shadow-xl">
 
                 {searchLoading ? (
                   <div className="p-5 text-center text-sm text-slate-500">

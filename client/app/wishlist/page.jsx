@@ -1,9 +1,8 @@
 
-
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import {
     Heart,
     ShoppingBag,
@@ -12,7 +11,12 @@ import Link from "next/link";
 import api from "@/axios/api";
 import toast from "react-hot-toast";
 
+import { getCart } from "@/redux/Slices/cartSlice";
+import { setShowLogin } from "@/redux/Slices/uiSlice";
+
 export default function WishlistPage() {
+
+    const dispatch = useDispatch();
 
     const user = useSelector((state) => state.auth.user);
     const store = useSelector((state) => state.store.selectedStore);
@@ -77,6 +81,45 @@ export default function WishlistPage() {
 
         } finally {
             setRemovingId(null);
+        }
+    };
+
+
+    // ADD TO CART
+    const handleAddToCart = async (item) => {
+
+        if (!user) {
+            return dispatch(setShowLogin(true));
+        }
+
+        // Check Product Availability
+        if (
+            !item.isAvailable ||
+            Number(item.availableQuantity) <= 0
+        ) {
+            return toast.error("This product is currently out of stock");
+        }
+
+        try {
+            const response = await api.post(`/cart/add/${store._id}`, {
+                product: item.product?._id || item.product,
+                variant: item.variant?._id || item.variant,
+                quantity: 1,
+            });
+
+            dispatch(getCart());
+
+            toast.success("Product added to cart!");
+
+            console.log(response.data);
+
+        } catch (error) {
+            console.log("Add to cart error:", error);
+
+            toast.error(
+                error.response?.data?.message ||
+                "Unable to add product to cart"
+            );
         }
     };
 
@@ -195,6 +238,10 @@ export default function WishlistPage() {
 
                             const image = variant?.images?.[0]?.url;
 
+                            const isAvailable =
+                                item.isAvailable &&
+                                Number(item.availableQuantity) > 0;
+
                             return (
 
                                 <div
@@ -210,16 +257,29 @@ export default function WishlistPage() {
                                             <img
                                                 src={image}
                                                 alt={variant?.name || "Product"}
-                                                className="h-full w-full object-contain p-4"
+                                                className={`h-full w-full object-contain p-4 transition ${
+                                                    !isAvailable
+                                                        ? "blur-sm opacity-50"
+                                                        : ""
+                                                }`}
                                             />
 
                                         ) : (
 
                                             <ShoppingBag
                                                 size={45}
-                                                className="text-emerald-300"
+                                                className={`text-emerald-300 ${
+                                                    !isAvailable ? "blur-sm opacity-50" : ""
+                                                }`}
                                             />
 
+                                        )}
+
+                                        {/* OUT OF STOCK LABEL */}
+                                        {!isAvailable && (
+                                            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-md">
+                                                Out of Stock
+                                            </span>
                                         )}
 
                                         {/* WISHLIST HEART */}
@@ -256,7 +316,7 @@ export default function WishlistPage() {
 
 
                                         {/* AVAILABILITY */}
-                                        {item.isAvailable ? (
+                                        {isAvailable ? (
 
                                             <p className="text-sm text-emerald-700 mt-3 font-medium">
                                                 In Stock
@@ -271,7 +331,18 @@ export default function WishlistPage() {
                                         )}
 
 
-                                        
+                                        {/* ADD TO CART */}
+                                        <button
+                                            onClick={() => handleAddToCart(item)}
+                                            disabled={!isAvailable}
+                                            className={`mt-4 w-full rounded-lg py-3 font-semibold transition ${
+                                                isAvailable
+                                                    ? "bg-emerald-700 hover:bg-emerald-800 text-white"
+                                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                            }`}
+                                        >
+                                            {isAvailable ? "Add to Cart" : "Out of Stock"}
+                                        </button>
 
                                     </div>
 

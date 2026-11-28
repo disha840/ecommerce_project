@@ -20,6 +20,9 @@ const Page = () => {
     const storeId = store?._id;
     const user = useSelector((state) => state.auth.user);
 
+    // Cart Items
+    const cartItems = useSelector((state) => state.cart.items || []);
+
     const [inventories, setInventories] = useState([]);
     const [products, setProducts] = useState([]);
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -27,10 +30,30 @@ const Page = () => {
     const [variants, setVariants] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const productsPerPage = 8;
+
+    const totalPages = Math.ceil(products.length / productsPerPage);
+    const startIndex = (currentPage - 1) * productsPerPage;
+
+    const currentProducts = products.slice(
+        startIndex,
+        startIndex + productsPerPage
+    );
+
     // Wishlist states
     const [wishlistVariants, setWishlistVariants] = useState([]);
     const [wishlistItemIds, setWishlistItemIds] = useState({});
     const [wishlistLoading, setWishlistLoading] = useState(null);
+
+    // Check if variant already exists in cart
+    const isVariantInCart = (variantId) => {
+        return cartItems.some(
+            (item) =>
+                (item.variant?._id || item.variant) === variantId
+        );
+    };
 
     // GET WISHLIST
     const fetchWishlist = async () => {
@@ -158,8 +181,15 @@ const Page = () => {
 
     // FETCH VARIANTS
     useEffect(() => {
+        setCurrentPage(1);
+
         if (slug && storeId) {
             fetchVariants();
+        } else {
+            setProducts([]);
+            setVariants([]);
+            setSelectedProduct(null);
+            setLoading(false);
         }
     }, [slug, storeId]);
 
@@ -173,7 +203,14 @@ const Page = () => {
         }
     }, [user, storeId]);
 
-    // ADD TO CART
+    // FETCH CART
+    useEffect(() => {
+        if (user && storeId) {
+            dispatch(getCart());
+        }
+    }, [user, storeId, dispatch]);
+
+    // ADD TO CART / GO TO CART
     const handleAddToCart = async (event, variant) => {
         event.stopPropagation();
 
@@ -181,20 +218,25 @@ const Page = () => {
             return dispatch(setShowLogin(true));
         }
 
+        // Already in cart: navigate to cart page
+        if (isVariantInCart(variant._id)) {
+            router.push("/cart");
+            return;
+        }
+
         try {
-            const response = await api.post(`/cart/add/${storeId}`, {
+            await api.post(`/cart/add/${storeId}`, {
                 product: variant.product?._id,
                 variant: variant._id,
                 quantity: 1,
             });
 
-            dispatch(getCart());
+            await dispatch(getCart());
 
             toast.success("Product added to cart!");
-
-            console.log(response.data);
         } catch (error) {
             console.log("Add to cart error:", error);
+
             toast.error(
                 error.response?.data?.message || "Unable to add product to cart"
             );
@@ -288,8 +330,10 @@ const Page = () => {
                         <div className="mt-4 h-1 w-16 rounded-full bg-emerald-500"></div>
                     </div>
 
+                    {/* Product Buttons */}
+
                     <div className="flex flex-wrap gap-3">
-                        {products.map((product) => (
+                        {currentProducts.map((product) => (
                             <button
                                 key={product._id}
                                 onClick={() => handleProductClick(product)}
@@ -303,6 +347,50 @@ const Page = () => {
                             </button>
                         ))}
                     </div>
+
+                    {/* Pagination */}
+
+                    {totalPages > 1 && (
+                        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+
+                            <p className="text-sm text-slate-500">
+                                Showing {startIndex + 1} -{" "}
+                                {Math.min(
+                                    startIndex + productsPerPage,
+                                    products.length
+                                )}{" "}
+                                of {products.length} products
+                            </p>
+
+                            <div className="flex items-center gap-3">
+
+                                <button
+                                    onClick={() =>
+                                        setCurrentPage((prev) => prev - 1)
+                                    }
+                                    disabled={currentPage === 1}
+                                    className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-emerald-500 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    Previous
+                                </button>
+
+                                <span className="text-sm font-semibold text-slate-700">
+                                    {currentPage} / {totalPages}
+                                </span>
+
+                                <button
+                                    onClick={() =>
+                                        setCurrentPage((prev) => prev + 1)
+                                    }
+                                    disabled={currentPage === totalPages}
+                                    className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-emerald-500 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    Next
+                                </button>
+
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Heading */}
@@ -312,13 +400,9 @@ const Page = () => {
                         Shop Your Favorites
                     </p>
 
-                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
+                    <h1 className="text-xl font-bold text-slate-900">
                         Choose Your Variant
                     </h1>
-
-                    <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-500 md:text-base">
-                        Explore available options and select the one that suits you best.
-                    </p>
 
                     <div className="mx-auto mt-5 h-1 w-16 rounded-full bg-emerald-500"></div>
                 </div>
@@ -342,13 +426,6 @@ const Page = () => {
                 ) : (
                     <>
                         <div className="mb-6 flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-slate-800">
-                                {selectedProduct?.name} - Available Options
-                            </h2>
-
-                            <span className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
-                                {variants.length} Variants
-                            </span>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -443,16 +520,26 @@ const Page = () => {
 
                                         </div>
 
-                                        {/* Add to Cart */}
+                                        {/* Add to Cart / Go to Cart */}
 
                                         <button
                                             onClick={(event) =>
                                                 handleAddToCart(event, variant)
                                             }
-                                            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95"
+                                            className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-sm transition active:scale-95 ${
+                                                isVariantInCart(variant._id)
+                                                    ? "bg-slate-700 hover:bg-slate-800"
+                                                    : "bg-emerald-600 hover:bg-emerald-700"
+                                            }`}
                                         >
-                                            <span className="text-lg">+</span>
-                                            Add to Cart
+                                            {isVariantInCart(variant._id) ? (
+                                                "Go to Cart"
+                                            ) : (
+                                                <>
+                                                    <span className="text-lg">+</span>
+                                                    Add to Cart
+                                                </>
+                                            )}
                                         </button>
 
                                     </div>
