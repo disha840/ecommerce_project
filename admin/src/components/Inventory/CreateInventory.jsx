@@ -1,14 +1,18 @@
 
 
+
 import React, { useState, useEffect } from "react";
 import { FiArrowLeft } from "react-icons/fi";
 import api from "../../api";
+import { toast } from "react-toastify";
 
-function CreateInventory({ onClose }) {
+function CreateInventory({ onClose, inventory, isEdit }) {
 
     const [stores, setStores] = useState([]);
     const [products, setProducts] = useState([]);
     const [variants, setVariants] = useState([]);
+
+    const [submitting, setSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
         store: "",
@@ -21,7 +25,7 @@ function CreateInventory({ onClose }) {
         status: "active"
     });
 
-    // Fetch All Stores
+    // FETCH ALL STORES
     useEffect(() => {
         async function fetchStores() {
             try {
@@ -41,7 +45,7 @@ function CreateInventory({ onClose }) {
         fetchStores();
     }, []);
 
-    // Fetch All Products
+    // FETCH ALL PRODUCTS
     useEffect(() => {
         async function fetchProducts() {
             try {
@@ -61,7 +65,40 @@ function CreateInventory({ onClose }) {
         fetchProducts();
     }, []);
 
-    // Fetch Variants According To Selected Product ID
+    // FILL FORM DATA WHEN EDITING
+    useEffect(() => {
+
+        if (isEdit && inventory) {
+
+            setFormData({
+                store: inventory.store?._id || inventory.store || "",
+                product: inventory.product?._id || inventory.product || "",
+                variant: inventory.variant?._id || inventory.variant || "",
+                quantity: inventory.quantity ?? "",
+                reservedQuantity: inventory.reservedQuantity ?? 0,
+                reorderLevel: inventory.reorderLevel ?? 10,
+                maxStockLevel: inventory.maxStockLevel ?? 100,
+                status: inventory.status || "active"
+            });
+
+        } else {
+
+            setFormData({
+                store: "",
+                product: "",
+                variant: "",
+                quantity: "",
+                reservedQuantity: 0,
+                reorderLevel: 10,
+                maxStockLevel: 100,
+                status: "active"
+            });
+
+        }
+
+    }, [inventory, isEdit]);
+
+    // FETCH VARIANTS ACCORDING TO SELECTED PRODUCT
     useEffect(() => {
 
         async function fetchVariants() {
@@ -76,9 +113,7 @@ function CreateInventory({ onClose }) {
                     `/productvariant/getallvariants/${formData.product}`
                 );
 
-                setVariants(
-                    response.data.variants || []
-                );
+                setVariants(response.data.variants || []);
 
             } catch (error) {
                 console.log("Fetch variants error:", error);
@@ -90,29 +125,69 @@ function CreateInventory({ onClose }) {
 
     }, [formData.product]);
 
+    // HANDLE INPUT CHANGE
     function handleChange(e) {
         const { name, value } = e.target;
 
-        setFormData({
-            ...formData,
+        setFormData((prev) => ({
+            ...prev,
             [name]: value,
             ...(name === "product" ? { variant: "" } : {})
-        });
+        }));
 
         if (name === "product") {
             setVariants([]);
         }
     }
 
+    // CREATE / UPDATE INVENTORY
     async function handleSubmit(e) {
         e.preventDefault();
 
         try {
-            await api.post("/inventory/createInventory", formData);
+            setSubmitting(true);
+
+            let response;
+
+            if (isEdit && inventory?._id) {
+
+                // UPDATE INVENTORY API
+                response = await api.put(
+                    `/inventory/updateinventory/${inventory._id}`,
+                    formData
+                );
+
+                toast.success(
+                    response.data.message || "Inventory updated successfully"
+                );
+
+            } else {
+
+                // CREATE INVENTORY API
+                response = await api.post(
+                    "/inventory/createinventory",
+                    formData
+                );
+
+                toast.success(
+                    response.data.message || "Inventory created successfully"
+                );
+
+            }
+
             onClose();
 
         } catch (error) {
-            console.error("Error saving inventory:", error);
+
+            console.error("Save Inventory Error:", error);
+
+            toast.error(
+                error.response?.data?.message ||
+                "Failed to save inventory"
+            );
+
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -124,7 +199,7 @@ function CreateInventory({ onClose }) {
 
     return (
         <div
-            className="fixed inset-0 z-100 flex items-center justify-center overflow-y-auto bg-[#102A43]/40 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#102A43]/40 p-4 backdrop-blur-sm"
             onClick={onClose}
         >
 
@@ -133,7 +208,7 @@ function CreateInventory({ onClose }) {
                 onClick={(e) => e.stopPropagation()}
             >
 
-                {/* Header */}
+                {/* HEADER */}
                 <div className="mb-6 flex items-center gap-3">
 
                     <button
@@ -146,11 +221,13 @@ function CreateInventory({ onClose }) {
 
                     <div>
                         <h1 className="text-2xl font-bold text-[#102A43]">
-                            Create Inventory
+                            {isEdit ? "Edit Inventory" : "Create Inventory"}
                         </h1>
 
                         <p className="mt-1 text-sm text-[#627D98]">
-                            Add product stock to your store
+                            {isEdit
+                                ? "Update your store product stock"
+                                : "Add product stock to your store"}
                         </p>
                     </div>
 
@@ -166,15 +243,18 @@ function CreateInventory({ onClose }) {
 
                         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 
-                            {/* Store */}
+                            {/* STORE */}
                             <div>
-                                <label className={labelClass}>Store *</label>
+                                <label className={labelClass}>
+                                    Store *
+                                </label>
 
                                 <select
                                     name="store"
                                     value={formData.store}
                                     onChange={handleChange}
                                     required
+                                    disabled={isEdit}
                                     className={inputClass}
                                 >
                                     <option value="">Select Store</option>
@@ -190,15 +270,18 @@ function CreateInventory({ onClose }) {
                                 </select>
                             </div>
 
-                            {/* Product */}
+                            {/* PRODUCT */}
                             <div>
-                                <label className={labelClass}>Product *</label>
+                                <label className={labelClass}>
+                                    Product *
+                                </label>
 
                                 <select
                                     name="product"
                                     value={formData.product}
                                     onChange={handleChange}
                                     required
+                                    disabled={isEdit}
                                     className={inputClass}
                                 >
                                     <option value="">Select Product</option>
@@ -214,7 +297,7 @@ function CreateInventory({ onClose }) {
                                 </select>
                             </div>
 
-                            {/* Variant */}
+                            {/* VARIANT */}
                             <div>
                                 <label className={labelClass}>
                                     Product Variant *
@@ -225,7 +308,7 @@ function CreateInventory({ onClose }) {
                                     value={formData.variant}
                                     onChange={handleChange}
                                     required
-                                    disabled={!formData.product}
+                                    disabled={!formData.product || isEdit}
                                     className={inputClass}
                                 >
                                     <option value="">Select Variant</option>
@@ -238,17 +321,32 @@ function CreateInventory({ onClose }) {
                                             {variant.name}
                                         </option>
                                     ))}
+
+                                    {/* Keep selected variant visible while editing */}
+                                    {isEdit &&
+                                        inventory?.variant &&
+                                        !variants.some(
+                                            (variant) =>
+                                                variant._id === formData.variant
+                                        ) && (
+                                            <option value={formData.variant}>
+                                                {inventory.variant.name || "Selected Variant"}
+                                            </option>
+                                        )}
                                 </select>
                             </div>
 
-                            {/* Quantity */}
+                            {/* QUANTITY */}
                             <div>
-                                <label className={labelClass}>Quantity *</label>
+                                <label className={labelClass}>
+                                    Quantity *
+                                </label>
 
                                 <input
                                     type="number"
                                     name="quantity"
                                     min="0"
+                                    step="1"
                                     value={formData.quantity}
                                     onChange={handleChange}
                                     required
@@ -257,7 +355,7 @@ function CreateInventory({ onClose }) {
                                 />
                             </div>
 
-                            {/* Reserved Quantity */}
+                            {/* RESERVED QUANTITY */}
                             <div>
                                 <label className={labelClass}>
                                     Reserved Quantity
@@ -267,13 +365,14 @@ function CreateInventory({ onClose }) {
                                     type="number"
                                     name="reservedQuantity"
                                     min="0"
+                                    step="1"
                                     value={formData.reservedQuantity}
                                     onChange={handleChange}
                                     className={inputClass}
                                 />
                             </div>
 
-                            {/* Reorder Level */}
+                            {/* REORDER LEVEL */}
                             <div>
                                 <label className={labelClass}>
                                     Reorder Level
@@ -283,13 +382,14 @@ function CreateInventory({ onClose }) {
                                     type="number"
                                     name="reorderLevel"
                                     min="0"
+                                    step="1"
                                     value={formData.reorderLevel}
                                     onChange={handleChange}
                                     className={inputClass}
                                 />
                             </div>
 
-                            {/* Max Stock */}
+                            {/* MAX STOCK */}
                             <div>
                                 <label className={labelClass}>
                                     Maximum Stock Level
@@ -299,15 +399,18 @@ function CreateInventory({ onClose }) {
                                     type="number"
                                     name="maxStockLevel"
                                     min="0"
+                                    step="1"
                                     value={formData.maxStockLevel}
                                     onChange={handleChange}
                                     className={inputClass}
                                 />
                             </div>
 
-                            {/* Status */}
+                            {/* STATUS */}
                             <div className="md:col-span-2">
-                                <label className={labelClass}>Status</label>
+                                <label className={labelClass}>
+                                    Status
+                                </label>
 
                                 <select
                                     name="status"
@@ -322,22 +425,28 @@ function CreateInventory({ onClose }) {
 
                         </div>
 
-                        {/* Buttons */}
+                        {/* BUTTONS */}
                         <div className="mt-8 flex justify-end gap-3 border-t border-[#D9E8EF] pt-6">
 
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="rounded-lg border border-[#D9E8EF] bg-white px-6 py-3 text-sm font-medium text-[#627D98]"
+                                disabled={submitting}
+                                className="rounded-lg border border-[#D9E8EF] bg-white px-6 py-3 text-sm font-medium text-[#627D98] disabled:opacity-50"
                             >
                                 Cancel
                             </button>
 
                             <button
                                 type="submit"
-                                className="rounded-lg bg-[#087F95] px-6 py-3 text-sm font-semibold text-white hover:bg-[#066778]"
+                                disabled={submitting}
+                                className="rounded-lg bg-[#087F95] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#066778] disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                Create Inventory
+                                {submitting
+                                    ? "Please Wait..."
+                                    : isEdit
+                                    ? "Update Inventory"
+                                    : "Create Inventory"}
                             </button>
 
                         </div>
