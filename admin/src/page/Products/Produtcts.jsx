@@ -29,7 +29,7 @@ const Product = () => {
 
   async function getProducts() {
     try {
-      setLoading(true);
+      
       setErrorMessage("");
 
       const response = await api.get("/products/showproducts");
@@ -47,9 +47,7 @@ const Product = () => {
       setErrorMessage(
         error.response?.data?.message || "Failed to fetch products."
       );
-    } finally {
-      setLoading(false);
-    }
+    } 
   }
 
   useEffect(() => {
@@ -303,8 +301,8 @@ const Product = () => {
                           onClick={() => handleStatusChange(product._id)}
                           className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                             product.isActive
-                              ? "bg-[#D7F2F6] text-[#087F95] hover:bg-[#BCEAF0]"
-                              : "bg-[#EAF7FA] text-[#627D98] hover:bg-[#D9E8EF]"
+                              ? "bg-green-100 text-green-700 hover:bg-green-200"
+                              :"bg-red-100 text-red-700 hover:bg-red-200"
                           }`}
                         >
                           {product.isActive ? "Active" : "Inactive"}
