@@ -181,6 +181,7 @@ export default function Navbar() {
             signal: controller.signal,
           }
         );
+        console.log(response)
 
         setSuggestions({
           categories: response.data.categories || [],
@@ -189,7 +190,7 @@ export default function Navbar() {
 
       } catch (error) {
         if (error.name !== "CanceledError") {
-          console.log("Search error:", error);
+          console.log("Search error:", error.message);
 
           setSuggestions({
             categories: [],
