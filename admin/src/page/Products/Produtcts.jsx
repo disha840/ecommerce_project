@@ -29,7 +29,7 @@ const Product = () => {
 
   async function getProducts() {
     try {
-      
+      setLoading(true);
       setErrorMessage("");
 
       const response = await api.get("/products/showproducts");
@@ -47,12 +47,24 @@ const Product = () => {
       setErrorMessage(
         error.response?.data?.message || "Failed to fetch products."
       );
-    } 
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
     getProducts();
   }, []);
+
+  // Change Product Status
+  const handleStatusChange = async (id) => {
+    try {
+      await api.patch(`/products/change-status/${id}`);
+      getProducts();
+    } catch (error) {
+      console.log("Change product status error:", error.message);
+    }
+  };
 
   function getName(value) {
     if (!value) return "-";
@@ -79,16 +91,6 @@ const Product = () => {
   function viewHandler(id) {
     navigate(`/admin/viewproduct/${id}`);
   }
-
-  // PRODUCT STATUS CHANGE
-  const handleStatusChange = async (id) => {
-    try {
-      await api.patch(`/products/change-status/${id}`);
-      getProducts();
-    } catch (error) {
-      console.log(error.message);
-    }
-  };
 
   // PAGE ACCESS
   if (!user?.permissions?.some((permission) => permission.includes("products"))) {
@@ -295,43 +297,32 @@ const Product = () => {
 
                     {/* Status */}
                     <td className="whitespace-nowrap px-5 py-4">
-                      {permissions.includes("products:update") ? (
-                        <button
-                          type="button"
-                          onClick={() => handleStatusChange(product._id)}
-                          className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                            product.isActive
-                              ? "bg-green-100 text-green-700 hover:bg-green-200"
-                              :"bg-red-100 text-red-700 hover:bg-red-200"
-                          }`}
-                        >
-                          {product.isActive ? "Active" : "Inactive"}
-                        </button>
-                      ) : (
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${
-                            product.isActive
-                              ? "bg-[#D7F2F6] text-[#087F95]"
-                              : "bg-[#EAF7FA] text-[#627D98]"
-                          }`}
-                        >
-                          {product.isActive ? "Active" : "Inactive"}
-                        </span>
-                      )}
+                      <button
+                        type="button"
+                        disabled={!permissions.includes("products:update")}
+                        onClick={() => handleStatusChange(product._id)}
+                        className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                          product.isActive
+                            ? "bg-green-100 text-green-700 hover:bg-green-200"
+                            : "bg-red-100 text-red-700 hover:bg-red-200"
+                        }`}
+                      >
+                        {product.isActive ? "Active" : "Inactive"}
+                      </button>
                     </td>
 
                     {/* Action Buttons */}
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
 
                         {permissions.includes("products:read") && (
                           <button
                             type="button"
                             title="View Product"
-                            className="rounded-lg bg-[#D7F2F6] p-2 text-[#087F95] transition hover:bg-[#BCEAF0]"
                             onClick={() => viewHandler(product._id)}
+                            className="text-blue-600 hover:text-blue-800"
                           >
-                            <FiEye size={17} />
+                            <FiEye size={18} />
                           </button>
                         )}
 
@@ -339,13 +330,13 @@ const Product = () => {
                           <button
                             type="button"
                             title="Edit Product"
-                            className="rounded-lg bg-amber-50 p-2 text-amber-700 transition hover:bg-amber-100"
                             onClick={() => {
                               setEditProduct(true);
                               setProductInfo(product);
                             }}
+                            className="text-green-600 hover:text-green-800"
                           >
-                            <FiEdit2 size={17} />
+                            <FiEdit2 size={18} />
                           </button>
                         )}
 
@@ -353,13 +344,13 @@ const Product = () => {
                           <button
                             type="button"
                             title="Delete Product"
-                            className="rounded-lg bg-red-50 p-2 text-red-600 transition hover:bg-red-100"
                             onClick={() => {
                               setShowDelete(true);
                               setDeleteId(product._id);
                             }}
+                            className="text-red-600 hover:text-red-800"
                           >
-                            <FiTrash2 size={17} />
+                            <FiTrash2 size={18} />
                           </button>
                         )}
 
