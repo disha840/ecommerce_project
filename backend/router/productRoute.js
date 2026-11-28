@@ -12,7 +12,6 @@ const {
     showFeaturedProducts,
     deleteProduct,
     showProductsBySubcategory,
-    getSearchSuggestions,
      changeProductStatus
 } = require("../controller/productController");
 

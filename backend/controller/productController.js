@@ -416,19 +416,11 @@ const showFeaturedProducts = async (req, res) => {
 const changeProductStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { isActive } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid product ID",
-      });
-    }
-
-    if (typeof isActive !== "boolean") {
-      return res.status(400).json({
-        success: false,
-        message: "isActive must be true or false",
       });
     }
 
@@ -441,13 +433,14 @@ const changeProductStatus = async (req, res) => {
       });
     }
 
-    product.isActive = isActive;
+    // Toggle product status
+    product.isActive = !product.isActive;
 
     await product.save();
 
     return res.status(200).json({
       success: true,
-      message: `Product ${isActive ? "activated" : "deactivated"} successfully`,
+      message: `Product ${product.isActive ? "activated" : "deactivated"} successfully`,
       product,
     });
 
@@ -461,7 +454,6 @@ const changeProductStatus = async (req, res) => {
     });
   }
 };
-
 
 
 module.exports = {
