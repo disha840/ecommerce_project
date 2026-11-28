@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
-    FiEye,
     FiEdit2,
     FiTrash2,
     FiPlus,
@@ -344,18 +343,8 @@ const Banner = () => {
                                         {/* ACTIONS */}
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() =>
-                                                        navigate(
-                                                            `/admin/banner/${banner._id}`
-                                                        )
-                                                    }
-                                                    title="View Banner"
-                                                    className="rounded-lg p-2 text-[#087F95] transition hover:bg-[#D7F2F6]"
-                                                >
-                                                    <FiEye size={18} />
-                                                </button>
 
+                                                {/* EDIT */}
                                                 <button
                                                     onClick={() =>
                                                         handleEdit(banner)
@@ -366,6 +355,7 @@ const Banner = () => {
                                                     <FiEdit2 size={18} />
                                                 </button>
 
+                                                {/* DELETE */}
                                                 <button
                                                     onClick={() =>
                                                         setBannerToDelete(banner)
@@ -375,6 +365,7 @@ const Banner = () => {
                                                 >
                                                     <FiTrash2 size={18} />
                                                 </button>
+
                                             </div>
                                         </td>
                                     </tr>
