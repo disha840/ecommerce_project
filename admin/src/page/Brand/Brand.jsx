@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import AddBrand from "../../components/Brand/AddBrand";
 import api from "../../api";
@@ -10,10 +11,6 @@ const Brand = () => {
 
   const user = useSelector((state) => state.auth.user);
   const permissions = user?.permissions || [];
-
-  if (!permissions.some((permission) => permission.includes("brand"))) {
-    return <Navigate to="/admin/dashboard" replace />;
-  }
 
   const [createBrand, setCreateBrand] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -35,6 +32,16 @@ const Brand = () => {
     getdata();
   }, []);
 
+  // Change Brand Status
+  async function handleToggleStatus(id) {
+    try {
+      await api.patch(`/brands/change-status/${id}`);
+      getdata();
+    } catch (error) {
+      console.log(error.response?.data || error.message);
+    }
+  }
+
   function handleView(id) {
     navigate(`/admin/viewbrand/${id}`);
   }
@@ -50,6 +57,10 @@ const Brand = () => {
   const inactiveBrands = data.filter(
     (item) => item.status !== "Active"
   ).length;
+
+  if (!permissions.some((permission) => permission.includes("brand"))) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
 
   return (
     <>
@@ -162,16 +173,32 @@ const Brand = () => {
                         {item.description || "—"}
                       </td>
 
+                      {/* Status Toggle */}
                       <td className="px-5 py-5">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${
-                            item.status === "Active"
-                              ? "bg-[#D7F2F6] text-[#087F95]"
-                              : "bg-[#EDF3F5] text-[#627D98]"
-                          }`}
-                        >
-                          {item.status}
-                        </span>
+                        {permissions.includes("brand:update") ? (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(item._id)}
+                            className={`rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer transition ${
+                              item.status === "Active"
+                                ? "bg-green-100 text-green-700 hover:bg-green-200"
+                                : "bg-red-100 text-red-700 hover:bg-red-200"
+                            }`}
+                            title="Click to change status"
+                          >
+                            {item.status}
+                          </button>
+                        ) : (
+                          <span
+                            className={`inline-block rounded-full px-3 py-1.5 text-xs font-semibold ${
+                              item.status === "Active"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {item.status}
+                          </span>
+                        )}
                       </td>
 
                       <td className="px-5 py-5 text-[#627D98]">
