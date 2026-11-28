@@ -29,7 +29,7 @@ const Product = () => {
 
   async function getProducts() {
     try {
-      setLoading(true);
+      // setLoading(true);
       setErrorMessage("");
 
       const response = await api.get("/products/showproducts");
