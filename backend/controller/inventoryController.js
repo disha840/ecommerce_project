@@ -464,24 +464,25 @@ const getStoreSubcategoryProducts = async (req, res) => {
     }
 };
 
+
+
 const getSearchSuggestions = async (req, res) => {
     try {
-         console.log("SEARCH API HIT");
+        console.log("SEARCH API HIT");
+
         const { storeId, q } = req.query;
 
-        // Validate Store ID
         if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
             return res.status(400).json({
                 success: false,
                 message: "Valid Store ID is required"
             });
         }
-        console.log("hello")
 
-        // Validate search query
+        const storeObjectId = new mongoose.Types.ObjectId(storeId);
         const searchQuery = String(q || "").trim();
 
-        if (!searchQuery) {
+        if (searchQuery.length < 2) {
             return res.status(200).json({
                 success: true,
                 categories: [],
@@ -496,18 +497,9 @@ const getSearchSuggestions = async (req, res) => {
             });
         }
 
-        if (searchQuery.length < 2) {
-            return res.status(200).json({
-                success: true,
-                categories: [],
-                products: []
-            });
-        }
-
-        // Check active store
         const store = await Store.findOne({
-            _id: storeId,
-            status: "active"
+            _id: storeObjectId,
+            status: "ACTIVE"
         }).select("_id");
 
         if (!store) {
@@ -517,7 +509,6 @@ const getSearchSuggestions = async (req, res) => {
             });
         }
 
-        // Escape regex
         const escapeRegex = (value) =>
             value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -526,9 +517,7 @@ const getSearchSuggestions = async (req, res) => {
             "i"
         );
 
-        const storeObjectId = new mongoose.Types.ObjectId(storeId);
-
-        // Search available products in selected store
+        // 1. Search available products and their variants
         const availableProducts = await Inventory.aggregate([
             {
                 $match: {
@@ -564,7 +553,10 @@ const getSearchSuggestions = async (req, res) => {
                 $match: {
                     "variant.status": "ACTIVE",
                     $expr: {
-                        $eq: ["$variant.product", "$product._id"]
+                        $eq: [
+                            "$variant.product",
+                            "$product._id"
+                        ]
                     },
                     $or: [
                         { "product.name": searchRegex },
@@ -594,15 +586,9 @@ const getSearchSuggestions = async (req, res) => {
                     images: "$product.images",
 
                     category: {
-                        $cond: [
-                            { $ifNull: ["$category._id", false] },
-                            {
-                                _id: "$category._id",
-                                name: "$category.name",
-                                slug: "$category.slug"
-                            },
-                            null
-                        ]
+                        _id: "$category._id",
+                        name: "$category.name",
+                        slug: "$category.slug"
                     },
 
                     variant: {
@@ -624,7 +610,7 @@ const getSearchSuggestions = async (req, res) => {
             { $limit: 10 }
         ]);
 
-        // Get categories having available products in this store
+        // 2. Get categories which have available products in this store
         const availableCategoryIds = await Inventory.aggregate([
             {
                 $match: {
@@ -660,7 +646,10 @@ const getSearchSuggestions = async (req, res) => {
                 $match: {
                     "variant.status": "ACTIVE",
                     $expr: {
-                        $eq: ["$variant.product", "$product._id"]
+                        $eq: [
+                            "$variant.product",
+                            "$product._id"
+                        ]
                     }
                 }
             },
@@ -675,15 +664,17 @@ const getSearchSuggestions = async (req, res) => {
             .map(item => item._id)
             .filter(Boolean);
 
-        // Search categories
+        // 3. Search matching category names
         const categories = await Category.find({
             _id: { $in: categoryIds },
             name: searchRegex
         })
             .select("_id name slug image")
+            .sort({ name: 1 })
             .limit(10)
             .lean();
 
+        // 4. Send response
         return res.status(200).json({
             success: true,
             message: "Search suggestions fetched successfully",
@@ -692,9 +683,13 @@ const getSearchSuggestions = async (req, res) => {
         });
 
     } catch (error) {
+        console.error("Search Controller Error:", error);
+        console.error("Error Message:", error.message);
+
         return handleResponseError(error, res);
     }
 };
+
 
 
 

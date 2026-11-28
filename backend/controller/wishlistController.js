@@ -63,6 +63,7 @@ const addToWishlist = async (req, res) => {
     }
 };
 
+
 const getWishlist = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -106,18 +107,17 @@ const getWishlist = async (req, res) => {
                     store: storeId,
                     variant: item.variant._id,
                     status: "active",
+                    availableQuantity: { $gt: 0 },
                 });
+
+                const availableQuantity = inventory
+                    ? inventory.availableQuantity
+                    : 0;
 
                 return {
                     ...item.toObject(),
-
-                    isAvailable: inventory
-                        ? inventory.availableQuantity > 0
-                        : false,
-
-                    availableQuantity: inventory
-                        ? inventory.availableQuantity
-                        : 0,
+                    isAvailable: availableQuantity > 0,
+                    availableQuantity,
                 };
             })
         );
@@ -137,6 +137,7 @@ const getWishlist = async (req, res) => {
         });
     }
 };
+
 const removeFromWishlist = async (req, res) => {
     try {
         const userId = req.user.id;
