@@ -26,7 +26,6 @@ const Category = () => {
   const [search, setSearch] = useState("");
   const [editCat, setEdit] = useState(false);
   const [editData, setEditData] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   // PAGINATION STATES
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,13 +37,9 @@ const Category = () => {
   // GET ALL CATEGORIES WITH PAGINATION
   async function getdata(page = 1) {
     try {
-      setLoading(true);
-
       const response = await api.get(
         `/category/showcategories?page=${page}&limit=${limit}`
       );
-
-      console.log("Category Pagination:", response.data);
 
       setData(response.data.category || []);
       setCurrentPage(Number(response.data.currentPage) || page);
@@ -54,8 +49,6 @@ const Category = () => {
     } catch (error) {
       console.log(error.response?.data || error.message);
       toast.error("Failed to fetch categories");
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -67,8 +60,6 @@ const Category = () => {
   // SEARCH CATEGORIES
   async function SearchCategory(searchvalue = "") {
     try {
-      setLoading(true);
-
       const response = await api.get(
         `/category/searched?search=${encodeURIComponent(searchvalue)}`
       );
@@ -83,8 +74,6 @@ const Category = () => {
     } catch (error) {
       console.log(error.response?.data || error.message);
       toast.error("Failed to search categories");
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -207,7 +196,6 @@ const Category = () => {
         {/* STATISTICS */}
         <div className="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-3">
 
-          {/* TOTAL CATEGORIES */}
           <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
             <p className="text-sm text-[#627D98]">
               Total Categories
@@ -218,7 +206,6 @@ const Category = () => {
             </h2>
           </div>
 
-          {/* ACTIVE CATEGORIES */}
           <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
             <p className="text-sm text-[#627D98]">
               Active Categories
@@ -229,7 +216,6 @@ const Category = () => {
             </h2>
           </div>
 
-          {/* INACTIVE CATEGORIES */}
           <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
             <p className="text-sm text-[#627D98]">
               Inactive Categories
@@ -300,16 +286,7 @@ const Category = () => {
               </thead>
 
               <tbody>
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan="6"
-                      className="px-5 py-10 text-center text-[#627D98]"
-                    >
-                      Loading categories...
-                    </td>
-                  </tr>
-                ) : data.length === 0 ? (
+                {data.length === 0 ? (
                   <tr>
                     <td
                       colSpan="6"
@@ -326,7 +303,6 @@ const Category = () => {
                       key={item._id}
                       className="border-t border-[#EAF2F5] transition hover:bg-[#F4FBFC]"
                     >
-
                       {/* SERIAL NUMBER */}
                       <td className="whitespace-nowrap px-5 py-5">
                         {search.trim()
@@ -381,7 +357,6 @@ const Category = () => {
                       <td className="whitespace-nowrap px-5 py-5">
                         <div className="flex justify-center gap-2">
 
-                          {/* VIEW */}
                           {permissions.includes("categories:read") && (
                             <button
                               type="button"
@@ -393,7 +368,6 @@ const Category = () => {
                             </button>
                           )}
 
-                          {/* EDIT */}
                           {permissions.includes("categories:update") && (
                             <button
                               type="button"
@@ -408,7 +382,6 @@ const Category = () => {
                             </button>
                           )}
 
-                          {/* DELETE */}
                           {permissions.includes("categories:delete") && (
                             <button
                               type="button"
@@ -454,7 +427,7 @@ const Category = () => {
                 <button
                   type="button"
                   onClick={() => getdata(currentPage - 1)}
-                  disabled={currentPage <= 1 || loading}
+                  disabled={currentPage <= 1}
                   className="rounded-lg border border-[#D9E8EF] bg-white px-4 py-2 text-sm font-medium text-[#102A43] transition hover:bg-[#EAF7FA] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Previous
@@ -467,7 +440,7 @@ const Category = () => {
                 <button
                   type="button"
                   onClick={() => getdata(currentPage + 1)}
-                  disabled={currentPage >= totalPages || loading}
+                  disabled={currentPage >= totalPages}
                   className="rounded-lg border border-[#D9E8EF] bg-white px-4 py-2 text-sm font-medium text-[#102A43] transition hover:bg-[#EAF7FA] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Next
