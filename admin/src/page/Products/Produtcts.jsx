@@ -5,6 +5,11 @@ import api from "../../api";
 import { useNavigate, Navigate } from "react-router-dom";
 import DeleteProductModal from "../../components/Products/DeleteProduct";
 import { useSelector } from "react-redux";
+import {
+  FiEye,
+  FiEdit2,
+  FiTrash2,
+} from "react-icons/fi";
 
 const Product = () => {
   const user = useSelector((state) => state.auth.user);
@@ -76,6 +81,16 @@ const Product = () => {
   function viewHandler(id) {
     navigate(`/admin/viewproduct/${id}`);
   }
+
+  // PRODUCT STATUS CHANGE
+  const handleStatusChange = async (id) => {
+    try {
+      await api.patch(`/products/change-status/${id}`);
+      getProducts();
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
   // PAGE ACCESS
   if (!user?.permissions?.some((permission) => permission.includes("products"))) {
@@ -280,16 +295,31 @@ const Product = () => {
                       </span>
                     </td>
 
+                    {/* Status */}
                     <td className="whitespace-nowrap px-5 py-4">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          product.isActive
-                            ? "bg-[#D7F2F6] text-[#087F95]"
-                            : "bg-[#EAF7FA] text-[#627D98]"
-                        }`}
-                      >
-                        {product.isActive ? "Active" : "Inactive"}
-                      </span>
+                      {permissions.includes("products:update") ? (
+                        <button
+                          type="button"
+                          onClick={() => handleStatusChange(product._id)}
+                          className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                            product.isActive
+                              ? "bg-[#D7F2F6] text-[#087F95] hover:bg-[#BCEAF0]"
+                              : "bg-[#EAF7FA] text-[#627D98] hover:bg-[#D9E8EF]"
+                          }`}
+                        >
+                          {product.isActive ? "Active" : "Inactive"}
+                        </button>
+                      ) : (
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            product.isActive
+                              ? "bg-[#D7F2F6] text-[#087F95]"
+                              : "bg-[#EAF7FA] text-[#627D98]"
+                          }`}
+                        >
+                          {product.isActive ? "Active" : "Inactive"}
+                        </span>
+                      )}
                     </td>
 
                     {/* Action Buttons */}
@@ -299,36 +329,39 @@ const Product = () => {
                         {permissions.includes("products:read") && (
                           <button
                             type="button"
-                            className="rounded-lg border border-[#D9E8EF] px-3 py-2 text-xs text-[#087F95] hover:bg-[#D7F2F6]"
+                            title="View Product"
+                            className="rounded-lg bg-[#D7F2F6] p-2 text-[#087F95] transition hover:bg-[#BCEAF0]"
                             onClick={() => viewHandler(product._id)}
                           >
-                            View
+                            <FiEye size={17} />
                           </button>
                         )}
 
                         {permissions.includes("products:update") && (
                           <button
                             type="button"
-                            className="rounded-lg bg-[#EAF7FA] px-3 py-2 text-xs text-[#087F95] hover:bg-[#D7F2F6]"
+                            title="Edit Product"
+                            className="rounded-lg bg-amber-50 p-2 text-amber-700 transition hover:bg-amber-100"
                             onClick={() => {
                               setEditProduct(true);
                               setProductInfo(product);
                             }}
                           >
-                            Edit
+                            <FiEdit2 size={17} />
                           </button>
                         )}
 
                         {permissions.includes("products:delete") && (
                           <button
                             type="button"
-                            className="rounded-lg bg-[#D7F2F6] px-3 py-2 text-xs text-[#087F95] hover:bg-[#BCEAF0]"
+                            title="Delete Product"
+                            className="rounded-lg bg-red-50 p-2 text-red-600 transition hover:bg-red-100"
                             onClick={() => {
                               setShowDelete(true);
                               setDeleteId(product._id);
                             }}
                           >
-                            Delete
+                            <FiTrash2 size={17} />
                           </button>
                         )}
 

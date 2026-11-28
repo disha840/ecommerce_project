@@ -182,7 +182,7 @@ function ViewInventory() {
               {label}
             </p>
 
-            <p className="mt-1 break-words font-semibold text-[#102A43]">
+            <p className="mt-1  font-semibold text-[#102A43]">
               {value ?? "N/A"}
             </p>
           </div>
