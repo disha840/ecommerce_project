@@ -9,7 +9,8 @@ const {
   updateSubcategory,
   viewSubCategory,
   deleteSubCategory,
-  ShowSubCategoryByCategory
+  ShowSubCategoryByCategory,
+  changeSubcategoryStatus
 } = require("../controller/subCatController");
 
 const router = express.Router();
@@ -56,4 +57,11 @@ router.get(
   ShowSubCategoryByCategory
 );
 
+
+router.patch(
+  "/change-status/:id",
+  auth,
+   checkPermission("subcategories", "update"),
+  changeSubcategoryStatus
+);
 module.exports = router;

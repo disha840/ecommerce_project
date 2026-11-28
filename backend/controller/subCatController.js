@@ -176,6 +176,39 @@ const ShowSubCategoryByCategory = async (req, res) => {
   }
 };
 
+const changeSubcategoryStatus = async (req, res) => {
+  try {
+     console.log("CHANGE SUBCATEGORY STATUS ROUTE HIT");
+    const { id } = req.params;
+  
+
+    const subcategory = await Subcategory.findById(id);
+
+    if (!subcategory) {
+      return res.status(404).json({
+        message: "Subcategory not found",
+      });
+    }
+
+    subcategory.status =
+      subcategory.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+
+    await subcategory.save();
+
+    res.status(200).json({
+      message: "Subcategory status updated successfully",
+      subcategory,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Failed to update subcategory status",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
-  createSubcategory,ShowSubCategory,updateSubcategory,viewSubCategory,deleteSubCategory,ShowSubCategoryByCategory
+  createSubcategory,ShowSubCategory,updateSubcategory,viewSubCategory,deleteSubCategory,ShowSubCategoryByCategory,changeSubcategoryStatus
 };
