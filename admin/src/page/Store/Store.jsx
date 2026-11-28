@@ -1,4 +1,3 @@
-
 import FormModal from "../../components/Store/formModal";
 import api from "../../api";
 
@@ -41,8 +40,6 @@ const Store = () => {
   // FETCH STORES
   const fetchStores = async (page = 1, searchValue = search) => {
     try {
-      setLoading(true);
-
       let res;
 
       if (searchValue.trim()) {
@@ -59,8 +56,6 @@ const Store = () => {
       setTotalStores(res.data.totalStores || 0);
     } catch (error) {
       console.log(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -205,11 +200,11 @@ const Store = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-[#627D98]">Inactive Stores</p>
-              <h2 className="mt-2 text-3xl font-bold text-[#627D98]">
+              <h2 className="mt-2 text-3xl font-bold text-red-600">
                 {stores.filter((store) => store.status !== "ACTIVE").length}
               </h2>
             </div>
-            <div className="rounded-xl bg-[#F0FAFC] p-3 text-[#627D98]">
+            <div className="rounded-xl bg-red-50 p-3 text-red-600">
               <FiXCircle size={24} />
             </div>
           </div>
@@ -325,10 +320,10 @@ const Store = () => {
                         {permissions.includes("store:update") && (
                           <button
                             onClick={() => handleToggleStatus(store._id)}
-                            className={`rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer ${
+                            className={`rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer transition ${
                               store.status === "ACTIVE"
-                                ? "bg-[#D7F2F6] text-[#087F95]"
-                                : "bg-[#F0FAFC] text-[#627D98]"
+                                ? "bg-green-100 text-green-700 hover:bg-green-200"
+                                : "bg-red-100 text-red-700 hover:bg-red-200"
                             }`}
                           >
                             {store.status}

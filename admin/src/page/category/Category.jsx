@@ -31,15 +31,13 @@ const Category = () => {
   // GET ALL CATEGORIES
   async function getdata() {
     try {
-      setLoading(true);
+  
       const response = await api.get("/category/showcategories");
       setData(response.data.category || []);
     } catch (error) {
       console.log(error.response?.data || error.message);
       toast.error("Failed to fetch categories");
-    } finally {
-      setLoading(false);
-    }
+    } 
   }
 
   useEffect(() => {
@@ -294,7 +292,7 @@ const Category = () => {
                             onClick={() => handleStatusChange(item._id)}
                             className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                               item.status === "ACTIVE"
-                                ? "bg-[#D7F2F6] text-[#087F95] hover:bg-[#BCEAF0]"
+                                ? "bg-green-100 text-green-700 hover:bg-green-200"
                                 : "bg-red-100 text-red-600 hover:bg-red-200"
                             }`}
                           >

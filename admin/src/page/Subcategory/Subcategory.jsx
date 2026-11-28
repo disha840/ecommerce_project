@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import api from "../../api";
 import {
@@ -52,6 +53,16 @@ const Subcategory = () => {
     getdata();
   }, []);
 
+  // CHANGE SUBCATEGORY STATUS
+  async function handleToggleStatus(id) {
+    try {
+      await api.patch(`/subcategory/change-status/${id}`);
+      getdata();
+    } catch (error) {
+      console.log(error.response?.data || error.message);
+    }
+  }
+
   // SEARCH SUBCATEGORIES
   const filteredData = data.filter((item) =>
     item.name?.toLowerCase().includes(search.toLowerCase())
@@ -69,7 +80,11 @@ const Subcategory = () => {
   }
 
   // PAGE ACCESS
-  if (!user?.permissions?.some((permission) => permission.includes("subcategories"))) {
+  if (
+    !user?.permissions?.some((permission) =>
+      permission.includes("subcategories")
+    )
+  ) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
@@ -138,7 +153,7 @@ const Subcategory = () => {
             Active Subcategories
           </p>
 
-          <h2 className="mt-2 text-3xl font-bold text-[#087F95]">
+          <h2 className="mt-2 text-3xl font-bold text-green-700">
             {data.filter(
               (item) =>
                 item.status?.toLowerCase() === "active"
@@ -281,16 +296,32 @@ const Subcategory = () => {
                       {item.parentCategory?.name || "-"}
                     </td>
 
+                    {/* STATUS */}
                     <td className="whitespace-nowrap px-5 py-5">
-                      <span
-                        className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                          item.status?.toLowerCase() === "active"
-                            ? "bg-[#D7F2F6] text-[#087F95]"
-                            : "bg-red-100 text-red-600"
-                        }`}
-                      >
-                        {item.status || "-"}
-                      </span>
+                      {permissions.includes("subcategories:update") ? (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStatus(item._id)}
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer transition ${
+                            item.status === "ACTIVE"
+                              ? "bg-green-100 text-green-700 hover:bg-green-200"
+                              : "bg-red-100 text-red-700 hover:bg-red-200"
+                          }`}
+                          title="Click to change status"
+                        >
+                          {item.status || "-"}
+                        </button>
+                      ) : (
+                        <span
+                          className={`inline-block rounded-full px-3 py-1.5 text-xs font-semibold ${
+                            item.status === "ACTIVE"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {item.status || "-"}
+                        </span>
+                      )}
                     </td>
 
                     <td className="whitespace-nowrap px-5 py-5 text-[#627D98]">
