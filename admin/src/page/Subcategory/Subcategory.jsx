@@ -7,6 +7,8 @@ import {
   FiEye,
   FiEdit2,
   FiTrash2,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 import AddSubcategory from "../../components/Subcategory/AddSubcategory";
 import { useNavigate, Navigate } from "react-router-dom";
@@ -28,36 +30,73 @@ const Subcategory = () => {
   const [deleting, setDeleting] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
-  // GET ALL SUBCATEGORIES
-  async function getdata() {
+  // PAGINATION STATES
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalSubcategories, setTotalSubcategories] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  // GET SUBCATEGORIES WITH PAGINATION
+  async function getdata(pageNumber = page) {
     try {
+      setLoading(true);
+
       const response = await api.get(
-        "/subcategory/showsubcategories"
+        "/subcategory/showsubcategories",
+        {
+          params: {
+            page: pageNumber,
+            limit: limit,
+          },
+        }
       );
 
-      setData(
-        response.data.subcategory ||
-          response.data.subcategories ||
-          response.data.data ||
-          []
+      const subcategories = response.data.subcategory || [];
+
+      setData(subcategories);
+
+      setTotalSubcategories(
+        response.data.pagination?.totalSubcategories || 0
       );
 
+      setTotalPages(
+        response.data.pagination?.totalPages || 1
+      );
+
+      setPage(pageNumber);
       setError("");
     } catch (error) {
       console.log(error.response?.data || error.message);
       setError("Failed to load subcategories");
+    } finally {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    getdata();
+    getdata(1);
   }, []);
+
+  // PREVIOUS PAGE
+  function handlePrevious() {
+    if (page > 1) {
+      getdata(page - 1);
+    }
+  }
+
+  // NEXT PAGE
+  function handleNext() {
+    if (page < totalPages) {
+      getdata(page + 1);
+    }
+  }
 
   // CHANGE SUBCATEGORY STATUS
   async function handleToggleStatus(id) {
     try {
       await api.patch(`/subcategory/change-status/${id}`);
-      getdata();
+      getdata(page);
     } catch (error) {
       console.log(error.response?.data || error.message);
     }
@@ -79,6 +118,16 @@ const Subcategory = () => {
     setEditData(null);
   }
 
+  // REFRESH AFTER DELETE
+  function handleDeleted() {
+    const nextPage =
+      data.length === 1 && page > 1 ? page - 1 : page;
+
+    setDeleting(false);
+    setDeleteId(null);
+    getdata(nextPage);
+  }
+
   // PAGE ACCESS
   if (
     !user?.permissions?.some((permission) =>
@@ -95,7 +144,7 @@ const Subcategory = () => {
       {showModal && (
         <AddSubcategory
           onClose={() => setShowModal(false)}
-          getdata={getdata}
+          getdata={() => getdata(page)}
         />
       )}
 
@@ -107,11 +156,7 @@ const Subcategory = () => {
             setDeleteId(null);
           }}
           subId={deleteId}
-          onDeleted={() => {
-            getdata();
-            setDeleting(false);
-            setDeleteId(null);
-          }}
+          onDeleted={handleDeleted}
         />
       )}
 
@@ -119,7 +164,7 @@ const Subcategory = () => {
       {edit && (
         <AddSubcategory
           onClose={closeEditModal}
-          getdata={getdata}
+          getdata={() => getdata(page)}
           editData={editData}
         />
       )}
@@ -144,13 +189,13 @@ const Subcategory = () => {
           </p>
 
           <h2 className="mt-2 text-3xl font-bold text-[#102A43]">
-            {data.length}
+            {totalSubcategories}
           </h2>
         </div>
 
         <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
           <p className="text-sm text-[#627D98]">
-            Active Subcategories
+            Active (Current Page)
           </p>
 
           <h2 className="mt-2 text-3xl font-bold text-green-700">
@@ -163,7 +208,7 @@ const Subcategory = () => {
 
         <div className="rounded-2xl border border-[#D9E8EF] bg-white p-5 shadow-sm">
           <p className="text-sm text-[#627D98]">
-            Inactive Subcategories
+            Inactive (Current Page)
           </p>
 
           <h2 className="mt-2 text-3xl font-bold text-red-600">
@@ -231,38 +276,24 @@ const Subcategory = () => {
 
             <thead className="bg-[#EAF7FA] text-[#102A43]">
               <tr>
-                <th className="whitespace-nowrap px-5 py-4">
-                  S.No
-                </th>
-
-                <th className="whitespace-nowrap px-5 py-4">
-                  Subcategory Name
-                </th>
-
-                <th className="whitespace-nowrap px-5 py-4">
-                  Description
-                </th>
-
-                <th className="whitespace-nowrap px-5 py-4">
-                  Parent Category
-                </th>
-
-                <th className="whitespace-nowrap px-5 py-4">
-                  Status
-                </th>
-
-                <th className="whitespace-nowrap px-5 py-4">
-                  Created At
-                </th>
-
-                <th className="whitespace-nowrap px-5 py-4 text-center">
-                  Action
-                </th>
+                <th className="whitespace-nowrap px-5 py-4">S.No</th>
+                <th className="whitespace-nowrap px-5 py-4">Subcategory Name</th>
+                <th className="whitespace-nowrap px-5 py-4">Description</th>
+                <th className="whitespace-nowrap px-5 py-4">Parent Category</th>
+                <th className="whitespace-nowrap px-5 py-4">Status</th>
+                <th className="whitespace-nowrap px-5 py-4">Created At</th>
+                <th className="whitespace-nowrap px-5 py-4 text-center">Action</th>
               </tr>
             </thead>
 
             <tbody>
-              {filteredData.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="px-5 py-12 text-center text-[#627D98]">
+                    Loading subcategories...
+                  </td>
+                </tr>
+              ) : filteredData.length === 0 ? (
                 <tr>
                   <td
                     colSpan="7"
@@ -279,9 +310,8 @@ const Subcategory = () => {
                     key={item._id}
                     className="border-t border-[#EAF2F5] transition hover:bg-[#F4FBFC]"
                   >
-
                     <td className="whitespace-nowrap px-5 py-5">
-                      {index + 1}
+                      {(page - 1) * limit + index + 1}
                     </td>
 
                     <td className="whitespace-nowrap px-5 py-5 font-medium text-[#102A43]">
@@ -326,9 +356,7 @@ const Subcategory = () => {
 
                     <td className="whitespace-nowrap px-5 py-5 text-[#627D98]">
                       {item.createdAt
-                        ? new Date(
-                            item.createdAt
-                          ).toLocaleDateString("en-GB")
+                        ? new Date(item.createdAt).toLocaleDateString("en-GB")
                         : "-"}
                     </td>
 
@@ -379,7 +407,6 @@ const Subcategory = () => {
 
                       </div>
                     </td>
-
                   </tr>
                 ))
               )}
@@ -387,6 +414,49 @@ const Subcategory = () => {
 
           </table>
         </div>
+
+        {/* PAGINATION */}
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-[#D9E8EF] bg-white px-5 py-4 sm:flex-row">
+
+          <p className="text-sm text-[#627D98]">
+            Showing {totalSubcategories === 0 ? 0 : (page - 1) * limit + 1}
+            {" - "}
+            {Math.min(page * limit, totalSubcategories)}
+            {" of "}
+            {totalSubcategories} subcategories
+          </p>
+
+          <div className="flex items-center gap-3">
+
+            {/* PREVIOUS */}
+            <button
+              type="button"
+              onClick={handlePrevious}
+              disabled={page === 1 || loading}
+              className="flex items-center justify-center rounded-lg border border-[#D9E8EF] bg-white p-2.5 text-[#087F95] transition hover:bg-[#EAF7FA] disabled:cursor-not-allowed disabled:opacity-40"
+              title="Previous Page"
+            >
+              <FiChevronLeft size={20} />
+            </button>
+
+            <span className="text-sm font-medium text-[#102A43]">
+              Page {page} of {totalPages}
+            </span>
+
+            {/* NEXT */}
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={page >= totalPages || loading}
+              className="flex items-center justify-center rounded-lg border border-[#D9E8EF] bg-white p-2.5 text-[#087F95] transition hover:bg-[#EAF7FA] disabled:cursor-not-allowed disabled:opacity-40"
+              title="Next Page"
+            >
+              <FiChevronRight size={20} />
+            </button>
+
+          </div>
+        </div>
+
       </div>
     </div>
   );
