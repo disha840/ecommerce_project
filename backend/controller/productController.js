@@ -5,7 +5,6 @@ const Subcategory = require("../models/subcategoryModel");
 const mongoose = require("mongoose");
 const Brand = require("../models/brandModel");
 const cloudinary = require("../cloudinary");
-const mongoose = require("../database/db");
 const Inventory = require("../models/inventoryModel");
 const ProductVariant = require("../models/productVariant");
 const Store = require("../models/storeModel");
