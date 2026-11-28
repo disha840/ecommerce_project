@@ -37,6 +37,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import ViewVariant from './page/ProductVariant/ViewVariant'
 import Orders from './page/orders/order'
 import Inventory from '../src/page/Inventory/Inventory'
+import ViewInventory from './page/Inventory/viewInventory'
 import Deliverypartner from "../src/page/DeliveryPartner/Deliverypartner"
 import Banner from './page/banner/page'
 
@@ -81,7 +82,11 @@ const App = () => {
      <Route path="/admin/viewvariant/:id" element={<ViewVariant/>}/>
      <Route path='/admin/orders' element={<Orders/>}/>
      <Route path='/admin/store' element={<Store/>}/>
+
      <Route path='/admin/inventory' element={<Inventory/>}/>
+     <Route path='/admin/viewinventory/:id' element={<ViewInventory/>}/>
+
+
      <Route path='/admin/deliverypartner' element={<Deliverypartner/>}/>
      <Route path='/admin/banner' element={<Banner/>}/>
 

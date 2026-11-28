@@ -75,7 +75,7 @@ const Inventory = () => {
 
   // VIEW INVENTORY DETAILS
   const handleViewInventory = (id) => {
-    navigate(`/admin/inventory/view/${id}`);
+    navigate(`/admin/inventory/viewinventory/${id}`);
   };
 
   // OPEN DELETE CONFIRMATION POPUP
