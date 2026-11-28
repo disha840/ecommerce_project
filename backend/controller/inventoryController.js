@@ -693,6 +693,211 @@ const getSearchSuggestions = async (req, res) => {
 
 
 
+
+// VIEW SINGLE INVENTORY
+const getInventoryById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Inventory ID"
+            });
+        }
+
+        const inventory = await Inventory.findById(id)
+            .populate("product", "name slug category brand images")
+            .populate("store", "name code address status")
+            .populate("variant", "name slug sku unit unitValue mrp sellingPrice images");
+
+        if (!inventory) {
+            return res.status(404).json({
+                success: false,
+                message: "Inventory not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Inventory fetched successfully",
+            inventory
+        });
+
+    } catch (error) {
+        console.error("Get Inventory By ID Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
+// UPDATE INVENTORY
+const updateInventory = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const {
+            quantity,
+            reservedQuantity,
+            reorderLevel,
+            maxStockLevel,
+            status
+        } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Inventory ID"
+            });
+        }
+
+        const inventory = await Inventory.findById(id);
+
+        if (!inventory) {
+            return res.status(404).json({
+                success: false,
+                message: "Inventory not found"
+            });
+        }
+
+        // VALIDATE STOCK FIELDS
+        const stockFields = {
+            quantity,
+            reservedQuantity,
+            reorderLevel,
+            maxStockLevel
+        };
+
+        const updatedValues = {};
+
+        for (const [key, value] of Object.entries(stockFields)) {
+            if (value !== undefined) {
+                if (value === "") {
+                    return res.status(400).json({
+                        success: false,
+                        message: `${key} is required`
+                    });
+                }
+
+                const numberValue = Number(value);
+
+                if (
+                    !Number.isFinite(numberValue) ||
+                    numberValue < 0 ||
+                    !Number.isInteger(numberValue)
+                ) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `${key} must be a valid non-negative integer`
+                    });
+                }
+
+                updatedValues[key] = numberValue;
+            }
+        }
+
+        // USE EXISTING VALUES FOR UNCHANGED FIELDS
+        const finalQuantity =
+            updatedValues.quantity ?? inventory.quantity;
+
+        const finalReservedQuantity =
+            updatedValues.reservedQuantity ?? inventory.reservedQuantity;
+
+        // RESERVED QUANTITY VALIDATION
+        if (finalReservedQuantity > finalQuantity) {
+            return res.status(400).json({
+                success: false,
+                message: "Reserved quantity cannot exceed total quantity"
+            });
+        }
+
+        // STATUS VALIDATION
+        if (status !== undefined) {
+            if (!["active", "inactive"].includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Status must be active or inactive"
+                });
+            }
+
+            updatedValues.status = status;
+        }
+
+        // UPDATE AVAILABLE QUANTITY AUTOMATICALLY
+        updatedValues.availableQuantity =
+            finalQuantity - finalReservedQuantity;
+
+        // UPDATE INVENTORY
+        Object.assign(inventory, updatedValues);
+
+        await inventory.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Inventory updated successfully",
+            inventory
+        });
+
+    } catch (error) {
+        console.error("Update Inventory Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
+// DELETE INVENTORY
+const deleteInventory = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Inventory ID"
+            });
+        }
+
+        const inventory = await Inventory.findById(id);
+
+        if (!inventory) {
+            return res.status(404).json({
+                success: false,
+                message: "Inventory not found"
+            });
+        }
+
+        await Inventory.findByIdAndDelete(id);
+
+        return res.status(200).json({
+            success: true,
+            message: "Inventory deleted successfully"
+        });
+
+    } catch (error) {
+        console.error("Delete Inventory Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
+
+
+
 module.exports = {
-    createInventory,getInventories,getAvailableStoreInventory,getStoreCategories,getStoreSubcategories,getStoreSubcategoryProducts,getSearchSuggestions
+    createInventory,getInventories,getAvailableStoreInventory,getStoreCategories,getStoreSubcategories,getStoreSubcategoryProducts,getSearchSuggestions,
+    getInventoryById,
+    updateInventory,
+    deleteInventory,
 };
