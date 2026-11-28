@@ -8,7 +8,8 @@ const {
     createBrand,
     showBrand,
     deleteBrand,
-    viewBrand
+    viewBrand,
+    changeBrandStatus
 } = require("../controller/brandController");
 
 router.post(
@@ -37,6 +38,13 @@ router.delete(
     auth,
     checkPermission("brand", "delete"),
     deleteBrand
+);
+
+router.patch(
+  "/change-status/:id",
+  auth,
+  checkPermission("brands", "update"),
+  changeBrandStatus
 );
 
 module.exports = router;

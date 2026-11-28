@@ -126,5 +126,34 @@ const viewBrand = async (req, res) => {
     });
   }
 };
+const changeBrandStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-module.exports = { createBrand ,showBrand,deleteBrand,viewBrand};
+    const brand = await Brand.findById(id);
+
+    if (!brand) {
+      return res.status(404).json({
+        message: "Brand not found"
+      });
+    }
+
+    brand.status = brand.status === "Active" ? "Inactive" : "Active";
+
+    await brand.save();
+
+    return res.status(200).json({
+      message: "Brand status updated successfully",
+      brand
+    });
+
+  } catch (error) {
+    console.log("Change Brand Status Error:", error);
+
+    return res.status(500).json({
+      message: error.message || "Internal server error"
+    });
+  }
+};
+
+module.exports = { createBrand ,showBrand,deleteBrand,viewBrand,changeBrandStatus};
