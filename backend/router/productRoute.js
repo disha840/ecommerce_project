@@ -12,7 +12,8 @@ const {
     showFeaturedProducts,
     deleteProduct,
     showProductsBySubcategory,
-    getSearchSuggestions
+    getSearchSuggestions,
+     changeProductStatus
 } = require("../controller/productController");
 
 router.post(
@@ -62,6 +63,12 @@ router.get(
     auth,
     checkPermission("products", "read"),
     showFeaturedProducts
+);
+router.patch(
+  "/change-status/:id",
+  auth,
+  checkPermission("product", "update"),
+  changeProductStatus
 );
 
 module.exports = router;

@@ -413,7 +413,54 @@ const showFeaturedProducts = async (req, res) => {
     });
   }
 };
+const changeProductStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID",
+      });
+    }
+
+    if (typeof isActive !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "isActive must be true or false",
+      });
+    }
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    product.isActive = isActive;
+
+    await product.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Product ${isActive ? "activated" : "deactivated"} successfully`,
+      product,
+    });
+
+  } catch (error) {
+    console.log("Change product status error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to change product status",
+      error: error.message,
+    });
+  }
+};
 
 
 
@@ -424,5 +471,6 @@ module.exports = {
   viewProduct,
   deleteProduct,
   showProductsBySubcategory,
-  showFeaturedProducts
+  showFeaturedProducts,
+  changeProductStatus
 };
