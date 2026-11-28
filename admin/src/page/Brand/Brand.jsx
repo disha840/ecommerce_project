@@ -30,7 +30,7 @@ const Brand = () => {
   // GET ALL BRANDS
   async function getdata() {
     try {
-      setLoading(true);
+    
 
       const response = await api.get("/brands/showbrand");
       setData(response.data.brand || []);
@@ -38,9 +38,7 @@ const Brand = () => {
     } catch (error) {
       console.log(error.response?.data || error.message);
       toast.error("Failed to fetch brands");
-    } finally {
-      setLoading(false);
-    }
+    } 
   }
 
   useEffect(() => {
