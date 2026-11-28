@@ -74,15 +74,38 @@ const createSubcategory = async (req, res) => {
     });
   }
 };
-const ShowSubCategory=async(req,res)=>{
-    try{
-          const subcategory=await Subcategory.find().sort({createdAt:-1}).populate("parentCategory", "name");
-          res.status(200).send({subcategory:subcategory,message:"fetch all subcategories sucessfully"})
-      }
-      catch(error){
-         res.status(500).send({message:"internal server error"})
-      }
-}
+
+const ShowSubCategory = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const totalSubcategories = await Subcategory.countDocuments();
+
+        const subcategory = await Subcategory.find()
+            .sort({ createdAt: -1 })
+            .populate("parentCategory", "name")
+            .skip(skip)
+            .limit(limit);
+
+        res.status(200).send({
+            subcategory,
+            pagination: {
+                totalSubcategories,
+                currentPage: page,
+                totalPages: Math.ceil(totalSubcategories / limit),
+                limit
+            },
+            message: "Fetch all subcategories successfully"
+        });
+    }
+    catch (error) {
+        res.status(500).send({
+            message: "Internal server error"
+        });
+    }
+};
 const updateSubcategory = async (req, res) => {
   try {
     const { name, description, parentCategory } = req.body;
