@@ -440,5 +440,39 @@ const viewVariant = async (req, res) => {
   }
 };
 
+const changeVariantStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-module.exports = { createProductVariant,getProductVariants,deleteProductVariant,getVariants,getOneVariant,updateProductVariant ,viewVariant,getAllVariants};
+    const variant = await ProductVariant.findById(id);
+
+    if (!variant) {
+      return res.status(404).json({
+        success: false,
+        message: "Product variant not found",
+      });
+    }
+
+    variant.status =
+      variant.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+
+    await variant.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Product variant status updated successfully",
+      variant,
+    });
+
+  } catch (error) {
+    console.log("Change variant status error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update product variant status",
+    });
+  }
+};
+
+
+module.exports = { createProductVariant,getProductVariants,deleteProductVariant,getVariants,getOneVariant,updateProductVariant ,viewVariant,getAllVariants,changeVariantStatus};

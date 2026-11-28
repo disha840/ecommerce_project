@@ -10,7 +10,8 @@ const {
   getOneVariant,
   updateProductVariant,
   viewVariant,
-  getAllVariants
+  getAllVariants,
+   changeVariantStatus
 } = require("../controller/variantController");
 
 const router = express.Router();
@@ -71,4 +72,11 @@ router.get(
   viewVariant
 );
 
+
+router.patch(
+  "/change-status/:id",
+   auth,
+  checkPermission("variants", "update"),
+  changeVariantStatus
+);
 module.exports = router;
