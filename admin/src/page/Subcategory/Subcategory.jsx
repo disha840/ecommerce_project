@@ -32,16 +32,13 @@ const Subcategory = () => {
 
   // PAGINATION STATES
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
   const [totalSubcategories, setTotalSubcategories] = useState(0);
-  const [loading, setLoading] = useState(false);
 
   // GET SUBCATEGORIES WITH PAGINATION
   async function getdata(pageNumber = page) {
     try {
-      setLoading(true);
-
       const response = await api.get(
         "/subcategory/showsubcategories",
         {
@@ -69,8 +66,6 @@ const Subcategory = () => {
     } catch (error) {
       console.log(error.response?.data || error.message);
       setError("Failed to load subcategories");
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -277,23 +272,35 @@ const Subcategory = () => {
             <thead className="bg-[#EAF7FA] text-[#102A43]">
               <tr>
                 <th className="whitespace-nowrap px-5 py-4">S.No</th>
-                <th className="whitespace-nowrap px-5 py-4">Subcategory Name</th>
-                <th className="whitespace-nowrap px-5 py-4">Description</th>
-                <th className="whitespace-nowrap px-5 py-4">Parent Category</th>
-                <th className="whitespace-nowrap px-5 py-4">Status</th>
-                <th className="whitespace-nowrap px-5 py-4">Created At</th>
-                <th className="whitespace-nowrap px-5 py-4 text-center">Action</th>
+
+                <th className="whitespace-nowrap px-5 py-4">
+                  Subcategory Name
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4">
+                  Description
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4">
+                  Parent Category
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4">
+                  Status
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4">
+                  Created At
+                </th>
+
+                <th className="whitespace-nowrap px-5 py-4 text-center">
+                  Action
+                </th>
               </tr>
             </thead>
 
             <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="7" className="px-5 py-12 text-center text-[#627D98]">
-                    Loading subcategories...
-                  </td>
-                </tr>
-              ) : filteredData.length === 0 ? (
+              {filteredData.length === 0 ? (
                 <tr>
                   <td
                     colSpan="7"
@@ -310,6 +317,7 @@ const Subcategory = () => {
                     key={item._id}
                     className="border-t border-[#EAF2F5] transition hover:bg-[#F4FBFC]"
                   >
+
                     <td className="whitespace-nowrap px-5 py-5">
                       {(page - 1) * limit + index + 1}
                     </td>
@@ -407,6 +415,7 @@ const Subcategory = () => {
 
                       </div>
                     </td>
+
                   </tr>
                 ))
               )}
@@ -419,7 +428,10 @@ const Subcategory = () => {
         <div className="flex flex-col items-center justify-between gap-4 border-t border-[#D9E8EF] bg-white px-5 py-4 sm:flex-row">
 
           <p className="text-sm text-[#627D98]">
-            Showing {totalSubcategories === 0 ? 0 : (page - 1) * limit + 1}
+            Showing{" "}
+            {totalSubcategories === 0
+              ? 0
+              : (page - 1) * limit + 1}
             {" - "}
             {Math.min(page * limit, totalSubcategories)}
             {" of "}
@@ -432,7 +444,7 @@ const Subcategory = () => {
             <button
               type="button"
               onClick={handlePrevious}
-              disabled={page === 1 || loading}
+              disabled={page === 1}
               className="flex items-center justify-center rounded-lg border border-[#D9E8EF] bg-white p-2.5 text-[#087F95] transition hover:bg-[#EAF7FA] disabled:cursor-not-allowed disabled:opacity-40"
               title="Previous Page"
             >
@@ -447,7 +459,7 @@ const Subcategory = () => {
             <button
               type="button"
               onClick={handleNext}
-              disabled={page >= totalPages || loading}
+              disabled={page >= totalPages}
               className="flex items-center justify-center rounded-lg border border-[#D9E8EF] bg-white p-2.5 text-[#087F95] transition hover:bg-[#EAF7FA] disabled:cursor-not-allowed disabled:opacity-40"
               title="Next Page"
             >
